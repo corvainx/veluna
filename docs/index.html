@@ -11,8 +11,10 @@
 <meta property="og:title" content="Veluna">
 <meta property="og:description" content="Free, open-source music player for Windows and Linux. Zero ads, zero tracking.">
 <meta property="og:url" content="https://ishmweet.github.io/veluna/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://ishmweet.github.io/veluna/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Veluna">
+<meta name="twitter:image" content="https://ishmweet.github.io/veluna/og-image.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111010'/%3E%3Cpolygon points='5,8 9,8 16,23 23,8 27,8 16,25' fill='%23d4cfcf'/%3E%3Cpolygon points='9,8 12.5,8 16,19 19.5,8 23,8 16,23' fill='%23111010'/%3E%3C/svg%3E" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,16 +25,13 @@
   --bg2:   #0a0a0a;
   --bg3:   #111111;
   --bg4:   #1a1a1a;
-  --bg5:   #222222;
   --fg:    #f0ece9;
   --fg2:   #b8b2ae;
   --fg3:   #8a8480;
   --fg4:   #5a5654;
-  --fg5:   #333030;
   --bdr:   #1a1a1a;
   --bdr2:  #242424;
   --bdr3:  #2e2e2e;
-  --accent: #f0ece9;
   --nav-h: 68px;
   --max:   1080px;
   --mono:  'Geist', sans-serif;
@@ -51,7 +50,6 @@ body {
   font-family: var(--sans);
   line-height: 1.65;
   overflow-x: hidden;
-
 }
 
 body::before {
@@ -129,6 +127,7 @@ nav.scrolled { background: var(--bg2); }
 .gh-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
 .dl-nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
   font-size: 13px; font-weight: 600; color: var(--bg);
   font-family: var(--mono); letter-spacing: .08em;
   padding: 9px 18px; border-radius: 6px;
@@ -239,15 +238,15 @@ nav.scrolled { background: var(--bg2); }
 /* Vinyl record */
 .hero-vinyl-wrap {
   position: absolute;
-  right: -30px; top: 50%;
+  right: clamp(20px, 6vw, 80px); top: 50%;
   transform: translateY(-50%);
-  width: clamp(420px, 50vw, 680px);
-  height: clamp(420px, 50vw, 680px);
+  width: clamp(320px, 42vw, 580px);
+  height: clamp(320px, 42vw, 580px);
   pointer-events: none;
 }
 .hero-vinyl {
   width: 100%; height: 100%;
-  opacity: .09;
+  opacity: .13;
   animation: vinyl-spin 28s linear infinite;
 }
 @keyframes vinyl-spin {
@@ -266,7 +265,7 @@ nav.scrolled { background: var(--bg2); }
 }
 
 @media (max-width: 900px) {
-  .hero-vinyl-wrap { opacity: .5; right: -140px; }
+  .hero-vinyl-wrap { opacity: .6; right: clamp(10px, 3vw, 40px); }
 }
 
 .hero-bg-lines {
@@ -501,8 +500,6 @@ nav.scrolled { background: var(--bg2); }
   font-family: var(--mono); font-size: 11px; color: var(--fg3);
   letter-spacing: .06em;
 }
-.version-dot { display: none; }
-
 .compare-wrap {
   margin-top: 44px; border-radius: var(--r-lg);
   border: 1px solid var(--bdr); overflow: hidden;
@@ -786,7 +783,7 @@ footer {
 #back-top svg { width: 14px; height: 14px; }
 
 @media (max-width: 900px) {
-  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .hero-inner { gap: 40px; }
   .hero-title { font-size: clamp(52px, 11vw, 80px); }
   .hero-bg-lines { display: none; }
   .nav-links { display: none; }
@@ -815,11 +812,11 @@ footer {
     align-items: flex-start;
   }
   .hero-vinyl-wrap {
-    right: -100px;
-    opacity: .4;
-    width: clamp(280px, 80vw, 360px);
-    height: clamp(280px, 80vw, 360px);
-    top: 44%;
+    right: -20px;
+    opacity: .35;
+    width: clamp(220px, 70vw, 320px);
+    height: clamp(220px, 70vw, 320px);
+    top: 50%;
   }
   .hero-tonearm { display: none; }
   .hero-eyebrow { font-size: 10px; margin-bottom: 24px; }
@@ -829,7 +826,9 @@ footer {
   .btn-primary, .btn-secondary { width: 100%; justify-content: center; font-size: 14px; padding: 15px 20px; }
 
   /* nav */
-  .dl-nav-btn { display: none; }
+  .dl-nav-btn { padding: 8px 10px; }
+  .dl-nav-btn span { display: none; }
+  .dl-nav-btn .dl-nav-icon { display: inline-block !important; }
   .gh-btn span { display: none; }
   .gh-btn { padding: 8px 10px; }
 
@@ -924,7 +923,10 @@ footer {
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48v-1.7C6.73 19.91 6.14 18 6.14 18c-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
         <span>GitHub</span>
       </a>
-      <a href="#download" class="dl-nav-btn">Download</a>
+      <a href="#download" class="dl-nav-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:none" class="dl-nav-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download</span>
+      </a>
       <button class="ham" id="ham" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -946,6 +948,7 @@ footer {
   <a href="#faq"      onclick="closeMobile()">faq</a>
   <a href="#community" onclick="closeMobile()">community</a>
   <a href="#license"   onclick="closeMobile()">license</a>
+  <a href="#donate"    onclick="closeMobile()">donate</a>
   <a href="#download" class="m-dl" onclick="closeMobile()">Get Veluna</a>
 </div>
 
@@ -1190,7 +1193,7 @@ footer {
 <section id="faq" class="section">
   <div class="section-inner">
     <span class="s-label reveal">Support</span>
-    <h2 class="s-head reveal d1">FAQ's</h2>
+    <h2 class="s-head reveal d1">FAQs</h2>
     <p class="s-sub reveal d2">Everything you need to know about Veluna.</p>
     <div class="faq-cols reveal d3">
       <div>
@@ -1474,7 +1477,7 @@ footer {
     btn.addEventListener('click', function() {
       var ans = btn.nextElementSibling;
       var expanded = btn.getAttribute('aria-expanded') === 'true';
-      btn.closest('.faq-cols').querySelectorAll('.faq-q').forEach(function(b) {
+      btn.closest('.faq-cols > div').querySelectorAll('.faq-q').forEach(function(b) {
         if (b !== btn) {
           b.setAttribute('aria-expanded', 'false');
           b.nextElementSibling.style.maxHeight = null;
