@@ -1,5 +1,9 @@
 # Veluna
 
+<p align="center">
+  <img src="https://github.com/ishmweet/veluna/blob/main/src-tauri/icons/128x128%402x.png?raw=true" alt="Veluna logo" width="128" />
+</p>
+
 > A free, open-source desktop music player built for people who actually listen.
 > Stream from YouTube. Download for offline use. Own your music — no accounts, no ads, no subscriptions.
 
