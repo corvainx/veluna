@@ -746,7 +746,7 @@ function YtImportModal({
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
-        const [title, artist,  id] = l.split('====');
+        const [title, artist, id] = l.split('====');
         return {
           title: title?.trim() || 'Unknown',
           artist: artist?.trim() || '',
@@ -3007,7 +3007,7 @@ export default function Veluna() {
 
   
   return (
-    <div className="flex flex-col h-screen w-full font-sans overflow-hidden" style={{background:'#111010',color:'#d4cfcf',height:'100vh',display:'flex',flexDirection:'column',overflow:'hidden'}}
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",fontFamily:"system-ui,sans-serif",overflow:"hidden"}}
       onContextMenu={e => e.preventDefault()}>
       <style>{`
         @keyframes loadbar { 0%{transform:translateX(-100%)} 50%{transform:translateX(150%)} 100%{transform:translateX(400%)} }
@@ -3033,109 +3033,157 @@ export default function Veluna() {
         .ctx-menu { animation: popIn 0.15s cubic-bezier(0.2,0,0,1) both; }
         .playlist-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .playlist-card:hover { transform: translateY(-2px); }
-        /* Veluna Ash Monochrome — palette override */
+
+        /* ═══ VELUNA ASH MONOCHROME THEME ═══ */
         html,body,#root{background:#111010!important;color:#d4cfcf!important;}
-        .text-white{color:#d4cfcf!important;}
-        .bg-\[\#050505\]{background-color:#111010!important;}
-        .bg-\[\#0a0a0a\]{background-color:#161414!important;}
-        .bg-\[\#0e0e0e\]{background-color:#1e1c1c!important;}
-        .bg-\[\#0d0d0d\]{background-color:#161414!important;}
-        .bg-\[\#111\]{background-color:#1e1c1c!important;}
+
+        /* Backgrounds */
+        .bg-\[\#050505\],.bg-\[\#0a0a0a\]{background-color:#111010!important;}
+        .bg-\[\#0e0e0e\],.bg-\[\#0d0d0d\],.bg-\[\#111\]{background-color:#1e1c1c!important;}
         .bg-neutral-950{background-color:#111010!important;}
-        .bg-neutral-900,.bg-neutral-900\/60,.bg-neutral-900\/50,.bg-neutral-900\/40,.bg-neutral-900\/20{background-color:#161414!important;}
-        .bg-neutral-800,.bg-neutral-800\/60,.bg-neutral-800\/70,.bg-neutral-800\/40{background-color:#1e1c1c!important;}
+        .bg-neutral-900{background-color:#161414!important;}
+        .bg-neutral-900\/20,.bg-neutral-900\/40,.bg-neutral-900\/50,.bg-neutral-900\/60,.bg-neutral-900\/80{background-color:#161414!important;}
+        .bg-neutral-800{background-color:#1e1c1c!important;}
+        .bg-neutral-800\/40,.bg-neutral-800\/50,.bg-neutral-800\/60,.bg-neutral-800\/70{background-color:#1e1c1c!important;}
         .bg-white\/5,.bg-white\/\[0\.04\],.bg-white\/\[0\.03\]{background-color:#1e1c1c!important;}
+        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-900\/50:hover,.hover\:bg-neutral-900\/60:hover,
+        .hover\:bg-white\/5:hover,.hover\:bg-white\/\[0\.04\]:hover,.hover\:bg-neutral-800:hover{background-color:#1e1c1c!important;}
+
+        /* Text */
+        .text-white{color:#d4cfcf!important;}
         .text-neutral-100,.text-neutral-200{color:#d4cfcf!important;}
         .text-neutral-300{color:#8a8585!important;}
         .text-neutral-400{color:#5a5656!important;}
         .text-neutral-500{color:#3a3838!important;}
         .text-neutral-600{color:#2e2c2c!important;}
         .text-neutral-700{color:#252323!important;}
-        .border-neutral-800,.border-neutral-800\/60,.border-neutral-800\/50,.border-neutral-800\/40{border-color:#1e1c1c!important;}
-        .border-neutral-700,.border-neutral-700\/60{border-color:#252323!important;}
-        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-900\/60:hover,.hover\:bg-neutral-900\/50:hover,
-        .hover\:bg-white\/5:hover,.hover\:bg-white\/\[0\.04\]:hover,.hover\:bg-neutral-800:hover{background-color:#1e1c1c!important;}
         .hover\:text-white:hover,.hover\:text-neutral-200:hover{color:#d4cfcf!important;}
         .hover\:text-neutral-300:hover{color:#8a8585!important;}
+        .hover\:text-neutral-400:hover{color:#5a5656!important;}
+
+        /* Borders */
+        .border-neutral-800,.border-neutral-800\/40,.border-neutral-800\/50,.border-neutral-800\/60{border-color:#1e1c1c!important;}
+        .border-neutral-700,.border-neutral-700\/50,.border-neutral-700\/60{border-color:#252323!important;}
+        .border-neutral-600{border-color:#2e2c2c!important;}
+        .hover\:border-neutral-700:hover{border-color:#252323!important;}
+        .hover\:border-neutral-600:hover{border-color:#2e2c2c!important;}
+        .divide-neutral-800>*+*{border-color:#1e1c1c!important;}
+
+        /* Accent */
         .bg-white{background-color:#d4cfcf!important;}
-        .shadow-\[inset_2px_0_0_\#d4cfcf\]{box-shadow:inset 2px 0 0 rgba(212,207,207,0.5)!important;}
-        ::-webkit-scrollbar{width:4px;}
+        .hover\:bg-\[\#d4cfcf\]:hover{background-color:#d4cfcf!important;}
+
+        /* Input styling */
+        input,textarea,select{background:#1e1c1c!important;color:#d4cfcf!important;border-color:#252323!important;}
+        input::placeholder,textarea::placeholder{color:#3a3838!important;}
+
+        /* Scrollbar */
+        ::-webkit-scrollbar{width:4px;height:4px;}
         ::-webkit-scrollbar-track{background:transparent;}
         ::-webkit-scrollbar-thumb{background:#252323;border-radius:2px;}
         ::-webkit-scrollbar-thumb:hover{background:#2e2c2c;}
-        ::selection{background:rgba(212,207,207,0.2);color:#d4cfcf;}
-      `}</style>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" crossOrigin="anonymous" />
+        ::selection{background:rgba(212,207,207,0.2)!important;color:#d4cfcf!important;}
 
-      <div style={{display:'flex',flex:'1 1 0%',overflow:'hidden'}}>
+        /* Sidebar nav active left border (replaces neon inset-shadow) */
+        .shadow-\[inset_2px_0_0_\#d4cfcf\]{box-shadow:inset 2px 0 0 rgba(212,207,207,0.5)!important;}
+      `}</style>
+
+      <div style={{display:"flex",flex:"1 1 0%",overflow:"hidden"}}>
 
         {}
-        <div style={{width:'220px',flexShrink:0,display:'flex',flexDirection:'column',background:'#161414',borderRight:'0.5px solid #1e1c1c',padding:'18px 10px 14px',zIndex:10,overflow:'visible',position:'relative'}}>
-
-          {/* Logo */}
-          <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'28px',flexShrink:0,cursor:'pointer',padding:'0 4px'}} onClick={() => navigateTo('home')}>
-            <svg width="26" height="26" viewBox="0 0 28 28" fill="none" style={{flexShrink:0}}>
-              <rect width="28" height="28" rx="6" fill="#d4cfcf"/>
-              <polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#111010"/>
-              <polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="#d4cfcf"/>
-            </svg>
-            <span style={{fontFamily:"'IBM Plex Mono',monospace",letterSpacing:'0.14em',fontSize:'12px',fontWeight:600,color:'#d4cfcf',textTransform:'uppercase',margin:0}}>veluna</span>
+        <div style={{width:"220px",flexShrink:0,display:"flex",flexDirection:"column",background:"#161414",borderRight:"0.5px solid #1e1c1c",padding:"18px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
+          {}
+          <div className="flex items-center gap-2 mb-6 shrink-0">
+            <div style={{display:"flex",alignItems:"center",gap:"10px",cursor:"pointer"}} onClick={() => navigateTo('home')}>
+              <svg width="24" height="24" viewBox="0 0 28 28" fill="none" style={{flexShrink:0}}><rect width="28" height="28" rx="6" fill="#d4cfcf"/><polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#111010"/><polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="#d4cfcf"/></svg>
+              <span style={{fontFamily:"'IBM Plex Mono',monospace",letterSpacing:"0.14em",fontSize:"11px",fontWeight:600,color:"#d4cfcf",textTransform:"uppercase"}}>veluna</span>
+            </div>
           </div>
 
-          {/* Nav */}
-          <nav style={{display:'flex',flexDirection:'column',gap:'1px',flexShrink:0}}>
+          {}
+          <div className="relative mb-4 shrink-0 overflow-visible" onClick={e => e.stopPropagation()}>
+            <div
+              onClick={() => setShowSleepPopover(o => !o)}
+              className='flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer border text-sm font-medium w-full'
+              style={sleepTimer>0?{background:'rgba(245,158,11,0.1)',borderColor:'rgba(245,158,11,0.3)',color:'#f59e0b',border:'1px solid rgba(245,158,11,0.3)'}:{background:'transparent',border:'none',color:'#2e2c2c'}}>
+              <Moon size={14} className={sleepTimer > 0 ? 'animate-pulse text-amber-400' : ''} />
+              <span className="flex-1">{sleepTimer > 0 ? 'Sleep in ' + Math.ceil(sleepTimer / 60) + 'm' : 'Sleep Timer'}</span>
+              {sleepTimer > 0
+                ? <button onClick={e => { e.stopPropagation(); cancelSleepTimer(); }} className="text-xs text-neutral-500 hover:text-red-400 px-1"><X size={11} /></button>
+                : <ChevronDown size={13} className={`transition-transform ${showSleepPopover ? 'rotate-180' : ''}`} />}
+            </div>
+            {showSleepPopover && (
+              <div className="absolute top-full left-0 mt-2 z-[9999]">
+                <SleepTimerPopover
+                  sleepTimer={sleepTimer}
+                  onSet={setSleepTimerMinutes}
+                  onCancel={cancelSleepTimer}
+                  onClose={() => setShowSleepPopover(false)}
+                />
+              </div>
+            )}
+          </div>
+
+          <nav className="flex flex-col gap-1 shrink-0">
             {([
-              {id:'home',      label:'Home',     icon:Home},
-              {id:'downloads', label:'Offline',  icon:HardDrive},
-              {id:'stats',     label:'Stats',    icon:BarChart2},
-              {id:'settings',  label:'Settings', icon:Settings},
-            ] as {id:string;label:string;icon:React.ComponentType<{size?:number;style?:React.CSSProperties}>}[]).map(({id,label,icon:Icon}) => {
-              const active = activeNav === id;
-              return (
-                <button key={id} onClick={() => navigateTo(id)} style={{display:'flex',alignItems:'center',gap:'11px',padding:'9px 12px',borderRadius:'7px',border:'none',background:active?'rgba(212,207,207,0.07)':'transparent',color:active?'#d4cfcf':'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:active?600:500,transition:'background 0.15s,color 0.15s'}}>
-                  <Icon size={16} style={{flexShrink:0,opacity:active?1:0.65}} />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-            <button onClick={() => setIsQueueOpen(o => !o)} style={{display:'flex',alignItems:'center',gap:'11px',padding:'9px 12px',borderRadius:'7px',border:'none',background:isQueueOpen?'rgba(212,207,207,0.07)':'transparent',color:isQueueOpen?'#d4cfcf':'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:isQueueOpen?600:500,transition:'background 0.15s,color 0.15s'}}>
-              <ListOrdered size={16} style={{flexShrink:0,opacity:isQueueOpen?1:0.65}} />
-              <span style={{flex:1}}>Queue</span>
-              {queue.length > 0 && <span key={queuePulseKey} className="queue-badge-pulse" style={{background:'rgba(212,207,207,0.15)',color:'#d4cfcf',fontSize:'10px',fontWeight:700,padding:'1px 6px',borderRadius:'4px',fontFamily:"'IBM Plex Mono',monospace"}}>{queue.length}</span>}
+              { id: 'home', label: 'Home', icon: Home },
+              { id: 'downloads', label: 'Offline', icon: HardDrive },
+              { id: 'stats', label: 'Stats', icon: BarChart2 },
+              { id: 'settings', label: 'Settings', icon: Settings },
+            ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]).map(({ id, label, icon: Icon }) => (
+              <button key={id} onClick={() => navigateTo(id)}
+                className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 w-full text-left
+                  ${activeNav === id ? 'bg-[#d4cfcf]/10 text-[#d4cfcf]' : 'text-neutral-400 hover:text-[#d4cfcf] hover:bg-neutral-800/40'}`}
+                style={activeNav===id?{background:'rgba(212,207,207,0.07)',color:'#d4cfcf',border:'none',outline:'none'}:{color:'#5a5656',border:'none',outline:'none',background:'transparent'}}>
+                <Icon size={20} className={activeNav === id ? 'text-[#d4cfcf]' : 'opacity-60'} />
+                <span className="font-medium">{label}</span>
+              </button>
+            ))}
+            <button onClick={() => setIsQueueOpen(o => !o)}
+              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 w-full text-left
+                ${isQueueOpen ? 'bg-[#d4cfcf]/10 text-[#d4cfcf]' : 'text-neutral-400 hover:text-[#d4cfcf] hover:bg-neutral-800/40'}`}
+              style={isQueueOpen?{background:'rgba(212,207,207,0.07)',color:'#d4cfcf',border:'none',outline:'none'}:{color:'#5a5656',border:'none',outline:'none',background:'transparent'}}>
+              <ListOrdered size={20} className={isQueueOpen ? 'text-[#d4cfcf]' : 'opacity-60'} />
+              <span className="font-medium">Queue</span>
+              {queue.length > 0 && <span key={queuePulseKey} className="ml-auto bg-[#d4cfcf] text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none queue-badge-pulse">{queue.length}</span>}
             </button>
           </nav>
 
-          {/* Divider */}
-          <div style={{height:'0.5px',background:'#1e1c1c',margin:'14px 4px 10px'}} />
-
-          {/* Playlists */}
-          <div style={{display:'flex',flexDirection:'column',flex:'1 1 0%',minHeight:0}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 2px 6px',flexShrink:0}}>
-              <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }} style={{display:'flex',alignItems:'center',gap:'8px',flex:1,padding:'5px 10px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#d4cfcf':'#3a3838',fontSize:'9px',fontWeight:600,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:'0.14em',textTransform:'uppercase',transition:'color 0.15s'}}>
-                PLAYLISTS
-                <ChevronRight size={11} style={{marginLeft:'auto',transition:'transform 0.2s',transform:sidebarPlaylistsExpanded?'rotate(90deg)':'none'}} />
+          {}
+          <div className="mt-5 flex flex-col flex-1 min-h-0">
+            <div className="flex items-center justify-between px-1 mb-2 shrink-0">
+              <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
+                className={`flex items-center gap-3 flex-1 py-2 px-3 rounded-lg transition-all duration-200 text-left ${activeNav === 'library' ? 'text-[#d4cfcf]' : 'text-neutral-400'}`}
+                style={activeNav==='library'?{color:'#d4cfcf',background:'transparent',border:'none'}:{color:'#5a5656',background:'transparent',border:'none'}}>
+                <ListMusic size={20} className={activeNav === 'library' ? 'text-[#d4cfcf]' : 'opacity-60'} />
+                <span className="font-medium">Playlists</span>
+                <ChevronRight size={14} className={`ml-auto transition-transform duration-200 ${sidebarPlaylistsExpanded ? 'rotate-90' : ''}`} />
               </button>
-              <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }} style={{padding:'4px',borderRadius:'4px',border:'none',background:'transparent',cursor:'pointer',color:'#2e2c2c'}} title="New playlist">
-                <PlusCircle size={13} />
+              <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
+                className="p-1.5 ml-1 text-neutral-600 hover:text-[#d4cfcf] transition-colors rounded-md hover:bg-neutral-900/50 shrink-0" title="New playlist">
+                <PlusCircle size={15} />
               </button>
             </div>
             {sidebarPlaylistsExpanded && (
-              <div style={{flex:'1 1 0%',overflowY:'auto',scrollbarWidth:'thin',scrollbarColor:'#252323 transparent'}}>
-                <div style={{display:'flex',flexDirection:'column',gap:'1px',paddingBottom:'8px'}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar -mx-1 px-1">
+                <div className="flex flex-col gap-0.5 pb-2">
                   {playlists.map(pl => {
-                    const isAct = openPlaylistId === pl.id && activeNav === 'library';
+                    const isOpen = openPlaylistId === pl.id && activeNav === 'library';
                     const cover = getPlaylistCover(pl);
                     return (
-                      <button key={pl.id} onClick={() => { setOpenPlaylistId(pl.id); navigateTo('library'); }} onContextMenu={e => openCtx(e, {type:'sidebar-playlist',playlist:pl})} style={{display:'flex',alignItems:'center',gap:'9px',padding:'6px 10px',borderRadius:'6px',border:'none',background:isAct?'rgba(212,207,207,0.06)':'transparent',color:isAct?'#d4cfcf':'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',transition:'background 0.15s,color 0.15s'}}>
-                        <div style={{width:'26px',height:'26px',borderRadius:'5px',overflow:'hidden',flexShrink:0,border:'0.5px solid #252323',background:'#1e1c1c',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                          {cover
-                            ? <img src={cover} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
-                            : pl.id === 'p1'
-                              ? <Heart size={11} style={{color:isAct?'#d4cfcf':'#5a5656',fill:isAct?'#d4cfcf':'none'}} />
-                              : <ListMusic size={11} style={{color:isAct?'#d4cfcf':'#3a3838'}} />}
+                      <button key={pl.id}
+                        onClick={() => { setOpenPlaylistId(pl.id); navigateTo('library'); }}
+                        onContextMenu={e => openCtx(e, { type: 'sidebar-playlist', playlist: pl })}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full text-left group
+                          ${isOpen ? 'bg-[#d4cfcf]/[0.08] text-[#d4cfcf] border border-[#d4cfcf]/15' : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/50 border border-transparent'}`}>
+                        <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 border border-neutral-800/60">
+                          {cover ? <img src={cover} className="w-full h-full object-cover" alt="" />
+                            : <div className={`w-full h-full flex items-center justify-center ${isOpen ? 'bg-[#d4cfcf]/15' : 'bg-neutral-800/60'}`}>
+                                {pl.id === 'p1' ? <Heart size={12} className={isOpen ? 'text-[#d4cfcf] fill-[#d4cfcf]' : 'text-neutral-500 group-hover:text-red-400'} /> : <ListMusic size={12} className={isOpen ? 'text-[#d4cfcf]' : 'text-neutral-500'} />}
+                              </div>}
                         </div>
-                        <span style={{fontSize:'12px',fontWeight:500,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pl.name}</span>
-                        {pl.tracks.length > 0 && <span style={{fontSize:'10px',fontFamily:"'IBM Plex Mono',monospace",color:isAct?'rgba(212,207,207,0.45)':'#2e2c2c',flexShrink:0}}>{pl.tracks.length}</span>}
+                        <span className="text-[13px] font-medium truncate flex-1">{pl.name}</span>
+                        {pl.tracks.length > 0 && <span className={`text-[10px] font-bold tabular-nums shrink-0 ${isOpen ? 'text-[#d4cfcf]/70' : 'text-neutral-700 group-hover:text-neutral-500'}`}>{pl.tracks.length}</span>}
                       </button>
                     );
                   })}
@@ -3144,27 +3192,15 @@ export default function Veluna() {
             )}
           </div>
 
-          {/* Sleep Timer */}
-          <div style={{flexShrink:0,marginTop:'10px',position:'relative'}} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowSleepPopover(o => !o)} style={{display:'flex',alignItems:'center',gap:'8px',width:'100%',padding:'7px 10px',borderRadius:'6px',border:'none',background:sleepTimer>0?'rgba(245,158,11,0.1)':'transparent',color:sleepTimer>0?'#f59e0b':'#2e2c2c',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'color 0.15s,background 0.15s'}}>
-              <Moon size={12} style={{flexShrink:0}} className={sleepTimer>0?'animate-pulse':''} />
-              <span style={{flex:1}}>{sleepTimer>0?('Sleep in ' + Math.ceil(sleepTimer/60) + 'm'):'Sleep Timer'}</span>
-              {sleepTimer>0
-                ? <button onClick={e=>{e.stopPropagation();cancelSleepTimer();}} style={{background:'none',border:'none',cursor:'pointer',color:'#6b7280',padding:'0 2px'}}><X size={11}/></button>
-                : <ChevronDown size={11} style={{transition:'transform 0.2s',transform:showSleepPopover?'rotate(180deg)':'none'}}/>}
-            </button>
-            {showSleepPopover && (
-              <div style={{position:'absolute',bottom:'100%',left:0,marginBottom:'4px',zIndex:9999}}>
-                <SleepTimerPopover sleepTimer={sleepTimer} onSet={setSleepTimerMinutes} onCancel={cancelSleepTimer} onClose={() => setShowSleepPopover(false)} />
-              </div>
-            )}
-          </div>
-
-          <ImportButton onSpotify={() => setShowCsvImportModal(true)} onYoutube={() => setShowYtImportModal(true)} onM3u={handleImportPlaylistM3u} />
+          <ImportButton
+            onSpotify={() => setShowCsvImportModal(true)}
+            onYoutube={() => setShowYtImportModal(true)}
+            onM3u={handleImportPlaylistM3u}
+          />
         </div>
 
         {}
-        <div className="flex-1 flex flex-col overflow-hidden relative" style={{background:'#111010'}}>
+        <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"#111010",overflow:"hidden",position:"relative"}}>
 
 
           <div className="flex items-center gap-3 px-6 pt-4 pb-0 shrink-0 z-20 relative">
@@ -4013,7 +4049,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div className={`shrink-0 bg-[#0a0a0a] border-l border-neutral-800/50 flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${isQueueOpen ? 'w-80' : 'w-0'}`}>
+        <div style={{flexShrink:0,background:"#161414",borderLeft:"0.5px solid #1e1c1c",display:"flex",flexDirection:"column",overflow:"hidden",width:isQueueOpen?"300px":"0",transition:"width 0.3s ease"}}>
           {isQueueOpen && (
             <>
               <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800/50 shrink-0">
@@ -4098,8 +4134,8 @@ export default function Veluna() {
       </div>
 
       {}
-      <div style={{height:'76px',background:'#161414',borderTop:'0.5px solid #1e1c1c',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 22px',position:'relative',zIndex:20,flexShrink:0}}>
-        {isPlaying && !isLoadingTrack && <div style={{position:'absolute',top:0,left:0,right:0,height:'1px',background:'rgba(212,207,207,0.12)'}} />}
+      <div style={{height:"76px",background:"#161414",borderTop:"0.5px solid #1e1c1c",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",position:"relative",zIndex:20,flexShrink:0}}>
+        {isPlaying && !isLoadingTrack && <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(212,207,207,0.15)"}} />}
         {isLoadingTrack && (
           <div className="absolute top-0 left-0 w-full h-[2px] overflow-hidden bg-neutral-800/40">
             <div className="h-full bg-[#d4cfcf]/80" style={{ animation: 'loadbar 1.4s ease-in-out infinite', width: '35%' }} />
