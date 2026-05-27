@@ -93,8 +93,7 @@ function clampMenu(x: number, y: number, w = 260, h = 320) {
 }
 
 const SleepTimerPopover = React.memo(({
-  sleepTimer, onSet, onCancel, onClose,
-}: { sleepTimer: number; onSet: (m: number) => void; onCancel: () => void; onClose: () => void }) => {
+  sleepTimer, onSet, onCancel, onClose }: { sleepTimer: number; onSet: (m: number) => void; onCancel: () => void; onClose: () => void }) => {
   const [input, setInput] = useState('');
   const presets = [5, 10, 15, 20, 30, 45, 60, 90];
   return (
@@ -153,8 +152,7 @@ type TrackRowProps = {
 const TrackRow = React.memo(({
   track, index, showRemove, onRemove,
   isActive, isHovered, isLoadingTrack, isPlaying, isLiked, isDownloading,
-  onPlay, onHoverEnter, onHoverLeave, onLike, onDownload, onCtx,
-}: TrackRowProps) => (
+  onPlay, onHoverEnter, onHoverLeave, onLike, onDownload, onCtx }: TrackRowProps) => (
   <div
     className={`flex items-center gap-4 px-4 py-3.5 rounded-lg cursor-pointer transition-all duration-150 group
       ${isActive ? 'bg-[#d4cfcf]/[0.07] border border-[#d4cfcf]/20' : 'hover:bg-white/5 border border-transparent'}`}
@@ -225,8 +223,7 @@ const WaveformBar = React.memo(({ waveform, progressPercent, isDragging }: { wav
           style={{
             height: `${Math.max(8, (v / max) * 100)}%`,
             background: (i / waveform.length) * 100 <= progressPercent ? '#d4cfcf' : '#252323',
-            transition: isDragging ? 'none' : 'background 0.3s',
-          }} />
+            transition: isDragging ? 'none' : 'background 0.3s' }} />
       ))}
     </div>
   );
@@ -296,8 +293,7 @@ const ThemedSelect = ({ value, options, onChange }: {
         border: '1px solid rgba(212,207,207,0.25)',
         borderRadius: '12px',
         overflow: 'hidden',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.99), 0 0 0 1px rgba(212,207,207,0.08)',
-      }}>
+        boxShadow: '0 16px 48px rgba(0,0,0,0.99), 0 0 0 1px rgba(212,207,207,0.08)' }}>
       {options.map((opt, i) => (
         <button key={opt.value}
           onMouseDown={e => { e.preventDefault(); onChange(opt.value); setOpen(false); }}
@@ -331,8 +327,7 @@ const ThemedSelect = ({ value, options, onChange }: {
 
 function ImportResultModal({
   matchedCount, failedCount,
-  onSave, onClose,
-}: { matchedCount: number; failedCount: number; onSave: (name: string, desc: string) => void; onClose: () => void }) {
+  onSave, onClose }: { matchedCount: number; failedCount: number; onSave: (name: string, desc: string) => void; onClose: () => void }) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -446,8 +441,7 @@ function CsvImportModal({
   onSavePlaylist,
   showToast,
   onProgress,
-  onMatchingDone,
-}: {
+  onMatchingDone }: {
   onClose: () => void;
   onSavePlaylist: (name: string, desc: string, tracks: Track[]) => void;
   showToast: (m: string) => void;
@@ -551,8 +545,7 @@ function CsvImportModal({
           const t: Track = {
             id: i, title: track.title, artist: track.artist,
             duration: '0:00', url: `https://youtube.com/watch?v=${cleanId}`,
-            cover: `https://i.ytimg.com/vi/${cleanId}/mqdefault.jpg`,
-          };
+            cover: `https://i.ytimg.com/vi/${cleanId}/mqdefault.jpg` };
           matched.push(t);
           setResults(prev => prev.map((r, idx) => idx === i ? { ...r, status: 'matched', url: t.url, cover: t.cover } : r));
         } else {
@@ -575,8 +568,7 @@ function CsvImportModal({
       running: 0,
       queue: [] as (() => void)[],
       acquire() { return new Promise<void>(r => { if (this.running < CONCURRENCY) { this.running++; r(); } else { this.queue.push(r); } }); },
-      release() { this.running--; const next = this.queue.shift(); if (next) { this.running++; next(); } },
-    };
+      release() { this.running--; const next = this.queue.shift(); if (next) { this.running++; next(); } } };
 
     await Promise.all(initial.map(async (track, i) => {
       await semaphore.acquire();
@@ -719,8 +711,7 @@ function CsvImportModal({
 function YtImportModal({
   onClose,
   onSavePlaylist,
-  showToast,
-}: {
+  showToast }: {
   onClose: () => void;
   onSavePlaylist: (name: string, desc: string, tracks: Track[]) => void;
   showToast: (m: string) => void;
@@ -751,8 +742,7 @@ function YtImportModal({
           title: title?.trim() || 'Unknown',
           artist: artist?.trim() || '',
           id: id?.trim() || '',
-          cover: id?.trim() ? `https://i.ytimg.com/vi/${id.trim()}/mqdefault.jpg` : '',
-        };
+          cover: id?.trim() ? `https://i.ytimg.com/vi/${id.trim()}/mqdefault.jpg` : '' };
       }).filter(t => t.id);
 
       if (parsed.length === 0) { showToast('No tracks found'); setPhase('input'); return; }
@@ -837,8 +827,7 @@ function YtImportModal({
         onSave={(name, desc) => {
           const tracks: Track[] = results.map((r, i) => ({
             id: i, title: r.title, artist: r.artist, duration: '0:00',
-            url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
-          }));
+            url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover }));
           onSavePlaylist(name, desc, tracks);
           setPhase('done');
           onClose();
@@ -896,8 +885,7 @@ function SettingsPanel({
   appVersion,
   lyricsSource, setLyricsSource,
   trayEnabled, setTrayEnabled,
-  audioDevices, setAudioDevices,
-}: {
+  audioDevices, setAudioDevices }: {
   downloadQuality: string; setDownloadQuality: (q: string) => void;
   downloadPath: string; handleSelectDirectory: () => void;
   downloadFormat: string; setDownloadFormat: (f: string) => void;
@@ -1289,8 +1277,7 @@ function SettingsPanel({
                         style={{
                           left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
                           width: `${(Math.abs(eq[key]) / 24) * 100}%`,
-                          background: eq[key] >= 0 ? '#d4cfcf' : '#6b7280',
-                        }} />
+                          background: eq[key] >= 0 ? '#d4cfcf' : '#6b7280' }} />
                       {/* thumb */}
                       <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-white bg-[#0a0a0a] shadow pointer-events-none transition-all"
                         style={{ left: `calc(${((eq[key] + 12) / 24) * 100}% - 8px)` }} />
@@ -1408,8 +1395,7 @@ function SettingsPanel({
 function DownloadsPanel({
   downloadPath, onPlayLocalTrack, onDeleteLocalTrack,
   currentTrackPath, isPlaying, isLoadingTrack,
-  onOpenInFileManager, onExportM3u, onChangeFolder,
-}: {
+  onOpenInFileManager, onExportM3u, onChangeFolder }: {
   downloadPath: string; onPlayLocalTrack: (t: LocalTrack, list?: LocalTrack[], idx?: number) => void;
   onDeleteLocalTrack: (t: LocalTrack) => void; currentTrackPath: string | null;
   isPlaying: boolean; isLoadingTrack: boolean;
@@ -1947,8 +1933,7 @@ export default function Veluna() {
       artist:       currentTrack.artist ?? '',
       coverUrl:     currentTrack.cover  ?? '',
       durationSecs: parseDuration(currentTrack.duration ?? '0:00'),
-      playing:      isPlaying,
-    }).catch(() => {});
+      playing:      isPlaying }).catch(() => {});
   }, [currentTrack, isPlaying]);
 
   
@@ -2142,8 +2127,7 @@ export default function Veluna() {
         downloadQuality, downloadFormat, downloadPath, backupPath,
         embedThumbnail, duplicateDetect,
         loudnormEnabled, streamQuality, skipSilence,
-        searchHistory, quickPicks, currentTrack,
-      };
+        searchHistory, quickPicks, currentTrack };
       const json = JSON.stringify(data, null, 2);
       const sep = navigator.platform.includes('Win') ? '\\' : '/';
       const resolvedBase = backupPath || downloadPath || '';
@@ -2325,8 +2309,7 @@ export default function Veluna() {
       id: -1, title: local.title,
       artist: local.artist || local.extension.toUpperCase(),
       duration: local.duration || '0:00',
-      url: `local://${local.path}`, cover: '',
-    };
+      url: `local://${local.path}`, cover: '' };
     setCurrentTrack(synth); currentTrackRef.current = synth;
 
     
@@ -2375,8 +2358,7 @@ export default function Veluna() {
       const tracks = playlist.tracks.map(t => ({
         title: t.title, artist: t.artist || '',
         url: t.url,
-        duration_secs: t.duration ? Math.round(parseDurationToSeconds(t.duration)) : 0,
-      }));
+        duration_secs: t.duration ? Math.round(parseDurationToSeconds(t.duration)) : 0 }));
       const safeName = playlist.name.replace(/[/\\:*?"<>|]/g, '_');
       const path = `${downloadPath}/${safeName}.m3u`;
       await invoke('export_playlist_m3u', { tracks, path });
@@ -2432,8 +2414,7 @@ export default function Veluna() {
               artist: pendingArtist,
               duration: '0:00',
               url,
-              cover: ytId ? `https://i.ytimg.com/vi/${ytId}/mqdefault.jpg` : '',
-            });
+              cover: ytId ? `https://i.ytimg.com/vi/${ytId}/mqdefault.jpg` : '' });
             pendingTitle = '';
             pendingArtist = '';
           }
@@ -2445,8 +2426,7 @@ export default function Veluna() {
           id: `pl_${Date.now()}`,
           name,
           description: `Imported from ${file.name}`,
-          tracks,
-        }]);
+          tracks }]);
         showToast(`Imported "${name}" — ${tracks.length} track${tracks.length !== 1 ? 's' : ''}`);
       } catch (err) {
         showToast(`Import failed: ${err}`);
@@ -3007,7 +2987,7 @@ export default function Veluna() {
 
   
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",fontFamily:"system-ui,sans-serif",overflow:"hidden"}}
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",overflow:"hidden",fontFamily:"system-ui,sans-serif"}}
       onContextMenu={e => e.preventDefault()}>
       <style>{`
         @keyframes loadbar { 0%{transform:translateX(-100%)} 50%{transform:translateX(150%)} 100%{transform:translateX(400%)} }
@@ -3034,22 +3014,21 @@ export default function Veluna() {
         .playlist-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .playlist-card:hover { transform: translateY(-2px); }
 
-        /* ═══ VELUNA ASH MONOCHROME THEME ═══ */
+        /* ════ VELUNA ASH MONOCHROME ════ */
         html,body,#root{background:#111010!important;color:#d4cfcf!important;}
-
-        /* Backgrounds */
-        .bg-\[\#050505\],.bg-\[\#0a0a0a\]{background-color:#111010!important;}
+        input,textarea,select{background:#1e1c1c!important;color:#d4cfcf!important;border-color:#252323!important;}
+        input::placeholder,textarea::placeholder{color:#3a3838!important;}
+        button{cursor:pointer;}
+        /* Bg overrides */
+        .bg-\[\#050505\],.bg-\[\#0a0a0a\],.bg-\[\#0f1115\]{background-color:#111010!important;}
         .bg-\[\#0e0e0e\],.bg-\[\#0d0d0d\],.bg-\[\#111\]{background-color:#1e1c1c!important;}
         .bg-neutral-950{background-color:#111010!important;}
-        .bg-neutral-900{background-color:#161414!important;}
-        .bg-neutral-900\/20,.bg-neutral-900\/40,.bg-neutral-900\/50,.bg-neutral-900\/60,.bg-neutral-900\/80{background-color:#161414!important;}
-        .bg-neutral-800{background-color:#1e1c1c!important;}
-        .bg-neutral-800\/40,.bg-neutral-800\/50,.bg-neutral-800\/60,.bg-neutral-800\/70{background-color:#1e1c1c!important;}
+        .bg-neutral-900,.bg-neutral-900\/20,.bg-neutral-900\/40,.bg-neutral-900\/50,.bg-neutral-900\/60,.bg-neutral-900\/80{background-color:#161414!important;}
+        .bg-neutral-800,.bg-neutral-800\/40,.bg-neutral-800\/50,.bg-neutral-800\/60,.bg-neutral-800\/70{background-color:#1e1c1c!important;}
         .bg-white\/5,.bg-white\/\[0\.04\],.bg-white\/\[0\.03\]{background-color:#1e1c1c!important;}
-        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-900\/50:hover,.hover\:bg-neutral-900\/60:hover,
-        .hover\:bg-white\/5:hover,.hover\:bg-white\/\[0\.04\]:hover,.hover\:bg-neutral-800:hover{background-color:#1e1c1c!important;}
-
-        /* Text */
+        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-900\/60:hover,.hover\:bg-neutral-900\/50:hover,
+        .hover\:bg-white\/5:hover,.hover\:bg-white\/\[0\.04\]:hover,.hover\:bg-neutral-800:hover,.hover\:bg-neutral-800\/80:hover{background-color:#1e1c1c!important;}
+        /* Text overrides */
         .text-white{color:#d4cfcf!important;}
         .text-neutral-100,.text-neutral-200{color:#d4cfcf!important;}
         .text-neutral-300{color:#8a8585!important;}
@@ -3060,52 +3039,40 @@ export default function Veluna() {
         .hover\:text-white:hover,.hover\:text-neutral-200:hover{color:#d4cfcf!important;}
         .hover\:text-neutral-300:hover{color:#8a8585!important;}
         .hover\:text-neutral-400:hover{color:#5a5656!important;}
-
-        /* Borders */
+        /* Border overrides */
         .border-neutral-800,.border-neutral-800\/40,.border-neutral-800\/50,.border-neutral-800\/60{border-color:#1e1c1c!important;}
         .border-neutral-700,.border-neutral-700\/50,.border-neutral-700\/60{border-color:#252323!important;}
         .border-neutral-600{border-color:#2e2c2c!important;}
         .hover\:border-neutral-700:hover{border-color:#252323!important;}
-        .hover\:border-neutral-600:hover{border-color:#2e2c2c!important;}
-        .divide-neutral-800>*+*{border-color:#1e1c1c!important;}
-
+        .divide-neutral-800>*+*,.divide-neutral-800\/50>*+*{border-color:#1e1c1c!important;}
         /* Accent */
         .bg-white{background-color:#d4cfcf!important;}
-        .hover\:bg-\[\#d4cfcf\]:hover{background-color:#d4cfcf!important;}
-
-        /* Input styling */
-        input,textarea,select{background:#1e1c1c!important;color:#d4cfcf!important;border-color:#252323!important;}
-        input::placeholder,textarea::placeholder{color:#3a3838!important;}
-
+        .text-black{color:#111010!important;}
         /* Scrollbar */
         ::-webkit-scrollbar{width:4px;height:4px;}
         ::-webkit-scrollbar-track{background:transparent;}
         ::-webkit-scrollbar-thumb{background:#252323;border-radius:2px;}
         ::-webkit-scrollbar-thumb:hover{background:#2e2c2c;}
         ::selection{background:rgba(212,207,207,0.2)!important;color:#d4cfcf!important;}
-
-        /* Sidebar nav active left border (replaces neon inset-shadow) */
-        .shadow-\[inset_2px_0_0_\#d4cfcf\]{box-shadow:inset 2px 0 0 rgba(212,207,207,0.5)!important;}
       `}</style>
 
-      <div style={{display:"flex",flex:"1 1 0%",overflow:"hidden"}}>
+      <div style={{display:"flex",flex:"1 1 0%",overflow:"hidden",minHeight:0}}>
 
         {}
-        <div style={{width:"220px",flexShrink:0,display:"flex",flexDirection:"column",background:"#161414",borderRight:"0.5px solid #1e1c1c",padding:"18px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
+        <div style={{width:"220px",flexShrink:0,display:"flex",flexDirection:"column",background:"#161414",borderRight:"0.5px solid #1e1c1c",padding:"16px 12px",zIndex:10,overflow:"visible",position:"relative"}}>
           {}
-          <div className="flex items-center gap-2 mb-6 shrink-0">
-            <div style={{display:"flex",alignItems:"center",gap:"10px",cursor:"pointer"}} onClick={() => navigateTo('home')}>
+          <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"24px",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:"10px",cursor:"pointer",flex:1}} onClick={() => navigateTo('home')}>
               <svg width="24" height="24" viewBox="0 0 28 28" fill="none" style={{flexShrink:0}}><rect width="28" height="28" rx="6" fill="#d4cfcf"/><polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#111010"/><polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="#d4cfcf"/></svg>
               <span style={{fontFamily:"'IBM Plex Mono',monospace",letterSpacing:"0.14em",fontSize:"11px",fontWeight:600,color:"#d4cfcf",textTransform:"uppercase"}}>veluna</span>
             </div>
           </div>
 
           {}
-          <div className="relative mb-4 shrink-0 overflow-visible" onClick={e => e.stopPropagation()}>
+          <div style={{position:"relative",marginBottom:"12px",flexShrink:0,overflow:"visible"}} onClick={e => e.stopPropagation()}>
             <div
               onClick={() => setShowSleepPopover(o => !o)}
-              className='flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer border text-sm font-medium w-full'
-              style={sleepTimer>0?{background:'rgba(245,158,11,0.1)',borderColor:'rgba(245,158,11,0.3)',color:'#f59e0b',border:'1px solid rgba(245,158,11,0.3)'}:{background:'transparent',border:'none',color:'#2e2c2c'}}>
+              style={sleepTimer>0?{display:'flex',alignItems:'center',gap:'8px',padding:'6px 10px',borderRadius:'6px',border:'1px solid rgba(245,158,11,0.3)',background:'rgba(245,158,11,0.08)',color:'#f59e0b',cursor:'pointer',fontSize:'12px',fontWeight:500,width:'100%'}:{display:'flex',alignItems:'center',gap:'8px',padding:'6px 10px',borderRadius:'6px',border:'1px solid transparent',background:'transparent',color:'#2e2c2c',cursor:'pointer',fontSize:'12px',fontWeight:500,width:'100%'}}>
               <Moon size={14} className={sleepTimer > 0 ? 'animate-pulse text-amber-400' : ''} />
               <span className="flex-1">{sleepTimer > 0 ? 'Sleep in ' + Math.ceil(sleepTimer / 60) + 'm' : 'Sleep Timer'}</span>
               {sleepTimer > 0
@@ -3113,7 +3080,7 @@ export default function Veluna() {
                 : <ChevronDown size={13} className={`transition-transform ${showSleepPopover ? 'rotate-180' : ''}`} />}
             </div>
             {showSleepPopover && (
-              <div className="absolute top-full left-0 mt-2 z-[9999]">
+              <div style={{position:"absolute",top:"100%",left:0,marginTop:"8px",zIndex:9999}}>
                 <SleepTimerPopover
                   sleepTimer={sleepTimer}
                   onSet={setSleepTimerMinutes}
@@ -3124,7 +3091,7 @@ export default function Veluna() {
             )}
           </div>
 
-          <nav className="flex flex-col gap-1 shrink-0">
+          <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0}}>
             {([
               { id: 'home', label: 'Home', icon: Home },
               { id: 'downloads', label: 'Offline', icon: HardDrive },
@@ -3132,41 +3099,36 @@ export default function Veluna() {
               { id: 'settings', label: 'Settings', icon: Settings },
             ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]).map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => navigateTo(id)}
-                className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 w-full text-left
-                  ${activeNav === id ? 'bg-[#d4cfcf]/10 text-[#d4cfcf]' : 'text-neutral-400 hover:text-[#d4cfcf] hover:bg-neutral-800/40'}`}
-                style={activeNav===id?{background:'rgba(212,207,207,0.07)',color:'#d4cfcf',border:'none',outline:'none'}:{color:'#5a5656',border:'none',outline:'none',background:'transparent'}}>
+                style={activeNav===id?{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'rgba(212,207,207,0.07)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:600}:{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:500}}>
                 <Icon size={20} className={activeNav === id ? 'text-[#d4cfcf]' : 'opacity-60'} />
                 <span className="font-medium">{label}</span>
               </button>
             ))}
             <button onClick={() => setIsQueueOpen(o => !o)}
-              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 w-full text-left
-                ${isQueueOpen ? 'bg-[#d4cfcf]/10 text-[#d4cfcf]' : 'text-neutral-400 hover:text-[#d4cfcf] hover:bg-neutral-800/40'}`}
-              style={isQueueOpen?{background:'rgba(212,207,207,0.07)',color:'#d4cfcf',border:'none',outline:'none'}:{color:'#5a5656',border:'none',outline:'none',background:'transparent'}}>
+              style={isQueueOpen?{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'rgba(212,207,207,0.07)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:600}:{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:500}}>
               <ListOrdered size={20} className={isQueueOpen ? 'text-[#d4cfcf]' : 'opacity-60'} />
               <span className="font-medium">Queue</span>
-              {queue.length > 0 && <span key={queuePulseKey} className="ml-auto bg-[#d4cfcf] text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none queue-badge-pulse">{queue.length}</span>}
+              {queue.length > 0 && <span key={queuePulseKey} className="queue-badge-pulse" style={{marginLeft:"auto",background:"rgba(212,207,207,0.15)",color:"#d4cfcf",fontSize:"10px",fontWeight:700,padding:"1px 6px",borderRadius:"4px",fontFamily:"'IBM Plex Mono',monospace"}}>{queue.length}</span>}
             </button>
           </nav>
 
           {}
-          <div className="mt-5 flex flex-col flex-1 min-h-0">
-            <div className="flex items-center justify-between px-1 mb-2 shrink-0">
+          <div style={{marginTop:"14px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 6px",flexShrink:0,borderBottom:"0.5px solid #1e1c1c",marginBottom:"6px"}}>
               <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
-                className={`flex items-center gap-3 flex-1 py-2 px-3 rounded-lg transition-all duration-200 text-left ${activeNav === 'library' ? 'text-[#d4cfcf]' : 'text-neutral-400'}`}
-                style={activeNav==='library'?{color:'#d4cfcf',background:'transparent',border:'none'}:{color:'#5a5656',background:'transparent',border:'none'}}>
+                style={{display:'flex',alignItems:'center',gap:'8px',flex:1,padding:'5px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#d4cfcf':'#3a3838',fontSize:'9px',fontWeight:600,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:'0.14em',textTransform:'uppercase'}}>
                 <ListMusic size={20} className={activeNav === 'library' ? 'text-[#d4cfcf]' : 'opacity-60'} />
                 <span className="font-medium">Playlists</span>
                 <ChevronRight size={14} className={`ml-auto transition-transform duration-200 ${sidebarPlaylistsExpanded ? 'rotate-90' : ''}`} />
               </button>
               <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                className="p-1.5 ml-1 text-neutral-600 hover:text-[#d4cfcf] transition-colors rounded-md hover:bg-neutral-900/50 shrink-0" title="New playlist">
+                style={{padding:"4px",marginLeft:"4px",border:"none",background:"transparent",cursor:"pointer",color:"#2e2c2c",borderRadius:"4px",flexShrink:0}} title="New playlist">
                 <PlusCircle size={15} />
               </button>
             </div>
             {sidebarPlaylistsExpanded && (
-              <div className="flex-1 overflow-y-auto custom-scrollbar -mx-1 px-1">
-                <div className="flex flex-col gap-0.5 pb-2">
+              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"#252323 transparent"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:"1px",paddingBottom:"8px"}}>
                   {playlists.map(pl => {
                     const isOpen = openPlaylistId === pl.id && activeNav === 'library';
                     const cover = getPlaylistCover(pl);
@@ -3174,16 +3136,15 @@ export default function Veluna() {
                       <button key={pl.id}
                         onClick={() => { setOpenPlaylistId(pl.id); navigateTo('library'); }}
                         onContextMenu={e => openCtx(e, { type: 'sidebar-playlist', playlist: pl })}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full text-left group
-                          ${isOpen ? 'bg-[#d4cfcf]/[0.08] text-[#d4cfcf] border border-[#d4cfcf]/15' : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/50 border border-transparent'}`}>
-                        <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 border border-neutral-800/60">
+                        style={isOpen?{display:'flex',alignItems:'center',gap:'9px',padding:'6px 8px',borderRadius:'6px',border:'none',background:'rgba(212,207,207,0.06)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'12px'}:{display:'flex',alignItems:'center',gap:'9px',padding:'6px 8px',borderRadius:'6px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'12px'}}>
+                        <div style={{width:"26px",height:"26px",borderRadius:"5px",overflow:"hidden",flexShrink:0,border:"0.5px solid #252323",background:"#1e1c1c",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {cover ? <img src={cover} className="w-full h-full object-cover" alt="" />
                             : <div className={`w-full h-full flex items-center justify-center ${isOpen ? 'bg-[#d4cfcf]/15' : 'bg-neutral-800/60'}`}>
-                                {pl.id === 'p1' ? <Heart size={12} className={isOpen ? 'text-[#d4cfcf] fill-[#d4cfcf]' : 'text-neutral-500 group-hover:text-red-400'} /> : <ListMusic size={12} className={isOpen ? 'text-[#d4cfcf]' : 'text-neutral-500'} />}
+                                {pl.id === 'p1' ? <Heart size={11} style={{color:isOpen?'#d4cfcf':'#5a5656',fill:isOpen?'#d4cfcf':'none'}} /> : <ListMusic size={11} style={{color:isOpen?'#d4cfcf':'#3a3838'}} />}
                               </div>}
                         </div>
                         <span className="text-[13px] font-medium truncate flex-1">{pl.name}</span>
-                        {pl.tracks.length > 0 && <span className={`text-[10px] font-bold tabular-nums shrink-0 ${isOpen ? 'text-[#d4cfcf]/70' : 'text-neutral-700 group-hover:text-neutral-500'}`}>{pl.tracks.length}</span>}
+                        {pl.tracks.length > 0 && <span style={{fontSize:'10px',fontFamily:"'IBM Plex Mono',monospace",color:isOpen?'rgba(212,207,207,0.45)':'#2e2c2c',flexShrink:0}}>{pl.tracks.length}</span>}
                       </button>
                     );
                   })}
@@ -3203,7 +3164,7 @@ export default function Veluna() {
         <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"#111010",overflow:"hidden",position:"relative"}}>
 
 
-          <div className="flex items-center gap-3 px-6 pt-4 pb-0 shrink-0 z-20 relative">
+          <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"12px 20px 10px",flexShrink:0,zIndex:20,position:"relative",borderBottom:"0.5px solid #191717"}}>
             <button
               onClick={() => {
                 if (activeNav === 'home' && tracks.length > 0) {
@@ -3214,15 +3175,12 @@ export default function Veluna() {
               }}
               disabled={activeNav === 'home' && tracks.length === 0}
               title="Go back"
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all duration-200
-                ${(activeNav !== 'home' || tracks.length > 0)
-                  ? 'text-white border-neutral-700 bg-neutral-900/80 hover:border-[#d4cfcf]/50 hover:text-[#d4cfcf] hover:bg-[#d4cfcf]/5 active:scale-95'
-                  : 'text-neutral-700 border-neutral-800/40 bg-neutral-900/30 cursor-not-allowed opacity-40'}`}
+              style={(activeNav!=='home'||tracks.length>0)?{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',borderRadius:'5px',border:'0.5px solid #252323',background:'#1e1c1c',color:'#8a8585',cursor:'pointer',fontSize:'12px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',borderRadius:'5px',border:'0.5px solid #1a1818',background:'transparent',color:'#252323',cursor:'not-allowed',fontSize:'12px',fontWeight:500,opacity:0.4}}
             >
               <ChevronLeft size={16} />
               <span>Back</span>
             </button>
-            <span className="text-xs text-neutral-600 font-medium uppercase tracking-widest">
+            <span style={{fontSize:"10px",color:"#3a3838",fontWeight:600,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:"0.14em",textTransform:"uppercase"}}>
               {activeNav === 'home' ? 'Home' : activeNav === 'downloads' ? 'Offline' : activeNav === 'settings' ? 'Settings' : activeNav === 'stats' ? 'Stats' : activeNav === 'library' ? (openPlaylistId ? 'Playlist' : 'Playlists') : activeNav}
             </span>
           </div>
@@ -3327,8 +3285,7 @@ export default function Veluna() {
                   // Map local files to Track shape for genre matching
                   const localAsTrack: Track[] = localTracksListRef.current.map((lt, i) => ({
                     id: -(i + 1), title: lt.title, artist: lt.artist || '',
-                    url: `local://${lt.path}`, cover: '', duration: lt.duration || '',
-                  }));
+                    url: `local://${lt.path}`, cover: '', duration: lt.duration || '' }));
 
                   // Build the fullest possible track pool:
                   // quickPicks + playHistory + ALL local files + ALL playlist tracks
@@ -3917,8 +3874,7 @@ export default function Veluna() {
                                     ? 'linear-gradient(180deg,#d4cfcf,#22cc0a)'
                                     : 'linear-gradient(180deg,rgba(212,207,207,0.65),rgba(212,207,207,0.3))',
                                 boxShadow: count > 0 && isToday ? '0 0 16px rgba(212,207,207,0.5)' : 'none',
-                                border: isToday && count > 0 ? '1px solid rgba(212,207,207,0.4)' : '1px solid transparent',
-                              }} />
+                                border: isToday && count > 0 ? '1px solid rgba(212,207,207,0.4)' : '1px solid transparent' }} />
                             <span className={`text-[11px] font-semibold ${isToday ? 'text-[#d4cfcf]' : 'text-neutral-500'}`}>{label}</span>
                             {isToday && <span className="text-[9px] text-[#d4cfcf]/60 font-bold -mt-1">TODAY</span>}
                           </div>
@@ -4049,7 +4005,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flexShrink:0,background:"#161414",borderLeft:"0.5px solid #1e1c1c",display:"flex",flexDirection:"column",overflow:"hidden",width:isQueueOpen?"300px":"0",transition:"width 0.3s ease"}}>
+        <div style={{flexShrink:0,background:'#161414',borderLeft:'0.5px solid #1e1c1c',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'280px':'0',transition:'width 0.3s ease'}}>
           {isQueueOpen && (
             <>
               <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800/50 shrink-0">
@@ -4134,11 +4090,11 @@ export default function Veluna() {
       </div>
 
       {}
-      <div style={{height:"76px",background:"#161414",borderTop:"0.5px solid #1e1c1c",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",position:"relative",zIndex:20,flexShrink:0}}>
-        {isPlaying && !isLoadingTrack && <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(212,207,207,0.15)"}} />}
+      <div style={{height:"76px",background:"#161414",borderTop:"0.5px solid #1e1c1c",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"relative",zIndex:20,flexShrink:0}}>
+        {isPlaying && !isLoadingTrack && <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(212,207,207,0.12)"}} />}
         {isLoadingTrack && (
-          <div className="absolute top-0 left-0 w-full h-[2px] overflow-hidden bg-neutral-800/40">
-            <div className="h-full bg-[#d4cfcf]/80" style={{ animation: 'loadbar 1.4s ease-in-out infinite', width: '35%' }} />
+          <div style={{position:"absolute",top:0,left:0,width:"100%",height:"2px",overflow:"hidden",background:"rgba(30,28,28,0.4)"}}>
+            <div style={{height:"100%",background:"rgba(212,207,207,0.6)",animation:"loadbar 1.4s ease-in-out infinite",width:"35%"}} />
           </div>
         )}
         {}
@@ -4171,7 +4127,7 @@ export default function Veluna() {
               </div>
               {!currentTrack.url.startsWith('local://') && (
                 <button onClick={() => toggleLikeTrack(currentTrack)} className="ml-1 p-1.5 focus:outline-none hover:scale-110 active:scale-95 transition-transform shrink-0">
-                  <Heart size={22} className={isTrackLiked(currentTrack.url) ? 'text-[#d4cfcf] fill-[#d4cfcf]' : 'text-neutral-400 hover:text-white'} />
+                  <Heart size={22} style={isTrackLiked(currentTrack.url)?{color:'#d4cfcf',fill:'#d4cfcf'}:{color:'#5a5656'}} />
                 </button>
               )}
               {currentTrack && !currentTrack.url.startsWith('local://') && (() => {
@@ -4196,16 +4152,16 @@ export default function Veluna() {
         {}
         <div className="flex flex-col items-center justify-center w-2/4 gap-2 max-w-2xl">
           <div className="flex items-center gap-5">
-            <button onClick={toggleShuffle} className={`transition-all duration-200 ${shuffle ? 'text-[#d4cfcf]' : 'text-neutral-600 hover:text-neutral-300'}`}><Shuffle size={20} /></button>
-            <button onClick={handleSkipBack} className={`transition-all duration-150 active:scale-90 ${currentTrack ? 'text-neutral-300 hover:text-[#d4cfcf]' : 'text-neutral-700 cursor-not-allowed'}`}><SkipBack size={24} /></button>
+            <button onClick={toggleShuffle} style={shuffle?{color:'#d4cfcf'}:{color:'#3a3838'}}><Shuffle size={20} /></button>
+            <button onClick={handleSkipBack} style={currentTrack?{color:'#8a8585',cursor:'pointer'}:{color:'#252323',cursor:'not-allowed'}}><SkipBack size={24} /></button>
             <button onClick={togglePlayPause} disabled={!currentTrack || isLoadingTrack}
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:bg-[#d4cfcf] hover:scale-110 transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-white disabled:hover:shadow-none">
+              style={{width:"44px",height:"44px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#d4cfcf",color:"#111010",border:"none",cursor:"pointer",flexShrink:0,transition:"opacity 0.15s"}}>
               {isLoadingTrack ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                 : isPlaying ? <Pause fill="currentColor" size={22} />
                 : <Play fill="currentColor" size={22} className="ml-0.5" />}
             </button>
-            <button onClick={handleSkipForward} className={`transition-all duration-150 active:scale-90 ${(queue.length > 0 || playlistContextRef.current !== null || (currentTrack?.url?.startsWith('local://') && localTracksListRef.current.length > 1)) ? 'text-neutral-300 hover:text-[#d4cfcf]' : 'text-neutral-700 cursor-not-allowed'}`}><SkipForward size={24} /></button>
-            <button onClick={cycleRepeat} className={`transition-all duration-200 ${repeatMode !== 'off' ? 'text-[#d4cfcf]' : 'text-neutral-600 hover:text-neutral-300'}`}>
+            <button onClick={handleSkipForward} style={(queue.length>0||playlistContextRef.current!==null||(currentTrack?.url?.startsWith('local://')&&localTracksListRef.current.length>1))?{color:'#8a8585',cursor:'pointer'}:{color:'#252323',cursor:'not-allowed'}}><SkipForward size={24} /></button>
+            <button onClick={cycleRepeat} style={repeatMode!=='off'?{color:'#d4cfcf'}:{color:'#3a3838'}}>
               {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
             </button>
           </div>
@@ -4244,7 +4200,7 @@ export default function Veluna() {
               {currentTrack ? formatTime(progressSeconds) : '0:00'}
             </span>
             <div ref={progressRef}
-              className="slider-track relative flex-1 h-1 bg-neutral-800 rounded-full cursor-pointer hover:h-1.5 transition-[height] duration-150 ease-out group/prog"
+  className="slider-track group/prog" style={{position:"relative",flex:"1 1 0%",height:"3px",background:"#252323",borderRadius:"2px",cursor:"pointer"}}
               onMouseDown={e => { isDraggingProgressRef.current = true; setIsDraggingProgress(true); updateProgressFromEvent(e.clientX); }}
               onMouseMove={e => {
                 if (!progressRef.current || !currentTrack) return;
@@ -4260,7 +4216,7 @@ export default function Veluna() {
               {/* Hover timestamp tooltip */}
               {currentTrack && <div className="prog-tooltip absolute -top-7 -translate-x-1/2 px-1.5 py-0.5 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold text-neutral-300 opacity-0 group-hover/prog:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10" style={{ left: '0%' }} />}
               {waveformData.length > 0 && <WaveformBar waveform={waveformData} progressPercent={calculateProgressPercent()} isDragging={isDraggingProgress} />}
-              <div className="absolute top-0 left-0 h-full bg-[#d4cfcf] rounded-full pointer-events-none"
+              <div style={{position:"absolute",top:0,left:0,height:"100%",background:"#d4cfcf",borderRadius:"2px",pointerEvents:"none"}}
                 style={{ width: `${calculateProgressPercent()}%`, transition: isDraggingProgress ? 'none' : 'width 0.5s linear' }}>
                 <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none" />
               </div>
@@ -4284,14 +4240,14 @@ export default function Veluna() {
             onClick={() => { if (currentTrack) setShowLyrics(o => !o); }}
             disabled={!currentTrack}
             title="Lyrics"
-            className={`transition-all duration-200 shrink-0 disabled:opacity-30 ${showLyrics ? 'text-[#d4cfcf]' : 'text-neutral-500 hover:text-neutral-300'}`}>
+            style={showLyrics?{color:'#d4cfcf',flexShrink:0}:{color:'#3a3838',flexShrink:0}}>
             <Mic2 size={18} />
           </button>
           <button onClick={toggleMute} className="focus:outline-none shrink-0">
             {volume === 0 ? <VolumeX size={20} className="text-red-500" /> : <Volume2 size={20} className="text-neutral-400 hover:text-white transition-colors" />}
           </button>
           <div ref={volumeRef} title={`Volume: ${Math.round(volume)}%`}
-            className="slider-track relative w-24 h-1 bg-neutral-800 rounded-full cursor-pointer hover:h-1.5 transition-[height] duration-150 ease-out group/vol"
+className="slider-track group/vol" style={{position:"relative",width:"80px",height:"3px",background:"#252323",borderRadius:"2px",cursor:"pointer"}}
             onMouseDown={e => { setIsDraggingVolume(true); updateVolumeFromEvent(e.clientX); }}>
             <div className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
               style={{ width: `${volume}%`, background: volume > 0 ? '#d4cfcf' : '#404040', boxShadow: volume > 0 ? '0 0 5px rgba(212,207,207,0.45)' : 'none', transition: isDraggingVolume ? 'none' : 'width 0.15s ease-out' }}>
@@ -4854,8 +4810,7 @@ export default function Veluna() {
                 backgroundImage: `url(${currentTrack.cover})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'blur(80px) brightness(0.6) saturate(2.0)',
-              }} />
+                filter: 'blur(80px) brightness(0.6) saturate(2.0)' }} />
             )}
             {/* Scrim */}
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg,rgba(0,0,0,0.42) 0%,rgba(0,0,0,0.28) 100%)' }} />
@@ -4962,8 +4917,7 @@ export default function Veluna() {
                             fontSize: '1.45rem',
                             fontWeight: isCurrent ? 700 : 500,
                             color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.48)',
-                            transition: 'color 0.3s ease',
-                          }}>
+                            transition: 'color 0.3s ease' }}>
                           {line.text || '\u00A0'}
                         </p>
                       );
