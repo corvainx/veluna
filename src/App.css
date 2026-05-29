@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ══════════════════════════════════════════════
-   VELUNA — Ash Monochrome Theme
-   Uses attribute selectors (specificity beats Tailwind)
-   + !important as final guarantee
-   ══════════════════════════════════════════════ */
-
 html, body, #root {
   background-color: #111010 !important;
   color: #d4cfcf !important;
