@@ -2987,7 +2987,7 @@ export default function Veluna() {
 
   
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",overflow:"hidden",fontFamily:"system-ui,sans-serif"}}
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",overflow:"hidden",fontFamily:"system-ui,-apple-system,sans-serif"}}
       onContextMenu={e => e.preventDefault()}>
       <style>{`
         @keyframes loadbar { 0%{transform:translateX(-100%)} 50%{transform:translateX(150%)} 100%{transform:translateX(400%)} }
@@ -3013,22 +3013,30 @@ export default function Veluna() {
         .ctx-menu { animation: popIn 0.15s cubic-bezier(0.2,0,0,1) both; }
         .playlist-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .playlist-card:hover { transform: translateY(-2px); }
+        .custom-scrollbar::-webkit-scrollbar{width:4px!important;}
+        .custom-scrollbar::-webkit-scrollbar-thumb{background:#252323!important;border-radius:2px!important;}
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#2e2c2c!important;}
 
-        /* ════ VELUNA ASH MONOCHROME ════ */
+        /* ════ VELUNA ASH MONOCHROME PALETTE OVERRIDE ════ */
         html,body,#root{background:#111010!important;color:#d4cfcf!important;}
         input,textarea,select{background:#1e1c1c!important;color:#d4cfcf!important;border-color:#252323!important;}
         input::placeholder,textarea::placeholder{color:#3a3838!important;}
-        button{cursor:pointer;}
-        /* Bg overrides */
+        ::-webkit-scrollbar{width:4px;height:4px;}
+        ::-webkit-scrollbar-track{background:transparent;}
+        ::-webkit-scrollbar-thumb{background:#252323;border-radius:2px;}
+        ::-webkit-scrollbar-thumb:hover{background:#2e2c2c;}
+        ::selection{background:rgba(212,207,207,0.2)!important;color:#d4cfcf!important;}
+        /* All bg neutrals → ash */
         .bg-\[\#050505\],.bg-\[\#0a0a0a\],.bg-\[\#0f1115\]{background-color:#111010!important;}
-        .bg-\[\#0e0e0e\],.bg-\[\#0d0d0d\],.bg-\[\#111\]{background-color:#1e1c1c!important;}
+        .bg-\[\#0e0e0e\],.bg-\[\#0d0d0d\],.bg-\[\#111\],.bg-\[\#111111\]{background-color:#1e1c1c!important;}
         .bg-neutral-950{background-color:#111010!important;}
         .bg-neutral-900,.bg-neutral-900\/20,.bg-neutral-900\/40,.bg-neutral-900\/50,.bg-neutral-900\/60,.bg-neutral-900\/80{background-color:#161414!important;}
-        .bg-neutral-800,.bg-neutral-800\/40,.bg-neutral-800\/50,.bg-neutral-800\/60,.bg-neutral-800\/70{background-color:#1e1c1c!important;}
+        .bg-neutral-800,.bg-neutral-800\/40,.bg-neutral-800\/50,.bg-neutral-800\/60,.bg-neutral-800\/70,.bg-neutral-800\/80{background-color:#1e1c1c!important;}
         .bg-white\/5,.bg-white\/\[0\.04\],.bg-white\/\[0\.03\]{background-color:#1e1c1c!important;}
-        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-900\/60:hover,.hover\:bg-neutral-900\/50:hover,
-        .hover\:bg-white\/5:hover,.hover\:bg-white\/\[0\.04\]:hover,.hover\:bg-neutral-800:hover,.hover\:bg-neutral-800\/80:hover{background-color:#1e1c1c!important;}
-        /* Text overrides */
+        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-800\/80:hover,.hover\:bg-neutral-900\/50:hover,
+        .hover\:bg-neutral-900\/60:hover,.hover\:bg-neutral-800:hover,.hover\:bg-white\/5:hover,
+        .hover\:bg-white\/\[0\.04\]:hover{background-color:#1e1c1c!important;}
+        /* All text neutrals → ash */
         .text-white{color:#d4cfcf!important;}
         .text-neutral-100,.text-neutral-200{color:#d4cfcf!important;}
         .text-neutral-300{color:#8a8585!important;}
@@ -3039,40 +3047,35 @@ export default function Veluna() {
         .hover\:text-white:hover,.hover\:text-neutral-200:hover{color:#d4cfcf!important;}
         .hover\:text-neutral-300:hover{color:#8a8585!important;}
         .hover\:text-neutral-400:hover{color:#5a5656!important;}
-        /* Border overrides */
+        /* Borders */
         .border-neutral-800,.border-neutral-800\/40,.border-neutral-800\/50,.border-neutral-800\/60{border-color:#1e1c1c!important;}
         .border-neutral-700,.border-neutral-700\/50,.border-neutral-700\/60{border-color:#252323!important;}
-        .border-neutral-600{border-color:#2e2c2c!important;}
-        .hover\:border-neutral-700:hover{border-color:#252323!important;}
         .divide-neutral-800>*+*,.divide-neutral-800\/50>*+*{border-color:#1e1c1c!important;}
-        /* Accent */
+        .hover\:border-neutral-700:hover{border-color:#252323!important;}
+        /* Accent white → ash */
         .bg-white{background-color:#d4cfcf!important;}
         .text-black{color:#111010!important;}
-        /* Scrollbar */
-        ::-webkit-scrollbar{width:4px;height:4px;}
-        ::-webkit-scrollbar-track{background:transparent;}
-        ::-webkit-scrollbar-thumb{background:#252323;border-radius:2px;}
-        ::-webkit-scrollbar-thumb:hover{background:#2e2c2c;}
-        ::selection{background:rgba(212,207,207,0.2)!important;color:#d4cfcf!important;}
+        /* Hover accent bg */
+        .hover\:bg-\[#d4cfcf\]:hover,.hover\:bg-\[#d4cfcf\]\/5:hover{background-color:rgba(212,207,207,0.06)!important;}
       `}</style>
 
       <div style={{display:"flex",flex:"1 1 0%",overflow:"hidden",minHeight:0}}>
 
         {}
-        <div style={{width:"220px",flexShrink:0,display:"flex",flexDirection:"column",background:"#161414",borderRight:"0.5px solid #1e1c1c",padding:"16px 12px",zIndex:10,overflow:"visible",position:"relative"}}>
+        <div style={{width:"220px",flexShrink:0,display:"flex",flexDirection:"column",background:"#161414",borderRight:"0.5px solid #1e1c1c",padding:"16px 12px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
           {}
-          <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"24px",flexShrink:0}}>
-            <div style={{display:"flex",alignItems:"center",gap:"10px",cursor:"pointer",flex:1}} onClick={() => navigateTo('home')}>
+          <div style={{display:"flex",alignItems:"center",marginBottom:"22px",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:"9px",cursor:"pointer",flex:1}} onClick={() => navigateTo('home')}>
               <svg width="24" height="24" viewBox="0 0 28 28" fill="none" style={{flexShrink:0}}><rect width="28" height="28" rx="6" fill="#d4cfcf"/><polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#111010"/><polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="#d4cfcf"/></svg>
               <span style={{fontFamily:"'IBM Plex Mono',monospace",letterSpacing:"0.14em",fontSize:"11px",fontWeight:600,color:"#d4cfcf",textTransform:"uppercase"}}>veluna</span>
             </div>
           </div>
 
           {}
-          <div style={{position:"relative",marginBottom:"12px",flexShrink:0,overflow:"visible"}} onClick={e => e.stopPropagation()}>
+          <div style={{position:"relative",marginBottom:"10px",flexShrink:0,overflow:"visible"}} onClick={e => e.stopPropagation()}>
             <div
               onClick={() => setShowSleepPopover(o => !o)}
-              style={sleepTimer>0?{display:'flex',alignItems:'center',gap:'8px',padding:'6px 10px',borderRadius:'6px',border:'1px solid rgba(245,158,11,0.3)',background:'rgba(245,158,11,0.08)',color:'#f59e0b',cursor:'pointer',fontSize:'12px',fontWeight:500,width:'100%'}:{display:'flex',alignItems:'center',gap:'8px',padding:'6px 10px',borderRadius:'6px',border:'1px solid transparent',background:'transparent',color:'#2e2c2c',cursor:'pointer',fontSize:'12px',fontWeight:500,width:'100%'}}>
+              style={sleepTimer>0?{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'6px',border:'1px solid rgba(245,158,11,0.3)',background:'rgba(245,158,11,0.08)',color:'#f59e0b',cursor:'pointer',fontSize:'11px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'6px',border:'none',background:'transparent',color:'#2e2c2c',cursor:'pointer',fontSize:'11px',fontWeight:500}}>
               <Moon size={14} className={sleepTimer > 0 ? 'animate-pulse text-amber-400' : ''} />
               <span className="flex-1">{sleepTimer > 0 ? 'Sleep in ' + Math.ceil(sleepTimer / 60) + 'm' : 'Sleep Timer'}</span>
               {sleepTimer > 0
@@ -3080,7 +3083,7 @@ export default function Veluna() {
                 : <ChevronDown size={13} className={`transition-transform ${showSleepPopover ? 'rotate-180' : ''}`} />}
             </div>
             {showSleepPopover && (
-              <div style={{position:"absolute",top:"100%",left:0,marginTop:"8px",zIndex:9999}}>
+              <div style={{position:"absolute",top:"100%",left:0,marginTop:"6px",zIndex:9999}}>
                 <SleepTimerPopover
                   sleepTimer={sleepTimer}
                   onSet={setSleepTimerMinutes}
@@ -3091,7 +3094,7 @@ export default function Veluna() {
             )}
           </div>
 
-          <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0}}>
+          <nav style={{display:"flex",flexDirection:"column",gap:"1px",flexShrink:0}}>
             {([
               { id: 'home', label: 'Home', icon: Home },
               { id: 'downloads', label: 'Offline', icon: HardDrive },
@@ -3099,30 +3102,30 @@ export default function Veluna() {
               { id: 'settings', label: 'Settings', icon: Settings },
             ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]).map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => navigateTo(id)}
-                style={activeNav===id?{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'rgba(212,207,207,0.07)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:600}:{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:500}}>
-                <Icon size={20} className={activeNav === id ? 'text-[#d4cfcf]' : 'opacity-60'} />
-                <span className="font-medium">{label}</span>
+                style={activeNav===id?{display:'flex',alignItems:'center',gap:'11px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'rgba(212,207,207,0.07)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:600}:{display:'flex',alignItems:'center',gap:'11px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:500}}>
+                <Icon size={20} style={activeNav===id?{color:'#d4cfcf'}:{opacity:0.5}} />
+                <span style={{fontSize:"13px"}}>{label}</span>
               </button>
             ))}
             <button onClick={() => setIsQueueOpen(o => !o)}
-              style={isQueueOpen?{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'rgba(212,207,207,0.07)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:600}:{display:'flex',alignItems:'center',gap:'12px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:500}}>
-              <ListOrdered size={20} className={isQueueOpen ? 'text-[#d4cfcf]' : 'opacity-60'} />
-              <span className="font-medium">Queue</span>
+              style={isQueueOpen?{display:'flex',alignItems:'center',gap:'11px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'rgba(212,207,207,0.07)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:600}:{display:'flex',alignItems:'center',gap:'11px',padding:'9px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'13px',fontWeight:500}}>
+              <ListOrdered size={20} style={isQueueOpen?{color:'#d4cfcf'}:{opacity:0.5}} />
+              <span style={{fontSize:"13px",flex:1}}>Queue</span>
               {queue.length > 0 && <span key={queuePulseKey} className="queue-badge-pulse" style={{marginLeft:"auto",background:"rgba(212,207,207,0.15)",color:"#d4cfcf",fontSize:"10px",fontWeight:700,padding:"1px 6px",borderRadius:"4px",fontFamily:"'IBM Plex Mono',monospace"}}>{queue.length}</span>}
             </button>
           </nav>
 
           {}
-          <div style={{marginTop:"14px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 6px",flexShrink:0,borderBottom:"0.5px solid #1e1c1c",marginBottom:"6px"}}>
+          <div style={{marginTop:"12px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px",marginBottom:"6px",paddingBottom:"6px",borderBottom:"0.5px solid #1e1c1c",flexShrink:0}}>
               <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
-                style={{display:'flex',alignItems:'center',gap:'8px',flex:1,padding:'5px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#d4cfcf':'#3a3838',fontSize:'9px',fontWeight:600,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:'0.14em',textTransform:'uppercase'}}>
-                <ListMusic size={20} className={activeNav === 'library' ? 'text-[#d4cfcf]' : 'opacity-60'} />
+                style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#d4cfcf':'#3a3838',fontSize:'9px',fontWeight:600,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:'0.14em',textTransform:'uppercase'}}>
+                <ListMusic size={20} style={activeNav==='library'?{color:'#d4cfcf'}:{opacity:0.5}} />
                 <span className="font-medium">Playlists</span>
                 <ChevronRight size={14} className={`ml-auto transition-transform duration-200 ${sidebarPlaylistsExpanded ? 'rotate-90' : ''}`} />
               </button>
               <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                style={{padding:"4px",marginLeft:"4px",border:"none",background:"transparent",cursor:"pointer",color:"#2e2c2c",borderRadius:"4px",flexShrink:0}} title="New playlist">
+                style={{padding:"3px",border:"none",background:"transparent",cursor:"pointer",color:"#2e2c2c",borderRadius:"4px",flexShrink:0}} title="New playlist">
                 <PlusCircle size={15} />
               </button>
             </div>
@@ -3136,15 +3139,15 @@ export default function Veluna() {
                       <button key={pl.id}
                         onClick={() => { setOpenPlaylistId(pl.id); navigateTo('library'); }}
                         onContextMenu={e => openCtx(e, { type: 'sidebar-playlist', playlist: pl })}
-                        style={isOpen?{display:'flex',alignItems:'center',gap:'9px',padding:'6px 8px',borderRadius:'6px',border:'none',background:'rgba(212,207,207,0.06)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'12px'}:{display:'flex',alignItems:'center',gap:'9px',padding:'6px 8px',borderRadius:'6px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left',fontSize:'12px'}}>
+                        style={isOpen?{display:'flex',alignItems:'center',gap:'8px',padding:'6px 8px',borderRadius:'6px',border:'none',background:'rgba(212,207,207,0.06)',color:'#d4cfcf',cursor:'pointer',width:'100%',textAlign:'left'}:{display:'flex',alignItems:'center',gap:'8px',padding:'6px 8px',borderRadius:'6px',border:'none',background:'transparent',color:'#5a5656',cursor:'pointer',width:'100%',textAlign:'left'}}>
                         <div style={{width:"26px",height:"26px",borderRadius:"5px",overflow:"hidden",flexShrink:0,border:"0.5px solid #252323",background:"#1e1c1c",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {cover ? <img src={cover} className="w-full h-full object-cover" alt="" />
-                            : <div className={`w-full h-full flex items-center justify-center ${isOpen ? 'bg-[#d4cfcf]/15' : 'bg-neutral-800/60'}`}>
+                            : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:isOpen?'rgba(212,207,207,0.1)':'#1e1c1c'}}>
                                 {pl.id === 'p1' ? <Heart size={11} style={{color:isOpen?'#d4cfcf':'#5a5656',fill:isOpen?'#d4cfcf':'none'}} /> : <ListMusic size={11} style={{color:isOpen?'#d4cfcf':'#3a3838'}} />}
                               </div>}
                         </div>
                         <span className="text-[13px] font-medium truncate flex-1">{pl.name}</span>
-                        {pl.tracks.length > 0 && <span style={{fontSize:'10px',fontFamily:"'IBM Plex Mono',monospace",color:isOpen?'rgba(212,207,207,0.45)':'#2e2c2c',flexShrink:0}}>{pl.tracks.length}</span>}
+                        {pl.tracks.length > 0 && <span style={{fontSize:'10px',fontFamily:"'IBM Plex Mono',monospace",color:isOpen?'rgba(212,207,207,0.45)':'#252323',flexShrink:0}}>{pl.tracks.length}</span>}
                       </button>
                     );
                   })}
@@ -3175,18 +3178,18 @@ export default function Veluna() {
               }}
               disabled={activeNav === 'home' && tracks.length === 0}
               title="Go back"
-              style={(activeNav!=='home'||tracks.length>0)?{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',borderRadius:'5px',border:'0.5px solid #252323',background:'#1e1c1c',color:'#8a8585',cursor:'pointer',fontSize:'12px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',borderRadius:'5px',border:'0.5px solid #1a1818',background:'transparent',color:'#252323',cursor:'not-allowed',fontSize:'12px',fontWeight:500,opacity:0.4}}
+              style={(activeNav!=='home'||tracks.length>0)?{display:'flex',alignItems:'center',gap:'5px',padding:'5px 10px',borderRadius:'5px',border:'0.5px solid #252323',background:'#1e1c1c',color:'#8a8585',cursor:'pointer',fontSize:'12px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'5px',padding:'5px 10px',borderRadius:'5px',border:'0.5px solid #1a1818',background:'transparent',color:'#252323',cursor:'not-allowed',fontSize:'12px',fontWeight:500,opacity:0.4}}
             >
               <ChevronLeft size={16} />
               <span>Back</span>
             </button>
-            <span style={{fontSize:"10px",color:"#3a3838",fontWeight:600,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:"0.14em",textTransform:"uppercase"}}>
+            <span style={{fontSize:"10px",color:"#3a3838",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:"0.14em",textTransform:"uppercase",fontWeight:600}}>
               {activeNav === 'home' ? 'Home' : activeNav === 'downloads' ? 'Offline' : activeNav === 'settings' ? 'Settings' : activeNav === 'stats' ? 'Stats' : activeNav === 'library' ? (openPlaylistId ? 'Playlist' : 'Playlists') : activeNav}
             </span>
           </div>
 
           {}
-          <div key={activeNav + (openPlaylistId || '')} style={{ animation: 'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both' }} className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <div key={activeNav + (openPlaylistId || '')} style={{animation:'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both',flex:'1 1 0%',display:'flex',flexDirection:'column',overflow:'hidden',minHeight:0}}>
           {activeNav === 'home' && (
             <>
               <div className="p-6 pb-3 relative z-30 shrink-0">
@@ -4005,7 +4008,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flexShrink:0,background:'#161414',borderLeft:'0.5px solid #1e1c1c',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'280px':'0',transition:'width 0.3s ease'}}>
+        <div style={{flexShrink:0,background:'#161414',borderLeft:'0.5px solid #1e1c1c',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'272px':'0',transition:'width 0.3s ease'}}>
           {isQueueOpen && (
             <>
               <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800/50 shrink-0">
@@ -4093,15 +4096,15 @@ export default function Veluna() {
       <div style={{height:"76px",background:"#161414",borderTop:"0.5px solid #1e1c1c",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"relative",zIndex:20,flexShrink:0}}>
         {isPlaying && !isLoadingTrack && <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(212,207,207,0.12)"}} />}
         {isLoadingTrack && (
-          <div style={{position:"absolute",top:0,left:0,width:"100%",height:"2px",overflow:"hidden",background:"rgba(30,28,28,0.4)"}}>
-            <div style={{height:"100%",background:"rgba(212,207,207,0.6)",animation:"loadbar 1.4s ease-in-out infinite",width:"35%"}} />
+          <div style={{position:"absolute",top:0,left:0,width:"100%",height:"2px",overflow:"hidden",background:"rgba(30,28,28,0.5)"}}>
+            <div style={{height:"100%",background:"rgba(212,207,207,0.55)",animation:"loadbar 1.4s ease-in-out infinite",width:"35%"}} />
           </div>
         )}
         {}
-        <div className="flex items-center gap-4 w-1/4 min-w-[180px]">
+        <div style={{display:"flex",alignItems:"center",gap:"12px",width:"220px",flexShrink:0}}>
           {currentTrack ? (
             <>
-              <div className="relative w-14 h-14 rounded-md overflow-hidden group border border-neutral-800 shrink-0 cursor-pointer bg-neutral-900 flex items-center justify-center"
+              <div className="group" style={{position:"relative",width:"46px",height:"46px",borderRadius:"6px",overflow:"hidden",border:"0.5px solid #252323",flexShrink:0,cursor:"pointer",background:"#1e1c1c",display:"flex",alignItems:"center",justifyContent:"center"}}
                 onClick={() => { if (!currentTrack.url.startsWith('local://')) setInfoModalTrack(currentTrack); }}
                 onContextMenu={e => { if (!currentTrack.url.startsWith('local://')) openCtx(e, { type: 'track', track: currentTrack }); }}>
                 {currentTrack.cover
@@ -4112,13 +4115,13 @@ export default function Veluna() {
                   : null}
               </div>
               <div key={currentTrack.url} className="flex flex-col overflow-hidden max-w-[140px]" style={{ animation: 'fadeIn 0.25s ease both' }}>
-                <span className="font-bold text-white text-sm truncate">{currentTrack.title}</span>
+                <span style={{fontWeight:600,color:"#d4cfcf",fontSize:"13px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.title}</span>
                 {isLoadingTrack
                   ? <span className="text-xs text-[#d4cfcf]/70 flex items-center gap-1.5 mt-0.5">
                       <span className="flex gap-[3px] items-end h-3">{[1, 0.6, 0.8, 0.5].map((h, i) => <span key={i} className="w-[2px] bg-[#d4cfcf]/60 rounded-full inline-block" style={{ height: `${h * 100}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</span>
                       Buffering...
                     </span>
-                  : <span className="text-xs text-neutral-400 truncate">{currentTrack.artist}</span>}
+                  : <span style={{fontSize:"11px",color:"#5a5656",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist}</span>}
                 {audioInfo && !isLoadingTrack && (
                   <span className="text-[10px] text-neutral-600 truncate mt-0.5 font-mono">
                     {audioInfo.codec.toUpperCase()}{audioInfo.samplerate > 0 ? ` · ${Math.round(audioInfo.samplerate / 1000)}kHz` : ''}
@@ -4127,7 +4130,7 @@ export default function Veluna() {
               </div>
               {!currentTrack.url.startsWith('local://') && (
                 <button onClick={() => toggleLikeTrack(currentTrack)} className="ml-1 p-1.5 focus:outline-none hover:scale-110 active:scale-95 transition-transform shrink-0">
-                  <Heart size={22} style={isTrackLiked(currentTrack.url)?{color:'#d4cfcf',fill:'#d4cfcf'}:{color:'#5a5656'}} />
+                  <Heart size={18} style={isTrackLiked(currentTrack.url)?{color:'#d4cfcf',fill:'#d4cfcf'}:{color:'#5a5656'}} />
                 </button>
               )}
               {currentTrack && !currentTrack.url.startsWith('local://') && (() => {
@@ -4143,31 +4146,31 @@ export default function Veluna() {
             </>
           ) : (
             <>
-              <div className="w-14 h-14 rounded-md border border-neutral-800/50 bg-[#0d0d0d] flex items-center justify-center shrink-0"><Music size={20} className="text-neutral-600" /></div>
-              <div className="flex flex-col overflow-hidden"><span className="font-bold text-neutral-600 text-sm">No track</span><span className="text-xs text-neutral-700">---</span></div>
+              <div style={{width:"46px",height:"46px",borderRadius:"6px",border:"0.5px solid #1e1c1c",background:"#161414",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Music size={18} style={{color:"#2e2c2c"}} /></div>
+              <div style={{display:"flex",flexDirection:"column",overflow:"hidden"}}><span style={{fontWeight:600,color:"#2e2c2c",fontSize:"13px"}}>No track</span><span style={{fontSize:"11px",color:"#252323"}}>---</span></div>
             </>
           )}
         </div>
 
         {}
-        <div className="flex flex-col items-center justify-center w-2/4 gap-2 max-w-2xl">
-          <div className="flex items-center gap-5">
-            <button onClick={toggleShuffle} style={shuffle?{color:'#d4cfcf'}:{color:'#3a3838'}}><Shuffle size={20} /></button>
-            <button onClick={handleSkipBack} style={currentTrack?{color:'#8a8585',cursor:'pointer'}:{color:'#252323',cursor:'not-allowed'}}><SkipBack size={24} /></button>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flex:"1 1 0%",gap:"8px",maxWidth:"600px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
+            <button onClick={toggleShuffle} style={{background:'none',border:'none',cursor:'pointer',color:shuffle?'#d4cfcf':'#3a3838',padding:'4px'}}><Shuffle size={18} /></button>
+            <button onClick={handleSkipBack} style={{background:'none',border:'none',cursor:currentTrack?'pointer':'not-allowed',color:currentTrack?'#8a8585':'#252323',padding:'4px'}}><SkipBack size={20} /></button>
             <button onClick={togglePlayPause} disabled={!currentTrack || isLoadingTrack}
-              style={{width:"44px",height:"44px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#d4cfcf",color:"#111010",border:"none",cursor:"pointer",flexShrink:0,transition:"opacity 0.15s"}}>
+              style={{width:"40px",height:"40px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#d4cfcf",color:"#111010",border:"none",cursor:"pointer",flexShrink:0,opacity:(!currentTrack||isLoadingTrack)?0.5:1}}>
               {isLoadingTrack ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                 : isPlaying ? <Pause fill="currentColor" size={22} />
                 : <Play fill="currentColor" size={22} className="ml-0.5" />}
             </button>
-            <button onClick={handleSkipForward} style={(queue.length>0||playlistContextRef.current!==null||(currentTrack?.url?.startsWith('local://')&&localTracksListRef.current.length>1))?{color:'#8a8585',cursor:'pointer'}:{color:'#252323',cursor:'not-allowed'}}><SkipForward size={24} /></button>
-            <button onClick={cycleRepeat} style={repeatMode!=='off'?{color:'#d4cfcf'}:{color:'#3a3838'}}>
+            <button onClick={handleSkipForward} style={{background:'none',border:'none',cursor:(queue.length>0||playlistContextRef.current!==null)?'pointer':'not-allowed',color:(queue.length>0||playlistContextRef.current!==null)?'#8a8585':'#252323',padding:'4px'}}><SkipForward size={20} /></button>
+            <button onClick={cycleRepeat} style={{background:'none',border:'none',cursor:'pointer',color:repeatMode!=='off'?'#d4cfcf':'#3a3838',padding:'4px'}}>
               {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
             </button>
           </div>
 
           {}
-          <div className="w-full flex items-center gap-2 mt-1">
+          <div style={{width:"100%",display:"flex",alignItems:"center",gap:"8px"}}>
             <SpeedSelector speed={playbackSpeed} onChange={setPlaybackSpeed} />
             {/* A-B Loop — same style as SpeedSelector */}
             <button
@@ -4200,7 +4203,7 @@ export default function Veluna() {
               {currentTrack ? formatTime(progressSeconds) : '0:00'}
             </span>
             <div ref={progressRef}
-  className="slider-track group/prog" style={{position:"relative",flex:"1 1 0%",height:"3px",background:"#252323",borderRadius:"2px",cursor:"pointer"}}
+              className="slider-track group/prog" style={{position:"relative",flex:"1 1 0%",height:"3px",background:"#252323",borderRadius:"2px",cursor:"pointer"}}
               onMouseDown={e => { isDraggingProgressRef.current = true; setIsDraggingProgress(true); updateProgressFromEvent(e.clientX); }}
               onMouseMove={e => {
                 if (!progressRef.current || !currentTrack) return;
@@ -4221,14 +4224,14 @@ export default function Veluna() {
                 <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none" />
               </div>
             </div>
-            <span className="text-xs font-medium text-neutral-400 tabular-nums min-w-[32px]">
+            <span style={{fontSize:"10px",fontFamily:"'IBM Plex Mono',monospace",color:"#3a3838",minWidth:"32px"}}>
               {currentTrack ? formatTime(trackDurationSeconds || parseDurationToSeconds(currentTrack.duration)) : '0:00'}
             </span>
           </div>
         </div>
 
         {}
-        <div className="w-1/4 flex items-center justify-end gap-3 pr-4">
+        <div style={{width:"200px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"10px",flexShrink:0}}>
           {}
           {crossfadeSeconds > 0 && (
             <span className="text-[10px] text-purple-400 font-bold tabular-nums" title={`Crossfade: ${crossfadeSeconds}s`}>
@@ -4240,14 +4243,14 @@ export default function Veluna() {
             onClick={() => { if (currentTrack) setShowLyrics(o => !o); }}
             disabled={!currentTrack}
             title="Lyrics"
-            style={showLyrics?{color:'#d4cfcf',flexShrink:0}:{color:'#3a3838',flexShrink:0}}>
+            style={showLyrics?{background:'none',border:'none',cursor:'pointer',color:'#d4cfcf',flexShrink:0,opacity:1}:{background:'none',border:'none',cursor:'pointer',color:'#3a3838',flexShrink:0}}>
             <Mic2 size={18} />
           </button>
-          <button onClick={toggleMute} className="focus:outline-none shrink-0">
-            {volume === 0 ? <VolumeX size={20} className="text-red-500" /> : <Volume2 size={20} className="text-neutral-400 hover:text-white transition-colors" />}
+          <button onClick={toggleMute} style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px"}}>
+            {volume === 0 ? <VolumeX size={17} style={{color:"#6b7280"}} /> : <Volume2 size={17} style={{color:"#5a5656"}} />}
           </button>
           <div ref={volumeRef} title={`Volume: ${Math.round(volume)}%`}
-className="slider-track group/vol" style={{position:"relative",width:"80px",height:"3px",background:"#252323",borderRadius:"2px",cursor:"pointer"}}
+            className="slider-track group/vol" style={{position:"relative",width:"72px",height:"3px",background:"#252323",borderRadius:"2px",cursor:"pointer"}}
             onMouseDown={e => { setIsDraggingVolume(true); updateVolumeFromEvent(e.clientX); }}>
             <div className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
               style={{ width: `${volume}%`, background: volume > 0 ? '#d4cfcf' : '#404040', boxShadow: volume > 0 ? '0 0 5px rgba(212,207,207,0.45)' : 'none', transition: isDraggingVolume ? 'none' : 'width 0.15s ease-out' }}>
