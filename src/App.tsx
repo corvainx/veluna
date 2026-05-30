@@ -4177,7 +4177,7 @@ export default function Veluna() {
                   : 'text-neutral-600 border-neutral-800 hover:text-neutral-400 hover:border-neutral-700'}`}>
               A-B{abLoop.b !== null ? ' ✓' : abLoop.a !== null ? ' …' : ''}
             </button>
-            <span className="text-xs font-medium text-neutral-400 tabular-nums min-w-[32px] text-right">
+            <span style={{fontSize:"10px",fontFamily:"'IBM Plex Mono',monospace",color:"var(--v-fg4)",minWidth:"32px",textAlign:"right"}}>
               {currentTrack ? formatTime(progressSeconds) : '0:00'}
             </span>
             <div ref={progressRef}
@@ -4231,7 +4231,7 @@ export default function Veluna() {
             className="slider-track group/vol" style={{position:"relative",width:"72px",height:"3px",background:"var(--v-bg3)",borderRadius:"2px",cursor:"pointer"}}
             onMouseDown={e => { setIsDraggingVolume(true); updateVolumeFromEvent(e.clientX); }}>
             <div className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
-              style={{ width: `${volume}%`, background: volume > 0 ? '#d4cfcf' : '#404040', boxShadow: volume > 0 ? '0 0 5px rgba(212,207,207,0.45)' : 'none', transition: isDraggingVolume ? 'none' : 'width 0.15s ease-out' }}>
+              style={{position:'absolute',top:0,left:0,height:'100%',borderRadius:'2px',pointerEvents:'none',width:`${volume}%`,background:volume>0?'#d4cfcf':'var(--v-bg3)',transition:isDraggingVolume?'none':'width 0.15s ease-out'}}>
               <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none" />
             </div>
             <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold text-neutral-300 opacity-0 group-hover/vol:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
