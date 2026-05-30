@@ -1,117 +1,284 @@
+/* ═══════════════════════════════════════════════════════════════
+   VELUNA — Ash Monochrome
+   CSS variables MUST come before @tailwind base so Tailwind's
+   preflight doesn't wipe them. The entire app JSX references
+   var(--v-bg0), var(--v-fg) etc. via inline styles — so if
+   these vars are undefined, the browser renders its defaults
+   (white bg, black text). This file fixes that.
+═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. VARIABLES FIRST — before any Tailwind reset ─────────── */
+:root {
+  --v-bg0:  #0c0b0b;
+  --v-bg1:  #111010;
+  --v-bg2:  #171515;
+  --v-bg3:  #1e1c1c;
+  --v-bg4:  #252222;
+  --v-bg5:  #2c2929;
+  --v-fg:   #dedad7;
+  --v-fg2:  #9c9794;
+  --v-fg3:  #5e5a58;
+  --v-fg4:  #3a3735;
+  --v-bdr:  #1a1818;
+  --v-bdr2: #222020;
+  --v-bdr3: #2e2b2b;
+
+  /* Tailwind neutral remap */
+  --tw-color-neutral-50:  #dedad7;
+  --tw-color-neutral-100: #dedad7;
+  --tw-color-neutral-200: #dedad7;
+  --tw-color-neutral-300: #9c9794;
+  --tw-color-neutral-400: #5e5a58;
+  --tw-color-neutral-500: #3a3735;
+  --tw-color-neutral-600: #2c2929;
+  --tw-color-neutral-700: #252222;
+  --tw-color-neutral-800: #1e1c1c;
+  --tw-color-neutral-900: #171515;
+  --tw-color-neutral-950: #0c0b0b;
+
+  color-scheme: dark;
+}
+
+/* ── 2. TAILWIND ─────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ══════════════════════════════════════════════════
-   VELUNA — Ash Monochrome
-   Custom properties defined on :root override every
-   Tailwind utility that uses them. Combined with
-   direct attribute selectors, this is bulletproof.
-══════════════════════════════════════════════════ */
+/* ── 3. EVERYTHING BELOW OVERRIDES TAILWIND ──────────────────── */
 
-:root {
-  /* Palette */
-  --v-bg0:  #111010;
-  --v-bg1:  #161414;
-  --v-bg2:  #1e1c1c;
-  --v-bg3:  #252323;
-  --v-fg:   #d4cfcf;
-  --v-fg2:  #8a8585;
-  --v-fg3:  #5a5656;
-  --v-fg4:  #3a3838;
-  --v-bdr:  #1e1c1c;
-  --v-bdr2: #252323;
-
-  /* Override Tailwind's neutral color vars */
-  --tw-color-neutral-50:  #d4cfcf;
-  --tw-color-neutral-100: #d4cfcf;
-  --tw-color-neutral-200: #d4cfcf;
-  --tw-color-neutral-300: #8a8585;
-  --tw-color-neutral-400: #5a5656;
-  --tw-color-neutral-500: #3a3838;
-  --tw-color-neutral-600: #2e2c2c;
-  --tw-color-neutral-700: #252323;
-  --tw-color-neutral-800: #1e1c1c;
-  --tw-color-neutral-900: #161414;
-  --tw-color-neutral-950: #111010;
-}
-
+/* ── Base reset ─────────────────────────────────────────────── */
 html, body, #root {
   background: var(--v-bg0) !important;
   color: var(--v-fg) !important;
-  overflow: hidden;
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden !important;
+  margin: 0 !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  color-scheme: dark !important;
 }
 
-/* ── Background overrides (attribute selector catches ALL variants) ── */
+/* ── Grain texture ───────────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ══ BACKGROUND COLORS ══════════════════════════════════════════ */
+
 [class*="bg-neutral-950"] { background-color: var(--v-bg0) !important; }
-[class*="bg-neutral-900"] { background-color: var(--v-bg1) !important; }
-[class*="bg-neutral-800"] { background-color: var(--v-bg2) !important; }
-[class*="bg-neutral-700"] { background-color: var(--v-bg3) !important; }
-[class*="bg-neutral-600"] { background-color: #2e2c2c !important; }
+[class*="bg-neutral-900"] { background-color: var(--v-bg2) !important; }
+[class*="bg-neutral-800"] { background-color: var(--v-bg3) !important; }
+[class*="bg-neutral-700"] { background-color: var(--v-bg4) !important; }
+[class*="bg-neutral-600"] { background-color: var(--v-bg5) !important; }
 [class~="bg-white"]       { background-color: var(--v-fg)  !important; }
 
-/* Arbitrary bg values */
-.bg-\[\#050505\], .bg-\[\#0a0a0a\], .bg-\[\#0f1115\] { background-color: var(--v-bg0) !important; }
-.bg-\[\#0e0e0e\], .bg-\[\#0d0d0d\], .bg-\[\#111\]    { background-color: var(--v-bg2) !important; }
+/* Arbitrary dark hex values */
+.bg-\[\#050505\], .bg-\[\#080808\], .bg-\[\#0a0a0a\],
+.bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-\[\#0e0e0e\],
+.bg-\[\#0f0f0f\], .bg-\[\#111\],    .bg-\[\#111111\],
+.bg-\[\#0f1115\], .bg-\[\#131313\] {
+  background-color: var(--v-bg2) !important;
+}
 
-/* Gradient → flat */
-[class*="bg-gradient-to-b"] { background-image: none !important; background-color: var(--v-bg0) !important; }
-[class*="from-\[#0f1115\]"], [class*="from-\[#050505\]"] { --tw-gradient-from: var(--v-bg0) !important; }
-[class*="to-\[#050505\]"]   { --tw-gradient-to:   var(--v-bg0) !important; }
+/* Gradients → flat */
+[class*="bg-gradient-to-b"] {
+  background-image: none !important;
+  background-color: var(--v-bg0) !important;
+}
+
+/* White/alpha overlays */
+.hover\:bg-white\/5:hover,
+[class*="hover:bg-white\/5"]:hover     { background-color: rgba(255,255,255,0.03) !important; }
+[class*="hover:bg-white\/10"]:hover    { background-color: rgba(255,255,255,0.04) !important; }
+.bg-white\/\[0\.04\],
+.bg-white\/\[0\.06\],
+.bg-white\/\[0\.03\],
+.bg-white\/5                           { background-color: rgba(255,255,255,0.03) !important; }
+[class*="hover:bg-white\/\[0.04\]"]:hover { background-color: rgba(255,255,255,0.025) !important; }
+[class*="hover:bg-white\/\[0.03\]"]:hover { background-color: rgba(255,255,255,0.02)  !important; }
+[class*="hover:bg-white\/\[0.02\]"]:hover { background-color: rgba(255,255,255,0.015) !important; }
 
 /* Hover bg */
-[class*="hover:bg-neutral-900"]:hover { background-color: var(--v-bg1) !important; }
-[class*="hover:bg-neutral-800"]:hover { background-color: var(--v-bg2) !important; }
-[class*="hover:bg-white"]:hover,
+[class*="hover:bg-neutral-900"]:hover  { background-color: var(--v-bg2) !important; }
+[class*="hover:bg-neutral-800"]:hover  { background-color: var(--v-bg3) !important; }
+[class*="hover:bg-white"]:hover        { background-color: var(--v-bg3) !important; }
 [class*="hover:bg-neutral-900\/50"]:hover,
-[class*="hover:bg-neutral-900\/60"]:hover { background-color: var(--v-bg2) !important; }
+[class*="hover:bg-neutral-900\/60"]:hover { background-color: var(--v-bg3) !important; }
 
-/* ── Text overrides ── */
-[class~="text-white"]             { color: var(--v-fg)  !important; }
-[class~="text-black"]             { color: var(--v-bg0) !important; }
+/* ══ TEXT COLORS ════════════════════════════════════════════════ */
+
+[class~="text-white"]                    { color: var(--v-fg)  !important; }
+[class~="text-black"]                    { color: var(--v-bg0) !important; }
 [class*="text-neutral-100"],
-[class*="text-neutral-200"]       { color: var(--v-fg)  !important; }
-[class*="text-neutral-300"]       { color: var(--v-fg2) !important; }
-[class*="text-neutral-400"]       { color: var(--v-fg3) !important; }
-[class*="text-neutral-500"]       { color: var(--v-fg4) !important; }
-[class*="text-neutral-600"]       { color: #2e2c2c !important; }
-[class*="text-neutral-700"]       { color: var(--v-bg3) !important; }
+[class*="text-neutral-200"]              { color: var(--v-fg)  !important; }
+[class*="text-neutral-300"]              { color: var(--v-fg2) !important; }
+[class*="text-neutral-400"]              { color: var(--v-fg2) !important; }
+[class*="text-neutral-500"]              { color: var(--v-fg3) !important; }
+[class*="text-neutral-600"]              { color: var(--v-fg4) !important; }
+[class*="text-neutral-700"]              { color: var(--v-bg5) !important; }
 [class*="hover:text-white"]:hover,
-[class*="hover:text-neutral-200"]:hover { color: var(--v-fg)  !important; }
-[class*="hover:text-neutral-300"]:hover { color: var(--v-fg2) !important; }
-[class*="hover:text-neutral-400"]:hover { color: var(--v-fg3) !important; }
+[class*="hover:text-neutral-200"]:hover  { color: var(--v-fg)  !important; }
+[class*="hover:text-neutral-300"]:hover  { color: var(--v-fg2) !important; }
+[class*="hover:text-neutral-400"]:hover  { color: var(--v-fg3) !important; }
 
-/* ── Border overrides ── */
-[class*="border-neutral-800"] { border-color: var(--v-bdr)  !important; }
-[class*="border-neutral-700"] { border-color: var(--v-bdr2) !important; }
-[class*="border-neutral-600"] { border-color: #2e2c2c !important; }
+/* ── Rogue colors → ash ─────────────────────────────────────── */
+[class*="text-amber-400"],
+[class*="text-cyan-400"],
+[class*="text-emerald-400"],
+[class*="text-violet-400"],
+[class*="text-purple-400"],
+[class*="text-blue-400"],
+[class*="text-blue-500"]      { color: var(--v-fg2) !important; }
+
+[class*="text-red-400"],
+[class*="text-red-500"],
+[class*="text-red-600"]       { color: var(--v-fg3) !important; }
+[class*="hover:text-red-400"]:hover,
+[class*="hover:text-red-300"]:hover { color: #b55 !important; }
+
+[class*="bg-blue-500"],
+[class*="bg-purple-500"],
+[class*="bg-amber-500"],
+[class*="bg-cyan-500"],
+[class*="bg-emerald-500"],
+[class*="bg-red-600"],
+[class*="bg-red-500"]          { background-color: var(--v-bg3) !important; }
+
+[class*="border-amber-500"],
+[class*="border-red-500"],
+[class*="border-red-600"],
+[class*="border-\[#1DB954\]"]  { border-color: var(--v-bdr3) !important; }
+
+[class*="bg-red-500\/10"]      { background-color: rgba(140,40,40,0.08) !important; }
+[class*="border-red-500\/20"]  { border-color: rgba(140,40,40,0.2)   !important; }
+[class*="bg-amber-500\/10"]    { background-color: rgba(222,218,215,0.05) !important; }
+[class*="border-amber-500\/20"]:not([data-keep]) { border-color: rgba(222,218,215,0.1) !important; }
+
+/* ── [#d4cfcf] accent ────────────────────────────────────────── */
+.text-\[\#d4cfcf\],
+[class*="text-\[#d4cfcf\]"]          { color: var(--v-fg) !important; }
+[class*="bg-\[#d4cfcf\]\/10"]        { background-color: rgba(222,218,215,0.07)  !important; }
+[class*="bg-\[#d4cfcf\]\/20"]        { background-color: rgba(222,218,215,0.12)  !important; }
+[class*="bg-\[#d4cfcf\]\/\[0.07\]"]  { background-color: rgba(222,218,215,0.05)  !important; }
+[class*="bg-\[#d4cfcf\]\/\[0.08\]"]  { background-color: rgba(222,218,215,0.07)  !important; }
+[class*="border-\[#d4cfcf\]\/15"]    { border-color: rgba(222,218,215,0.1)  !important; }
+[class*="border-\[#d4cfcf\]\/20"]    { border-color: rgba(222,218,215,0.13) !important; }
+[class*="border-\[#d4cfcf\]\/30"]    { border-color: rgba(222,218,215,0.18) !important; }
+[class*="hover:border-\[#d4cfcf\]\/60"]:hover { border-color: rgba(222,218,215,0.35) !important; }
+[class*="hover:bg-\[#d4cfcf\]\/20"]:hover     { background-color: rgba(222,218,215,0.12) !important; }
+[class*="ring-\[#d4cfcf\]"]          { --tw-ring-color: rgba(222,218,215,0.18) !important; }
+
+/* ══ BORDERS ════════════════════════════════════════════════════ */
+
+[class*="border-neutral-800"]  { border-color: var(--v-bdr)  !important; }
+[class*="border-neutral-700"]  { border-color: var(--v-bdr2) !important; }
+[class*="border-neutral-600"]  { border-color: var(--v-bdr3) !important; }
 [class*="divide-neutral-800"] > * + * { border-color: var(--v-bdr) !important; }
 [class*="hover:border-neutral-700"]:hover { border-color: var(--v-bdr2) !important; }
 
-/* ── Inputs ── */
+/* ══ INPUTS ═════════════════════════════════════════════════════ */
+
 input, textarea, select {
-  background-color: var(--v-bg2) !important;
+  background-color: var(--v-bg3) !important;
   color: var(--v-fg) !important;
   border-color: var(--v-bdr2) !important;
 }
-input::placeholder, textarea::placeholder { color: var(--v-fg4) !important; }
-input:focus, textarea:focus { outline: none; border-color: var(--v-bg3) !important; }
+input::placeholder, textarea::placeholder { color: var(--v-fg4) !important; opacity: 1 !important; }
+input:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--v-bdr3) !important;
+  box-shadow: 0 0 0 2px rgba(222,218,215,0.07) !important;
+}
 
-/* ── Glow removal ── */
-[class*="shadow-[0_0"],
-[class*="drop-shadow-[0_0"] { box-shadow: none !important; filter: none !important; }
+/* ══ BUTTONS ════════════════════════════════════════════════════ */
 
-/* ── Scrollbars ── */
-::-webkit-scrollbar       { width: 4px; height: 4px; }
+/* Primary round play button */
+button.rounded-full.bg-white,
+button.rounded-full[class*="bg-white"] {
+  background: var(--v-fg) !important;
+  color: var(--v-bg0) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6) !important;
+}
+button.rounded-full.bg-white:hover { transform: scale(1.05) !important; }
+button.rounded-full.bg-white:active { transform: scale(0.95) !important; }
+
+/* ══ SHADOWS ════════════════════════════════════════════════════ */
+
+[class*="shadow-\[0_0_"],
+[class*="drop-shadow-\[0_0_"] {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.55) !important;
+  filter: none !important;
+}
+[class*="shadow-\[0_24px_"] {
+  box-shadow: 0 24px 60px rgba(0,0,0,0.85),
+              0 0 0 1px rgba(255,255,255,0.04) !important;
+}
+
+/* ══ MODALS ═════════════════════════════════════════════════════ */
+
+[class*="bg-black\/85"] { background-color: rgba(5,4,4,0.9)  !important; }
+[class*="bg-black\/80"] { background-color: rgba(5,4,4,0.85) !important; }
+[class*="bg-black\/70"] { background-color: rgba(5,4,4,0.78) !important; }
+
+/* ══ MISC COMPONENTS ════════════════════════════════════════════ */
+
+[class*="shadow-\[inset_2px_0_0_#d4cfcf\]"] {
+  box-shadow: inset 2px 0 0 var(--v-fg2) !important;
+}
+
+[class*="hover:bg-neutral-800\/80"]:hover {
+  background-color: var(--v-bg4) !important;
+}
+
+/* Confirm danger */
+[class*="bg-red-500\/10"][class*="border-red-500\/30"] {
+  background: rgba(160,40,40,0.07) !important;
+  border-color: rgba(160,40,40,0.22) !important;
+  color: #a05050 !important;
+}
+[class*="hover:bg-red-500\/20"]:hover { background: rgba(160,40,40,0.14) !important; }
+
+/* Kbd */
+kbd {
+  background: var(--v-bg3) !important;
+  border-color: var(--v-bdr3) !important;
+  color: var(--v-fg2) !important;
+  box-shadow: 0 1px 0 var(--v-bg5) !important;
+}
+
+/* Separator lines */
+.h-px,
+[class~="h-px"] { background-color: var(--v-bdr) !important; }
+
+/* Toggle switch active */
+[class*="bg-\[#d4cfcf\]\/80"] { background-color: rgba(222,218,215,0.7) !important; }
+
+/* Pulse skeleton */
+@keyframes velunaPulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.18; }
+}
+[class*="animate-pulse"] {
+  animation: velunaPulse 2s ease-in-out infinite !important;
+  background-color: var(--v-bg3) !important;
+}
+
+/* ══ SCROLLBARS ═════════════════════════════════════════════════ */
+
+::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--v-bg3); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #2e2c2c; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--v-bg3); }
+::-webkit-scrollbar-thumb { background: var(--v-bg5); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--v-bdr3); }
 
-/* ── Selection ── */
-::selection { background: rgba(212,207,207,0.2) !important; color: var(--v-fg) !important; }
+/* ══ SELECTION ══════════════════════════════════════════════════ */
 
-/* ── Ring (focus) ── */
-[class*="ring-[#d4cfcf]"] { --tw-ring-color: rgba(212,207,207,0.3) !important; }
+::selection {
+  background: rgba(222,218,215,0.18) !important;
+  color: var(--v-fg) !important;
+}
