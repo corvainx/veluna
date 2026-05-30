@@ -280,7 +280,7 @@ nav.scrolled { background: var(--bg2); }
   position: relative; z-index: 2;
 }
 @media (min-width: 1024px) {
-  .hero-inner { position: relative; left: -140px; z-index: 2; }
+  .hero-inner { position: relative; left: -110px; z-index: 2; }
 }
 
 .hero-left { display: flex; flex-direction: column; }
@@ -644,24 +644,6 @@ nav.scrolled { background: var(--bg2); }
 .comm-btn:hover { color: var(--fg); background: var(--bg4); border-color: var(--fg4); }
 .comm-btn svg { width: 13px; height: 13px; }
 
-.donate-inner {
-  max-width: 500px; margin: 0 auto; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 24px;
-}
-.donate-inner .s-sub { max-width: 400px; margin: 0 auto; }
-.donate-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.donate-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 11px 22px; border-radius: 6px;
-  font-family: var(--mono); font-size: 12px; font-weight: 600;
-  letter-spacing: .06em;
-  border: 1px solid var(--bdr3);
-  background: var(--bg2); color: var(--fg2);
-  transition: color .2s, background .2s, border-color .2s;
-}
-.donate-btn:hover { color: var(--fg); background: var(--bg3); border-color: var(--fg4); }
-.donate-btn svg { width: 15px; height: 15px; }
-
 footer {
   padding: 64px clamp(20px, 5%, 56px) 0;
   border-top: 1px solid var(--bdr);
@@ -874,10 +856,6 @@ footer {
   .trust-card-body { font-size: 13px; }
   .trust-pill { font-size: 10px; padding: 4px 10px; }
 
-  /* donate */
-  .donate-links { flex-direction: column; align-items: center; }
-  .donate-btn { width: 100%; justify-content: center; }
-
   /* showcase */
   .showcase-text { font-size: 11px; }
   .showcase-line { padding: 12px 18px; gap: 12px; }
@@ -916,7 +894,7 @@ footer {
       <a href="#faq"      class="nav-link">faq</a>
       <a href="#community" class="nav-link">community</a>
       <a href="#license"   class="nav-link">license</a>
-      <a href="#donate"    class="nav-link">donate</a>
+
     </div>
     <div class="nav-actions">
       <a href="https://github.com/ishmweet/veluna" class="gh-btn" target="_blank" rel="noopener">
@@ -952,7 +930,7 @@ footer {
   <a href="#faq"      onclick="closeMobile()">faq</a>
   <a href="#community" onclick="closeMobile()">community</a>
   <a href="#license"   onclick="closeMobile()">license</a>
-  <a href="#donate"    onclick="closeMobile()">donate</a>
+
   <a href="#download" class="m-dl" onclick="closeMobile()">Get Veluna</a>
 </div>
 
@@ -1345,26 +1323,6 @@ footer {
   </div>
 </section>
 
-<hr class="divider">
-
-<section id="donate" class="section">
-  <div class="section-inner">
-    <div class="donate-inner">
-      <span class="s-label reveal" style="text-align:center">Donate</span>
-      <h2 class="s-head reveal d1" style="text-align:center">Keep the lights on</h2>
-      <p class="s-sub reveal d2" style="text-align:center;margin:0 auto;">Veluna is free forever. If we've helped you enjoy uninterrupted, ad-free music, consider supporting the project with a donation.</p>
-      <div class="donate-links reveal d3">
-        <a href="https://ko-fi.com/velunaproject" class="donate-btn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          Support on Ko-fi
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
@@ -1410,7 +1368,6 @@ footer {
         <a href="#license">License</a>
         <a href="#license">Privacy Policy</a>
         <a href="https://github.com/ishmweet/veluna" target="_blank" rel="noopener">Source Code</a>
-        <a href="https://ko-fi.com/velunaproject" target="_blank" rel="noopener">Donate</a>
       </div>
 
     </div>
@@ -1447,7 +1404,7 @@ footer {
   }, { threshold: 0.07, rootMargin: '0px 0px -36px 0px' });
   revealEls.forEach(function(el) { io.observe(el); });
 
-  var sections = ['download','compare','features','faq','community','license','donate'];
+  var sections = ['download','compare','features','faq','community','license'];
   var navLinks = {};
   sections.forEach(function(id) {
     var el = document.querySelector('.nav-links a[href="#' + id + '"]');
