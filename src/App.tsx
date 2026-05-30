@@ -2987,7 +2987,7 @@ export default function Veluna() {
 
   
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",overflow:"hidden",fontFamily:"system-ui,-apple-system,sans-serif"}}
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#111010",color:"#d4cfcf",overflow:"hidden"}}
       onContextMenu={e => e.preventDefault()}>
       <style>{`
         @keyframes loadbar { 0%{transform:translateX(-100%)} 50%{transform:translateX(150%)} 100%{transform:translateX(400%)} }
@@ -3013,50 +3013,6 @@ export default function Veluna() {
         .ctx-menu { animation: popIn 0.15s cubic-bezier(0.2,0,0,1) both; }
         .playlist-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .playlist-card:hover { transform: translateY(-2px); }
-        .custom-scrollbar::-webkit-scrollbar{width:4px!important;}
-        .custom-scrollbar::-webkit-scrollbar-thumb{background:#252323!important;border-radius:2px!important;}
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#2e2c2c!important;}
-
-        /* ════ VELUNA ASH MONOCHROME PALETTE OVERRIDE ════ */
-        html,body,#root{background:#111010!important;color:#d4cfcf!important;}
-        input,textarea,select{background:#1e1c1c!important;color:#d4cfcf!important;border-color:#252323!important;}
-        input::placeholder,textarea::placeholder{color:#3a3838!important;}
-        ::-webkit-scrollbar{width:4px;height:4px;}
-        ::-webkit-scrollbar-track{background:transparent;}
-        ::-webkit-scrollbar-thumb{background:#252323;border-radius:2px;}
-        ::-webkit-scrollbar-thumb:hover{background:#2e2c2c;}
-        ::selection{background:rgba(212,207,207,0.2)!important;color:#d4cfcf!important;}
-        /* All bg neutrals → ash */
-        .bg-\[\#050505\],.bg-\[\#0a0a0a\],.bg-\[\#0f1115\]{background-color:#111010!important;}
-        .bg-\[\#0e0e0e\],.bg-\[\#0d0d0d\],.bg-\[\#111\],.bg-\[\#111111\]{background-color:#1e1c1c!important;}
-        .bg-neutral-950{background-color:#111010!important;}
-        .bg-neutral-900,.bg-neutral-900\/20,.bg-neutral-900\/40,.bg-neutral-900\/50,.bg-neutral-900\/60,.bg-neutral-900\/80{background-color:#161414!important;}
-        .bg-neutral-800,.bg-neutral-800\/40,.bg-neutral-800\/50,.bg-neutral-800\/60,.bg-neutral-800\/70,.bg-neutral-800\/80{background-color:#1e1c1c!important;}
-        .bg-white\/5,.bg-white\/\[0\.04\],.bg-white\/\[0\.03\]{background-color:#1e1c1c!important;}
-        .hover\:bg-neutral-800\/70:hover,.hover\:bg-neutral-800\/80:hover,.hover\:bg-neutral-900\/50:hover,
-        .hover\:bg-neutral-900\/60:hover,.hover\:bg-neutral-800:hover,.hover\:bg-white\/5:hover,
-        .hover\:bg-white\/\[0\.04\]:hover{background-color:#1e1c1c!important;}
-        /* All text neutrals → ash */
-        .text-white{color:#d4cfcf!important;}
-        .text-neutral-100,.text-neutral-200{color:#d4cfcf!important;}
-        .text-neutral-300{color:#8a8585!important;}
-        .text-neutral-400{color:#5a5656!important;}
-        .text-neutral-500{color:#3a3838!important;}
-        .text-neutral-600{color:#2e2c2c!important;}
-        .text-neutral-700{color:#252323!important;}
-        .hover\:text-white:hover,.hover\:text-neutral-200:hover{color:#d4cfcf!important;}
-        .hover\:text-neutral-300:hover{color:#8a8585!important;}
-        .hover\:text-neutral-400:hover{color:#5a5656!important;}
-        /* Borders */
-        .border-neutral-800,.border-neutral-800\/40,.border-neutral-800\/50,.border-neutral-800\/60{border-color:#1e1c1c!important;}
-        .border-neutral-700,.border-neutral-700\/50,.border-neutral-700\/60{border-color:#252323!important;}
-        .divide-neutral-800>*+*,.divide-neutral-800\/50>*+*{border-color:#1e1c1c!important;}
-        .hover\:border-neutral-700:hover{border-color:#252323!important;}
-        /* Accent white → ash */
-        .bg-white{background-color:#d4cfcf!important;}
-        .text-black{color:#111010!important;}
-        /* Hover accent bg */
-        .hover\:bg-\[#d4cfcf\]:hover,.hover\:bg-\[#d4cfcf\]\/5:hover{background-color:rgba(212,207,207,0.06)!important;}
       `}</style>
 
       <div style={{display:"flex",flex:"1 1 0%",overflow:"hidden",minHeight:0}}>
@@ -4243,7 +4199,7 @@ export default function Veluna() {
             onClick={() => { if (currentTrack) setShowLyrics(o => !o); }}
             disabled={!currentTrack}
             title="Lyrics"
-            style={showLyrics?{background:'none',border:'none',cursor:'pointer',color:'#d4cfcf',flexShrink:0,opacity:1}:{background:'none',border:'none',cursor:'pointer',color:'#3a3838',flexShrink:0}}>
+            style={showLyrics?{background:'none',border:'none',cursor:'pointer',color:'#d4cfcf',flexShrink:0}:{background:'none',border:'none',cursor:'pointer',color:'#3a3838',flexShrink:0}}>
             <Mic2 size={18} />
           </button>
           <button onClick={toggleMute} style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px"}}>
