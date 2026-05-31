@@ -3007,9 +3007,152 @@ export default function Veluna() {
 
   
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"var(--v-bg0)",color:"var(--v-fg)",overflow:"hidden"}}
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#0c0b0b",color:"#dedad7",overflow:"hidden"}}
       onContextMenu={e => e.preventDefault()}>
       <style>{`
+        /* ── VELUNA DESIGN TOKENS ── injected directly so they
+           resolve before any Tailwind/webview reset runs ────── */
+        :root, * {
+          --v-bg0: #0c0b0b;
+          --v-bg1: #111010;
+          --v-bg2: #171515;
+          --v-bg3: #1e1c1c;
+          --v-bg4: #252222;
+          --v-bg5: #2c2929;
+          --v-fg:  #dedad7;
+          --v-fg2: #9c9794;
+          --v-fg3: #5e5a58;
+          --v-fg4: #3a3735;
+          --v-bdr: #1a1818;
+          --v-bdr2:#222020;
+          --v-bdr3:#2e2b2b;
+        }
+
+        /* Force the webview root dark — belt AND suspenders */
+        html, body { background:#0c0b0b !important; color:#dedad7 !important; color-scheme:dark !important; }
+
+        /* ── Tailwind class overrides (monochrome enforcement) ── */
+
+        /* Backgrounds */
+        .bg-white, [class~="bg-white"]          { background-color:#dedad7 !important; }
+        [class*="bg-neutral-950"]               { background-color:#0c0b0b !important; }
+        [class*="bg-neutral-900"]               { background-color:#171515 !important; }
+        [class*="bg-neutral-800"]               { background-color:#1e1c1c !important; }
+        [class*="bg-neutral-700"]               { background-color:#252222 !important; }
+        [class*="bg-neutral-600"]               { background-color:#2c2929 !important; }
+        .bg-\\[\\#0e0e0e\\],.bg-\\[\\#0d0d0d\\],.bg-\\[\\#0c0c0c\\],
+        .bg-\\[\\#111\\],.bg-\\[\\#111111\\],.bg-\\[\\#0a0a0a\\],
+        .bg-\\[\\#050505\\],.bg-\\[\\#0f1115\\] { background-color:#171515 !important; }
+        [class*="bg-gradient-to"]               { background-image:none !important; background-color:#0c0b0b !important; }
+        [class*="hover:bg-neutral-900"]:hover   { background-color:#171515 !important; }
+        [class*="hover:bg-neutral-800"]:hover   { background-color:#1e1c1c !important; }
+        [class*="hover:bg-white"]:hover,[class*="hover:bg-neutral-900\\/50"]:hover,
+        [class*="hover:bg-neutral-900\\/60"]:hover { background-color:#1e1c1c !important; }
+        [class*="hover:bg-white\\/5"]:hover,[class*="hover:bg-white\\/10"]:hover  { background-color:rgba(255,255,255,0.035) !important; }
+        [class*="hover:bg-white\\/\\[0.04\\]"]:hover { background-color:rgba(255,255,255,0.028) !important; }
+        [class*="hover:bg-white\\/\\[0.03\\]"]:hover { background-color:rgba(255,255,255,0.02) !important; }
+        [class*="hover:bg-white\\/\\[0.02\\]"]:hover { background-color:rgba(255,255,255,0.015) !important; }
+        [class*="hover:bg-neutral-800\\/80"]:hover   { background-color:#252222 !important; }
+
+        /* Text */
+        [class~="text-white"]                   { color:#dedad7 !important; }
+        [class~="text-black"]                   { color:#0c0b0b !important; }
+        [class*="text-neutral-100"],[class*="text-neutral-200"] { color:#dedad7 !important; }
+        [class*="text-neutral-300"],[class*="text-neutral-400"] { color:#9c9794 !important; }
+        [class*="text-neutral-500"]             { color:#5e5a58 !important; }
+        [class*="text-neutral-600"]             { color:#3a3735 !important; }
+        [class*="text-neutral-700"]             { color:#2c2929 !important; }
+        [class*="hover:text-white"]:hover,[class*="hover:text-neutral-200"]:hover { color:#dedad7 !important; }
+        [class*="hover:text-neutral-300"]:hover { color:#9c9794 !important; }
+        [class*="hover:text-neutral-400"]:hover { color:#5e5a58 !important; }
+
+        /* Rogue colors → ash */
+        [class*="text-amber-400"],[class*="text-cyan-400"],[class*="text-emerald-400"],
+        [class*="text-violet-400"],[class*="text-purple-400"],[class*="text-blue-400"],
+        [class*="text-blue-500"]                { color:#9c9794 !important; }
+        [class*="text-red-400"],[class*="text-red-500"],[class*="text-red-600"] { color:#5e5a58 !important; }
+        [class*="hover:text-red-400"]:hover,[class*="hover:text-red-300"]:hover { color:#a05050 !important; }
+        [class*="bg-amber-500"],[class*="bg-cyan-500"],[class*="bg-emerald-500"],
+        [class*="bg-violet-500"],[class*="bg-blue-500"],[class*="bg-purple-500"],
+        [class*="bg-red-600"],[class*="bg-red-500"] { background-color:#1e1c1c !important; }
+        [class*="border-amber-500"],[class*="border-red-500"],[class*="border-red-600"],
+        [class*="border-\\[#1DB954\\]"]         { border-color:#2e2b2b !important; }
+        [class*="bg-red-500\\/10"]              { background-color:rgba(140,40,40,0.08) !important; }
+        [class*="border-red-500\\/20"]          { border-color:rgba(140,40,40,0.2) !important; }
+        [class*="bg-amber-500\\/10"]            { background-color:rgba(222,218,215,0.05) !important; }
+        [class*="border-amber-500\\/20"]        { border-color:rgba(222,218,215,0.1) !important; }
+        [class*="hover:bg-red-500\\/20"]:hover  { background-color:rgba(140,40,40,0.12) !important; }
+
+        /* #d4cfcf accent → our fg */
+        .text-\\[\\#d4cfcf\\],[class*="text-\\[#d4cfcf\\]"] { color:#dedad7 !important; }
+        [class*="bg-\\[#d4cfcf\\]\\/10"]        { background-color:rgba(222,218,215,0.07) !important; }
+        [class*="bg-\\[#d4cfcf\\]\\/20"]        { background-color:rgba(222,218,215,0.12) !important; }
+        [class*="bg-\\[#d4cfcf\\]\\/\\[0.07\\]"] { background-color:rgba(222,218,215,0.05) !important; }
+        [class*="bg-\\[#d4cfcf\\]\\/\\[0.08\\]"] { background-color:rgba(222,218,215,0.07) !important; }
+        [class*="border-\\[#d4cfcf\\]\\/15"]    { border-color:rgba(222,218,215,0.1) !important; }
+        [class*="border-\\[#d4cfcf\\]\\/20"]    { border-color:rgba(222,218,215,0.13) !important; }
+        [class*="border-\\[#d4cfcf\\]\\/30"]    { border-color:rgba(222,218,215,0.18) !important; }
+        [class*="hover:border-\\[#d4cfcf\\]\\/60"]:hover { border-color:rgba(222,218,215,0.35) !important; }
+        [class*="hover:bg-\\[#d4cfcf\\]\\/20"]:hover     { background-color:rgba(222,218,215,0.12) !important; }
+        [class*="ring-\\[#d4cfcf\\]"]           { --tw-ring-color:rgba(222,218,215,0.18) !important; }
+        [class*="bg-\\[#d4cfcf\\]\\/80"]        { background-color:rgba(222,218,215,0.7) !important; }
+
+        /* Borders */
+        [class*="border-neutral-800"] { border-color:#1a1818 !important; }
+        [class*="border-neutral-700"] { border-color:#222020 !important; }
+        [class*="border-neutral-600"] { border-color:#2e2b2b !important; }
+        [class*="divide-neutral-800"] > * + * { border-color:#1a1818 !important; }
+        [class*="hover:border-neutral-700"]:hover { border-color:#222020 !important; }
+
+        /* Modal backdrops */
+        [class*="bg-black\\/85"] { background-color:rgba(5,4,4,0.9) !important; }
+        [class*="bg-black\\/80"] { background-color:rgba(5,4,4,0.85) !important; }
+        [class*="bg-black\\/70"] { background-color:rgba(5,4,4,0.78) !important; }
+
+        /* Inputs */
+        input, textarea, select {
+          background-color:#1e1c1c !important;
+          color:#dedad7 !important;
+          border-color:#222020 !important;
+        }
+        input::placeholder, textarea::placeholder { color:#3a3735 !important; opacity:1 !important; }
+        input:focus, textarea:focus { border-color:#2e2b2b !important; box-shadow:0 0 0 2px rgba(222,218,215,0.07) !important; outline:none !important; }
+
+        /* Primary round play button */
+        button.rounded-full.bg-white { background:#dedad7 !important; color:#0c0b0b !important; }
+
+        /* Shadows — remove colored glows */
+        [class*="shadow-\\[0_0_"] { box-shadow:0 4px 20px rgba(0,0,0,0.55) !important; filter:none !important; }
+        [class*="drop-shadow-\\[0_0_"] { filter:none !important; }
+
+        /* Settings tab active indicator */
+        [class*="shadow-\\[inset_2px_0_0_#d4cfcf\\]"] { box-shadow:inset 2px 0 0 #9c9794 !important; }
+
+        /* Danger confirm button */
+        [class*="bg-red-500\\/10"][class*="border-red-500\\/30"] {
+          background:rgba(140,40,40,0.08) !important; border-color:rgba(140,40,40,0.22) !important; color:#a05050 !important;
+        }
+
+        /* Separator lines */
+        .h-px { background-color:#1a1818 !important; }
+
+        /* Skeleton */
+        @keyframes velunaPulse { 0%,100%{opacity:0.45} 50%{opacity:0.18} }
+        [class*="animate-pulse"] { animation:velunaPulse 2s ease-in-out infinite !important; background-color:#1e1c1c !important; }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width:3px; height:3px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:#2c2929; border-radius:2px; }
+        ::-webkit-scrollbar-thumb:hover { background:#2e2b2b; }
+
+        /* Selection */
+        ::selection { background:rgba(222,218,215,0.18) !important; color:#dedad7 !important; }
+
+        /* Kbd */
+        kbd { background:#1e1c1c !important; border-color:#2e2b2b !important; color:#9c9794 !important; }
+
+        /* Animations */
         @keyframes loadbar { 0%{transform:translateX(-100%)} 50%{transform:translateX(150%)} 100%{transform:translateX(400%)} }
         @keyframes dropIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -3022,10 +3165,10 @@ export default function Veluna() {
         @keyframes queuePulse { 0%{transform:scale(1)} 40%{transform:scale(1.45)} 70%{transform:scale(0.9)} 100%{transform:scale(1)} }
         .queue-badge-pulse { animation: queuePulse 0.4s cubic-bezier(0.2,0,0,1) both; }
         .slider-track:hover .slider-thumb{opacity:1!important;transform:translateY(-50%) scale(1.25)}
-        .custom-scrollbar::-webkit-scrollbar{width:4px}
+        .custom-scrollbar::-webkit-scrollbar{width:3px}
         .custom-scrollbar::-webkit-scrollbar-track{background:transparent}
-        .custom-scrollbar::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#444}
+        .custom-scrollbar::-webkit-scrollbar-thumb{background:#2c2929;border-radius:2px}
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#2e2b2b}
         *{-webkit-user-select:none!important;user-select:none!important;}
         input,textarea{-webkit-user-select:text!important;user-select:text!important;}
         .home-card { animation: fadeUp 0.22s cubic-bezier(0.2,0,0,1) both; }
