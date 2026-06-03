@@ -632,7 +632,7 @@ function CsvImportModal({
               <div key={step.n} className="flex gap-4 items-start">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-black mt-0.5" style={{ background: '#e2ddd9' }}>{step.n}</div>
                 <div>
-                  <p className="text-sm font-semibold text-white">{step.title}</p>
+                  <p style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>{step.title}</p>
                   <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">{step.desc}</p>
                   {step.link && <button onClick={() => openUrl(step.link!).catch(() => window.open(step.link!, '_blank'))}
                     className="text-base mt-2 inline-block font-bold hover:underline cursor-pointer" style={{ color: '#9e9894' }}>{step.linkLabel}</button>}
@@ -671,7 +671,7 @@ function CsvImportModal({
                   <div className="w-8 h-8 rounded-md shrink-0 overflow-hidden bg-neutral-900 flex items-center justify-center">
                     {r.cover ? <img src={r.cover} className="w-full h-full object-cover" alt="" /> : <Music size={13} className="text-neutral-700" />}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div style={{flex:1,minWidth:0}}>
                     <p className="text-sm font-semibold text-white truncate leading-snug">{r.title}</p>
                     <p className="text-xs text-neutral-600 truncate">{r.artist}</p>
                   </div>
@@ -807,7 +807,7 @@ function YtImportModal({
               {results.slice(0, 50).map((r, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <img src={r.cover} className="w-10 h-7 rounded object-cover shrink-0 bg-neutral-900" alt="" />
-                  <div className="flex-1 min-w-0">
+                  <div style={{flex:1,minWidth:0}}>
                     <p className="text-sm text-white truncate">{r.title}</p>
                     <p className="text-xs text-neutral-600 truncate">{r.artist}</p>
                   </div>
@@ -924,41 +924,49 @@ function SettingsPanel({
   ];
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {}
-      <div className="w-48 shrink-0 border-r border-neutral-800/50 flex flex-col p-4 gap-1">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-600 px-3 mb-2">Settings</p>
+    <div style={{flex:1,display:"flex",overflow:"hidden"}}>
+      <div style={{width:"172px",flexShrink:0,borderRight:"1px solid #1c1a1a",display:"flex",flexDirection:"column",padding:"14px 10px",gap:"2px"}}>
+        <div style={{fontSize:"9px",fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",color:"#363230",padding:"0 8px 10px"}}>Settings</div>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-left w-full
-              ${activeTab === tab.id
-                ? 'bg-[#d4cfcf]/[0.08] text-[#d4cfcf] border border-[#d4cfcf]/15 shadow-[inset_2px_0_0_#d4cfcf]'
-                : 'text-neutral-500 hover:text-neutral-200 hover:bg-white/[0.03] border border-transparent'}`}>
-            <span className={activeTab === tab.id ? 'text-[#d4cfcf]' : 'text-neutral-600'}>{tab.icon}</span>
-            <span className="flex-1">{tab.label}</span>
+            style={{
+              display:"flex",alignItems:"center",gap:"9px",
+              padding:"8px 10px",borderRadius:"8px",
+              border:"none",cursor:"pointer",
+              textAlign:"left",width:"100%",
+              fontSize:"12.5px",fontWeight:500,
+              background:activeTab===tab.id?"rgba(226,221,217,0.07)":"transparent",
+              color:activeTab===tab.id?"#e2ddd9":"#5c5755",
+              position:"relative",
+              transition:"background .12s,color .12s",
+              boxShadow:activeTab===tab.id?"inset 2px 0 0 #9e9894":"none",
+            }}
+            onMouseEnter={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="rgba(226,221,217,0.04)";e.currentTarget.style.color="#9e9894";}}}
+            onMouseLeave={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#5c5755";}}}>
+            <span style={{color:activeTab===tab.id?"#9e9894":"#363230",display:"flex",flexShrink:0}}>{tab.icon}</span>
+            <span style={{flex:1}}>{tab.label}</span>
             {tab.id === 'updates' && updateAvailable && (
-              <span className="w-2 h-2 rounded-full bg-[#d4cfcf] shrink-0" />
+              <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"#9e9894",flexShrink:0}} />
             )}
           </button>
         ))}
       </div>
 
-      {}
-      <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
+      <div style={{flex:1,overflowY:"auto",padding:"20px 24px"}} className="custom-scrollbar">
 
         {}
         {activeTab === 'updates' && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">Updates</h2>
-              <p className="text-sm text-neutral-500">Check for new releases of Veluna.</p>
+              <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Updates</h2>
+              <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Check for new releases of Veluna.</p>
             </div>
 
             <div className={`rounded-xl border p-5 flex items-start gap-4 ${updateAvailable ? 'bg-[#d4cfcf]/[0.04] border-[#d4cfcf]/20' : 'bg-neutral-900/40 border-neutral-800/40'}`}>
               <div className={`mt-0.5 shrink-0 ${updateAvailable ? 'text-[#d4cfcf]' : 'text-neutral-600'}`}>
                 {updateAvailable ? <ArrowUpCircle size={22} /> : <CheckCircle size={22} />}
               </div>
-              <div className="flex-1 min-w-0">
+              <div style={{flex:1,minWidth:0}}>
                 {updateAvailable ? (
                   <>
                     <p className="text-sm font-semibold text-white mb-0.5">Update available — v{updateAvailable}</p>
@@ -975,7 +983,7 @@ function SettingsPanel({
                 ) : (
                   <>
                     <p className="text-sm font-semibold text-white mb-0.5">You're up to date</p>
-                    <p className="text-xs text-neutral-500">Veluna v{appVersion} is the latest release.</p>
+                    <p style={{fontSize:"11px",color:"#5c5755"}}>Veluna v{appVersion} is the latest release.</p>
                   </>
                 )}
               </div>
@@ -986,19 +994,19 @@ function SettingsPanel({
         {activeTab === 'downloads' && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">Downloads</h2>
-              <p className="text-sm text-neutral-500">Configure download quality and destination folder.</p>
+              <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Downloads</h2>
+              <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Configure download quality and destination folder.</p>
             </div>
 
             {}
             <div className="border border-neutral-800/60 rounded-xl overflow-visible">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
-                <h3 className="text-sm font-semibold text-white">Audio Quality</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Quality of downloaded MP3 files.</p>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Quality</h3>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Quality of downloaded MP3 files.</p>
               </div>
               <div className="px-5 py-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white">Download Quality</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Download Quality</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
                     {downloadQuality === 'High' ? 'Best available audio bitrate (320kbps+)' : downloadQuality === 'Medium' ? 'Balanced quality (~128kbps)' : 'Smallest file size'}
                   </p>
@@ -1016,16 +1024,16 @@ function SettingsPanel({
             </div>
 
             {}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
-                <h3 className="text-sm font-semibold text-white">Download Folder</h3>
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Download Folder</h3>
               </div>
-              <div className="flex items-center justify-between px-5 py-4 cursor-pointer group hover:bg-white/[0.02] transition-colors" onClick={handleSelectDirectory}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-mono text-neutral-300 truncate">{downloadPath}</p>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={handleSelectDirectory}>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:"12px",fontFamily:"monospace",color:"#c8c4c0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{downloadPath}</p>
                   {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} audio files</p>}
                 </div>
-                <button className="p-2 ml-4 text-neutral-600 group-hover:text-[#d4cfcf] transition-colors shrink-0 rounded-lg">
+                <button style={{padding:"6px",marginLeft:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",flexShrink:0,borderRadius:"7px",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <FolderOpen size={17} />
                 </button>
               </div>
@@ -1033,13 +1041,13 @@ function SettingsPanel({
 
             {}
             <div className="border border-neutral-800/60 rounded-xl overflow-visible">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
-                <h3 className="text-sm font-semibold text-white">Audio Format</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Container format for downloaded files.</p>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Format</h3>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Container format for downloaded files.</p>
               </div>
               <div className="px-5 py-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white">Format</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Format</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
                     {downloadFormat === 'opus' ? 'Best compression, native YouTube codec' : downloadFormat === 'm4a' ? 'AAC in M4A, great Apple/car stereo compat' : downloadFormat === 'flac' ? 'Lossless — largest files' : 'MP3 — widest compatibility'}
                   </p>
@@ -1058,28 +1066,28 @@ function SettingsPanel({
             </div>
 
             {}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Image size={14} className="text-[#d4cfcf]" /> File Options</h3>
               </div>
-              <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800/30">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",borderBottom:"1px solid #1c1a1a"}}>
                 <div>
-                  <p className="text-sm font-medium text-white">Embed Thumbnail</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Embed Thumbnail</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{embedThumbnail ? 'Cover art written into file tags' : 'No cover art in downloaded files'}</p>
                 </div>
                 <button onClick={() => setEmbedThumbnail(!embedThumbnail)}
-                  className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${embedThumbnail ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${embedThumbnail ? 'left-5' : 'left-0.5'}`} />
+                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:embedThumbnail?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:embedThumbnail?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
+                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:embedThumbnail?"#0c0b0b":"#5c5755",left:embedThumbnail?"20px":"2px"}} />
                 </button>
               </div>
-              <div className="flex items-center justify-between px-5 py-4">
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <p className="text-sm font-medium text-white">Duplicate Detection</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Duplicate Detection</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{duplicateDetect ? 'Skips tracks already in your download folder' : 'Always download regardless of duplicates'}</p>
                 </div>
                 <button onClick={() => setDuplicateDetect(!duplicateDetect)}
-                  className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${duplicateDetect ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${duplicateDetect ? 'left-5' : 'left-0.5'}`} />
+                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:duplicateDetect?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:duplicateDetect?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
+                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:duplicateDetect?"#0c0b0b":"#5c5755",left:duplicateDetect?"20px":"2px"}} />
                 </button>
               </div>
             </div>
@@ -1089,19 +1097,19 @@ function SettingsPanel({
         {activeTab === 'playback' && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">Playback</h2>
-              <p className="text-sm text-neutral-500">Audio engine and playback behaviour settings.</p>
+              <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Playback</h2>
+              <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Audio engine and playback behaviour settings.</p>
             </div>
 
             {/* Loudnorm */}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Zap size={14} className="text-[#d4cfcf]" /> Audio Normalization</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Equalizes loudness across all tracks so nothing is too loud or too quiet.</p>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Equalizes loudness across all tracks so nothing is too loud or too quiet.</p>
               </div>
-              <div className="flex items-center justify-between px-5 py-4">
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <p className="text-sm font-medium text-white">Loudnorm (EBU R128)</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Loudnorm (EBU R128)</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{loudnormEnabled ? 'Active — consistent volume across tracks' : 'Disabled — faster start, raw volume'}</p>
                 </div>
                 <button onClick={() => {
@@ -1110,21 +1118,21 @@ function SettingsPanel({
                   if (warn) { showToast(`⚠ ${warn}`); }
                   setLoudnormEnabled(next);
                 }}
-                  className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${loudnormEnabled ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${loudnormEnabled ? 'left-5' : 'left-0.5'}`} />
+                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:loudnormEnabled?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:loudnormEnabled?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
+                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:loudnormEnabled?"#0c0b0b":"#5c5755",left:loudnormEnabled?"20px":"2px"}} />
                 </button>
               </div>
             </div>
 
             {/* Playback Quality */}
             <div className="border border-neutral-800/60 rounded-xl overflow-visible">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Gauge size={14} className="text-[#d4cfcf]" /> Stream Quality</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Higher quality uses more bandwidth. Opus is native YouTube codec with best compression.</p>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Higher quality uses more bandwidth. Opus is native YouTube codec with best compression.</p>
               </div>
               <div className="flex items-center justify-between px-5 py-5">
                 <div>
-                  <p className="text-sm font-medium text-white">Streaming Format</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Streaming Format</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Preferred audio codec for streaming playback</p>
                 </div>
                 <ThemedSelect
@@ -1140,13 +1148,13 @@ function SettingsPanel({
             </div>
 
             {/* Skip Silence */}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2"><SkipForward size={14} className="text-[#d4cfcf]" /> Smart Playback</h3>
               </div>
-              <div className="flex items-center justify-between px-5 py-4">
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <p className="text-sm font-medium text-white">Skip Silence</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Skip Silence</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{skipSilence ? 'Auto-skips silent parts between tracks' : 'Play all audio including silence'}</p>
                 </div>
                 <button onClick={() => {
@@ -1155,18 +1163,18 @@ function SettingsPanel({
                   if (warn) { showToast(`⚠ ${warn}`); }
                   setSkipSilence(next);
                 }}
-                  className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${skipSilence ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${skipSilence ? 'left-5' : 'left-0.5'}`} />
+                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:skipSilence?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:skipSilence?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
+                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:skipSilence?"#0c0b0b":"#5c5755",left:skipSilence?"20px":"2px"}} />
                 </button>
               </div>
             </div>
 
             {/* Audio Output */}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20 flex items-center justify-between">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Volume2 size={14} className="text-[#d4cfcf]" /> Audio Output</h3>
-                  <p className="text-xs text-neutral-600 mt-0.5">Select output device. Switches instantly without restarting playback.</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Select output device. Switches instantly without restarting playback.</p>
                 </div>
                 <button onClick={() => invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices').then(setAudioDevices).catch(() => {})}
                   className="p-1.5 text-neutral-600 hover:text-[#d4cfcf] transition-colors rounded-lg" title="Refresh">
@@ -1175,7 +1183,7 @@ function SettingsPanel({
               </div>
               <div className="flex flex-col divide-y divide-neutral-800/40">
                 {audioDevices.length === 0 ? (
-                  <div className="px-5 py-4 text-sm text-neutral-600">No devices found</div>
+                  <div style={{padding:"10px 14px",fontSize:"12px",color:"#5c5755"}}>No devices found</div>
                 ) : audioDevices.map(dev => {
                   const isDefault = dev.is_default;
                   return (
@@ -1190,7 +1198,7 @@ function SettingsPanel({
                         } catch (e) { showToast(`Switch failed: ${e}`); }
                         finally { setSwitchingDevice(false); }
                       }}
-                      className={`flex items-center gap-3 px-5 py-3.5 text-left transition-colors w-full
+                      style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 14px",textAlign:"left",cursor:"pointer",width:"100%",background:"transparent",border:"none",transition:"background .1s"}} className={`
                         ${isDefault ? 'bg-white/[0.04]' : 'hover:bg-white/[0.03] cursor-pointer'}
                         ${switchingDevice && !isDefault ? 'opacity-40' : ''}`}>
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border
@@ -1199,7 +1207,7 @@ function SettingsPanel({
                           ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? '#9e9894' : '#3a3a3a'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
                           : <Volume2 size={13} className={isDefault ? 'text-[#d4cfcf]' : 'text-neutral-600'} />}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div style={{flex:1,minWidth:0}}>
                         <p className={`text-sm font-medium truncate ${isDefault ? 'text-white' : 'text-neutral-400'}`}>{dev.name}</p>
                         {dev.form && <p className="text-xs text-neutral-600 capitalize mt-0.5">{dev.form}</p>}
                       </div>
@@ -1212,13 +1220,13 @@ function SettingsPanel({
 
             {/* Lyrics Source */}
             <div className="border border-neutral-800/60 rounded-xl overflow-visible">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Mic2 size={14} className="text-[#d4cfcf]" /> Lyrics Source</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Primary source for synced lyrics. Falls back to lrclib → lyrics.ovh automatically.</p>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Primary source for synced lyrics. Falls back to lrclib → lyrics.ovh automatically.</p>
               </div>
               <div className="flex items-center justify-between px-5 py-5">
                 <div>
-                  <p className="text-sm font-medium text-white">Primary source</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Primary source</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
                     {lyricsSource === 'musixmatch' ? 'Musixmatch — word-level richsync when available'
                       : lyricsSource === 'netease' ? 'NetEase — strong for C-pop / K-pop'
@@ -1234,11 +1242,11 @@ function SettingsPanel({
             </div>
 
             {/* Equalizer */}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20 flex items-center justify-between">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2"><BarChart2 size={14} className="text-[#d4cfcf]" /> Equalizer</h3>
-                  <p className="text-xs text-neutral-600 mt-0.5">Adjust bass, mid, and treble. Applied in real-time via mpv.</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Adjust bass, mid, and treble. Applied in real-time via mpv.</p>
                 </div>
                 <button onClick={() => { setEq({ bass: 0, mid: 0, treble: 0 }); invoke('set_equalizer', { bass: 0, mid: 0, treble: 0 }).catch(() => {}); }}
                   className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors px-2 py-1 rounded border border-neutral-800 hover:border-neutral-700">
@@ -1254,7 +1262,7 @@ function SettingsPanel({
                   <div key={key}>
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <span className="text-sm font-medium text-white">{label}</span>
+                        <span style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>{label}</span>
                         <span className="text-xs text-neutral-600 ml-2">{desc}</span>
                       </div>
                       <span className={`text-xs font-bold tabular-nums w-12 text-right ${eq[key] > 0 ? 'text-[#d4cfcf]' : eq[key] < 0 ? 'text-red-400' : 'text-neutral-500'}`}>
@@ -1297,61 +1305,61 @@ function SettingsPanel({
         {activeTab === 'storage' && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">Storage</h2>
-              <p className="text-sm text-neutral-500">Backup and restore your playlists, queue, settings, and history.</p>
+              <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Storage</h2>
+              <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Backup and restore your playlists, queue, settings, and history.</p>
             </div>
 
             {}
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
-                <h3 className="text-sm font-semibold text-white">Backup Location</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Choose where backup files are saved.</p>
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Backup Location</h3>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Choose where backup files are saved.</p>
               </div>
-              <div className="flex items-center justify-between px-5 py-4 cursor-pointer group hover:bg-white/[0.02] transition-colors" onClick={async () => {
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={async () => {
                 try {
                   const sel = await (await import('@tauri-apps/plugin-dialog')).open({ directory: true, multiple: false, defaultPath: backupPath });
                   if (sel) setBackupPath(sel as string);
                 } catch {}
               }}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-mono text-neutral-300 truncate">{backupPath || downloadPath}</p>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:"12px",fontFamily:"monospace",color:"#c8c4c0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{backupPath || downloadPath}</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Backup file: veluna_backup.json</p>
                 </div>
-                <button className="p-2 ml-4 text-neutral-600 group-hover:text-[#d4cfcf] transition-colors shrink-0 rounded-lg">
+                <button style={{padding:"6px",marginLeft:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",flexShrink:0,borderRadius:"7px",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <FolderOpen size={17} />
                 </button>
               </div>
             </div>
 
-            <div className="border border-neutral-800/60 rounded-xl divide-y divide-neutral-800/60 overflow-hidden">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               {}
-              <div className="px-5 py-4 flex items-center justify-between group hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={onBackup}>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={onBackup}>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Create Backup</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">Save all playlists, queue, history and settings to a JSON file.</p>
+                  <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Create Backup</h3>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Save all playlists, queue, history and settings to a JSON file.</p>
                 </div>
-                <button className="p-2 text-neutral-600 group-hover:text-[#d4cfcf] transition-colors rounded-lg ml-4 shrink-0">
+                <button style={{padding:"6px",marginLeft:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",flexShrink:0,borderRadius:"7px",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <Upload size={17} />
                 </button>
               </div>
 
               {}
-              <div className="px-5 py-4 flex items-center justify-between group hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={onRestore}>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={onRestore}>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Restore Backup</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">Restore your data and settings from a backup file.</p>
+                  <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Restore Backup</h3>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Restore your data and settings from a backup file.</p>
                 </div>
-                <button className="p-2 text-neutral-600 group-hover:text-[#d4cfcf] transition-colors rounded-lg ml-4 shrink-0">
+                <button style={{padding:"6px",marginLeft:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",flexShrink:0,borderRadius:"7px",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <ArchiveRestore size={17} />
                 </button>
               </div>
 
               {}
-              <div className="px-5 py-4 flex items-center justify-between group hover:bg-red-500/[0.04] transition-colors cursor-pointer"
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(180,40,40,0.05)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
                 onClick={onReset}>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Reset Veluna App</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">Clear all data and reset the app to its default state.</p>
+                  <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Reset Veluna App</h3>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Clear all data and reset the app to its default state.</p>
                 </div>
                 <button className="p-2 text-neutral-700 group-hover:text-red-400 transition-colors rounded-lg ml-4 shrink-0">
                   <Trash2 size={17} />
@@ -1364,25 +1372,25 @@ function SettingsPanel({
         {activeTab === 'appearance' && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
-              <h2 className="text-xl font-bold text-white mb-1">Appearance</h2>
-              <p className="text-sm text-neutral-500">Tray icon and window behaviour.</p>
+              <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Appearance</h2>
+              <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Tray icon and window behaviour.</p>
             </div>
-            <div className="border border-neutral-800/60 rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-neutral-800/40 bg-neutral-900/20">
-                <h3 className="text-sm font-semibold text-white">System Tray</h3>
-                <p className="text-xs text-neutral-600 mt-0.5">Left-click icon toggles window. Tray menu: play/pause, next, prev, quit.</p>
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>System Tray</h3>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Left-click icon toggles window. Tray menu: play/pause, next, prev, quit.</p>
               </div>
-              <div className="flex items-center justify-between px-5 py-4">
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <p className="text-sm font-medium text-white">Enable Tray Icon</p>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Enable Tray Icon</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{trayEnabled ? 'Active — close button hides to tray' : 'Disabled — close exits app'}</p>
                 </div>
                 <button onClick={async () => {
                   const next = !trayEnabled;
                   try { await invoke('tray_set', { enabled: next }); setTrayEnabled(next); }
                   catch (e) { showToast(`Tray unavailable: ${e}`); }
-                }} className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${trayEnabled ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${trayEnabled ? 'left-5' : 'left-0.5'}`} style={trayEnabled?{background:'#0e0d0d'}:{background:'white'}} />
+                }} style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:trayEnabled?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:trayEnabled?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s,border-color .2s",cursor:"pointer"}}>
+                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:trayEnabled?"#0c0b0b":"#5c5755",left:trayEnabled?"20px":"2px"}}/>
                 </button>
               </div>
             </div>
@@ -1463,11 +1471,11 @@ function DownloadsPanel({
   return (
     <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
       {}
-      <div className="flex items-center gap-4 mb-6">
+      <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"14px"}}>
         <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-[#d4cfcf]/10 border border-[#d4cfcf]/30 shrink-0">
           <HardDrive size={22} className="text-[#d4cfcf]" />
         </div>
-        <div className="flex-1 min-w-0">
+        <div style={{flex:1,minWidth:0}}>
           <h2 className="text-2xl font-bold text-white">Offline</h2>
           {}
           <button onClick={onChangeFolder}
@@ -1475,7 +1483,7 @@ function DownloadsPanel({
             <span className="truncate">{downloadPath}</span>
             <FolderOpen size={13} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
-          {diskInfo && <p className="text-xs text-neutral-600 mt-0.5">{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} files</p>}
+          {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} files</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={onChangeFolder} className="p-2 text-neutral-500 hover:text-[#d4cfcf] transition-colors rounded-lg hover:bg-white/5" title="Change folder"><FolderOpen size={16} /></button>
@@ -1488,21 +1496,15 @@ function DownloadsPanel({
 
       {}
       {!scanning && tracks.length > 0 && (
-        <div className="relative mb-4">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search size={15} className={searchQ ? 'text-[#d4cfcf]' : 'text-neutral-600'} />
-          </div>
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Filter tracks..."
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
-            className="w-full bg-neutral-900/60 border border-neutral-800 text-white rounded-xl py-2.5 pl-9 pr-9 focus:outline-none focus:border-[#d4cfcf]/50 focus:ring-1 focus:ring-[#d4cfcf]/20 transition-all text-sm placeholder-neutral-600"
+        <div style={{position:"relative",marginBottom:"10px"}}>
+          <Search size={14} style={{position:"absolute",left:"11px",top:"50%",transform:"translateY(-50%)",color:searchQ?"#9e9894":"#363230",pointerEvents:"none"}}/>
+          <input ref={searchRef} type="text" placeholder="Filter tracks…" value={searchQ}
+            onChange={e=>setSearchQ(e.target.value)}
+            style={{width:"100%",height:"36px",background:"#161414",border:"1px solid #252222",color:"#e2ddd9",borderRadius:"9px",padding:"0 32px 0 34px",fontSize:"13px",outline:"none"}}
           />
           {searchQ && (
-            <button onClick={() => setSearchQ('')} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-white transition-colors">
-              <X size={14} />
+            <button onClick={()=>setSearchQ('')} style={{position:"absolute",right:"8px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",padding:"2px"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
+              <X size={13}/>
             </button>
           )}
         </div>
@@ -1515,39 +1517,37 @@ function DownloadsPanel({
       )}
 
       {scanning && (
-        <div className="flex flex-col gap-1">
+        <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3.5 rounded-lg">
-              <div className="w-10 h-10 rounded-md bg-neutral-800/60 animate-pulse shrink-0" />
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="h-3 bg-neutral-800/70 rounded-full animate-pulse" style={{ width: `${50 + (i * 11) % 35}%` }} />
-                <div className="h-2.5 bg-neutral-800/40 rounded-full animate-pulse" style={{ width: `${25 + (i * 7) % 20}%` }} />
+            <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"8px 12px"}}>
+              <div style={{width:"38px",height:"38px",borderRadius:"7px",background:"#1c1a1a",flexShrink:0}} className="animate-pulse"/>
+              <div style={{flex:1,display:"flex",flexDirection:"column",gap:"6px"}}>
+                <div style={{height:"11px",background:"#1c1a1a",borderRadius:"3px",width:`${50+(i*11)%35}%`}} className="animate-pulse"/>
+                <div style={{height:"9px",background:"#1c1a1a",borderRadius:"3px",width:`${25+(i*7)%20}%`}} className="animate-pulse"/>
               </div>
-              <div className="w-12 h-2.5 bg-neutral-800/40 rounded-full animate-pulse shrink-0" />
             </div>
           ))}
         </div>
       )}
 
       {!scanning && tracks.length === 0 && !error && (
-        <div className="flex flex-col items-center justify-center h-48 text-neutral-700 gap-4">
-          <FileMusic size={40} strokeWidth={1} />
-          <div className="text-center">
-            <p className="text-sm font-medium text-neutral-600">No audio files found</p>
-            <p className="text-xs text-neutral-700 mt-1">Download tracks from Home, or change your folder in Settings → Downloads.</p>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"160px",gap:"12px",textAlign:"center"}}>
+          <div style={{width:"52px",height:"52px",borderRadius:"12px",background:"#161414",border:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <FileMusic size={22} strokeWidth={1} style={{color:"#363230"}}/>
+          </div>
+          <div>
+            <div style={{fontSize:"13px",fontWeight:600,color:"#5c5755"}}>No audio files found</div>
+            <div style={{fontSize:"11px",color:"#363230",marginTop:"4px"}}>Download tracks from Home or change folder in Settings</div>
           </div>
         </div>
       )}
 
       {!scanning && tracks.length > 0 && (
         <>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-1.5 h-5 bg-[#d4cfcf] rounded-full shrink-0" />
-            <h3 className="text-base font-bold text-white flex-1">
-              {searchQ.trim() ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}` : `${tracks.length} track${tracks.length !== 1 ? 's' : ''}`}
-            </h3>
-            {enriching && <span className="text-[11px] text-neutral-600 flex items-center gap-1.5"><div className="w-2.5 h-2.5 border border-neutral-600 border-t-transparent rounded-full animate-spin" />reading metadata</span>}
-            {!searchQ && !enriching && <p className="text-xs text-neutral-700">Drag to reorder</p>}
+          <div className="v-section-head">
+            <h2>{searchQ.trim()?`${filtered.length} result${filtered.length!==1?'s':''}`:`${tracks.length} track${tracks.length!==1?'s':''}`}</h2>
+            {enriching && <span style={{fontSize:"11px",color:"#5c5755",display:"flex",alignItems:"center",gap:"5px"}}><div style={{width:"10px",height:"10px",border:"1.5px solid #5c5755",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>reading…</span>}
+            {!searchQ && !enriching && <span style={{fontSize:"10px",color:"#363230"}}>drag to reorder</span>}
           </div>
 
           {filtered.length === 0 && searchQ && (
@@ -1564,69 +1564,52 @@ function DownloadsPanel({
               const isDragOver = dragOverLocalIdx === i && dragLocalIdx.current !== null && dragLocalIdx.current !== i;
               return (
                 <div key={track.path}
-                  className={`relative flex items-center gap-4 px-4 py-3.5 rounded-lg cursor-pointer transition-all duration-150 group border
-                    ${isDragOver ? 'border-[#e2ddd9]/20 bg-white/[0.03]' : ''}
-                    ${isActive && !isDragOver ? 'bg-white/[0.05] border-white/[0.08]' : !isDragOver ? 'hover:bg-white/5 border-transparent' : ''}`}
-                  onMouseEnter={() => {
-                    setHovered(track.path);
-                    if (dragLocalIdx.current !== null) { dragOverLocalIdxRef.current = i; setDragOverLocalIdx(i); }
-                  }}
+                  className={`v-track${isActive?' v-track--active':''}`}
+                  style={{position:"relative",borderColor:isDragOver?"rgba(226,221,217,0.2)":"undefined"}}
+                  onMouseEnter={() => { setHovered(track.path); if(dragLocalIdx.current!==null){dragOverLocalIdxRef.current=i;setDragOverLocalIdx(i);} }}
                   onMouseLeave={() => setHovered(null)}
                   onClick={() => onPlayLocalTrack(track, searchQ ? filtered : tracks, i)}
                 >
-                  {isDragOver && <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#d4cfcf] rounded-full z-10 pointer-events-none" />}
+                  {isDragOver && <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />}
                   {!searchQ && (
-                    <div className="w-4 flex items-center justify-center shrink-0 cursor-grab opacity-0 group-hover:opacity-40 hover:!opacity-70 transition-opacity"
+                    <div style={{width:"14px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"grab",opacity:isHov?0.5:0,transition:"opacity .12s"}}
                       onMouseDown={e => {
                         e.preventDefault();
-                        dragLocalIdx.current = i;
-                        dragOverLocalIdxRef.current = i;
-                        setDragOverLocalIdx(i);
+                        dragLocalIdx.current = i; dragOverLocalIdxRef.current = i; setDragOverLocalIdx(i);
                         const onUp = () => {
-                          const from = dragLocalIdx.current;
-                          const to = dragOverLocalIdxRef.current;
-                          dragLocalIdx.current = null;
-                          dragOverLocalIdxRef.current = null;
-                          setDragOverLocalIdx(null);
+                          const from = dragLocalIdx.current; const to = dragOverLocalIdxRef.current;
+                          dragLocalIdx.current = null; dragOverLocalIdxRef.current = null; setDragOverLocalIdx(null);
                           window.removeEventListener('mouseup', onUp);
-                          if (from === null || to === null || from === to) return;
-                          setTracks(prev => {
-                            const next = [...prev];
-                            const [moved] = next.splice(from, 1);
-                            next.splice(to, 0, moved);
-                            return next;
-                          });
+                          if (from===null||to===null||from===to) return;
+                          setTracks(prev => { const next=[...prev]; const [moved]=next.splice(from,1); next.splice(to,0,moved); return next; });
                         };
                         window.addEventListener('mouseup', onUp);
                       }}>
-                      <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" className="text-neutral-400">
-                        <circle cx="3" cy="3" r="1.5"/><circle cx="7" cy="3" r="1.5"/>
-                        <circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/>
-                        <circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/>
-                      </svg>
+                      <svg width="8" height="14" viewBox="0 0 10 16" fill="#5c5755"><circle cx="3" cy="3" r="1.5"/><circle cx="7" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/></svg>
                     </div>
                   )}
-                  <div className="w-8 flex items-center justify-center shrink-0">
-                    {isActive && isLoadingTrack
-                      ? <div className="w-3.5 h-3.5 border-2 border-[#d4cfcf] border-t-transparent rounded-full animate-spin" />
-                      : isActive && isPlaying
-                        ? <div className="flex gap-[2px] items-end h-4">{[100, 65, 80].map((h, j) => <div key={j} style={{width:"3px",background:"#9e9894",borderRadius:"1px"}} style={{ height: `${h}%`, animation: `barBounce ${0.7 + j * 0.12}s ease-in-out ${j * 110}ms infinite`, transformOrigin: "bottom" }} />)}</div>
-                        : isHov ? <Play size={16} fill="white" className="text-white" />
-                        : <span className={`text-[13px] tabular-nums ${isActive ? 'text-[#d4cfcf]' : 'text-neutral-500'}`}>{i + 1}</span>}
+                  <div className="v-track__num">
+                    {isActive&&isLoadingTrack
+                      ? <div style={{width:"12px",height:"12px",border:"1.5px solid #9e9894",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto"}}/>
+                      : isActive&&isPlaying
+                        ? <div style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"13px",justifyContent:"center"}}>{[100,65,80].map((h,j)=><div key={j} style={{width:"2.5px",background:"#9e9894",borderRadius:"1px",height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:"bottom"}}/>)}</div>
+                        : isHov ? <Play size={12} style={{fill:"#e2ddd9",color:"#e2ddd9",margin:"0 auto"}}/>
+                        : i+1}
                   </div>
-                  <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 border ${isActive ? 'bg-[#d4cfcf]/10 border-[#d4cfcf]/20' : 'bg-neutral-900 border-neutral-800/60'}`}>
-                    <FileMusic size={18} className={isActive ? 'text-[#d4cfcf]' : 'text-neutral-500'} />
+                  <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"#1c1a1a",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`}}>
+                    <FileMusic size={16} style={{color:isActive?"#9e9894":"#363230"}}/>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-[15px] truncate ${isActive ? 'text-[#d4cfcf]' : 'text-white'}`}>{track.title}</p>
-                    <p className="text-[13px] text-neutral-500 truncate mt-0.5">{track.artist || track.extension.toUpperCase()} · {formatBytes(track.size_bytes)}</p>
+                  <div className="v-track__info">
+                    <div className="v-track__title">{track.title}</div>
+                    <div className="v-track__artist">{track.artist||track.extension.toUpperCase()} · {formatBytes(track.size_bytes)}</div>
                   </div>
-                  <div className={`flex items-center gap-1 transition-opacity ${isHov ? 'opacity-100' : 'opacity-0'}`}>
-                    <button onClick={e => { e.stopPropagation(); setRenaming(track); setRenameVal(track.title); }} className="p-1.5 rounded-md hover:bg-white/10 transition-colors" title="Rename"><Pencil size={13} className="text-neutral-400" /></button>
-                    <button onClick={e => { e.stopPropagation(); onOpenInFileManager(track.path); }} className="p-1.5 rounded-md hover:bg-white/10 transition-colors" title="Show in folder"><FolderOpen size={13} className="text-neutral-400" /></button>
-                    <button onClick={e => { e.stopPropagation(); onDeleteLocalTrack(track); scan(); }} className="p-1.5 rounded-md hover:bg-red-500/20 transition-colors" title="Delete"><Trash2 size={13} className="text-neutral-400 hover:text-red-400" /></button>
+                  <div className="v-track__actions">
+                    <button className="v-track__btn" title="Rename" onClick={e=>{e.stopPropagation();setRenaming(track);setRenameVal(track.title);}}><Pencil size={12}/></button>
+                    <button className="v-track__btn" title="Show in folder" onClick={e=>{e.stopPropagation();onOpenInFileManager(track.path);}}><FolderOpen size={12}/></button>
+                    <button className="v-track__btn" title="Delete" onClick={e=>{e.stopPropagation();onDeleteLocalTrack(track);scan();}}
+                      onMouseEnter={e=>(e.currentTarget.style.color="#b05555")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><Trash2 size={12}/></button>
                   </div>
-                  <span className="text-[13px] text-neutral-500 tabular-nums w-12 text-right shrink-0">{track.duration || '—'}</span>
+                  <span style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums",width:"40px",textAlign:"right",flexShrink:0}}>{track.duration||"—"}</span>
                 </div>
               );
             })}
@@ -1636,15 +1619,15 @@ function DownloadsPanel({
 
       {}
       {renaming && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#111] border border-neutral-800 p-6 rounded-xl w-80 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-4">Rename Track</h3>
-            <input autoFocus type="text" value={renameVal} onChange={e => setRenameVal(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') confirmRename(); if (e.key === 'Escape') setRenaming(null); }}
-              className="w-full bg-[#050505] border border-neutral-800 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-[#d4cfcf] mb-4 text-sm" />
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setRenaming(null)} className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors">Cancel</button>
-              <button onClick={confirmRename} className="px-4 py-2 bg-[#d4cfcf] text-black text-sm font-bold rounded-lg transition-all">Rename</button>
+        <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}>
+          <div style={{background:"#161414",border:"1px solid #252222",padding:"20px",borderRadius:"12px",width:"300px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+            <div style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",marginBottom:"14px"}}>Rename Track</div>
+            <input autoFocus type="text" value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+              onKeyDown={e=>{if(e.key==='Enter')confirmRename();if(e.key==='Escape')setRenaming(null);}}
+              style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",marginBottom:"14px",boxSizing:"border-box"}}/>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:"8px"}}>
+              <button onClick={()=>setRenaming(null)} style={{padding:"7px 14px",background:"transparent",border:"1px solid #252222",color:"#5c5755",borderRadius:"8px",cursor:"pointer",fontSize:"12px",fontWeight:500}}>Cancel</button>
+              <button onClick={confirmRename} style={{padding:"7px 14px",background:"#e2ddd9",color:"#0c0b0b",borderRadius:"8px",cursor:"pointer",fontSize:"12px",fontWeight:700,border:"none"}}>Rename</button>
             </div>
           </div>
         </div>
@@ -3677,7 +3660,7 @@ export default function Veluna() {
                       : openPlaylist.id === 'p1' ? <Heart size={48} style={{color:'#9e9894',fill:'rgba(226,221,217,0.12)'}} /> : <ListMusic size={48} style={{color:'#5c5755'}} />}
                     {openPlaylist.id !== 'p1' && <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><ImagePlus size={22} className="text-white" /></div>}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div style={{flex:1,minWidth:0}}>
                     <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500 mb-1">Playlist</p>
                     <h2 className="text-3xl font-black text-white truncate">{openPlaylist.name}</h2>
                     {openPlaylist.description && openPlaylist.description.trim() && (
@@ -3774,7 +3757,7 @@ export default function Veluna() {
                                         </svg>
                                       </div>
                                     )}
-                                    <div className="flex-1 min-w-0">
+                                    <div style={{flex:1,minWidth:0}}>
                                       <TrackRow track={t} index={i} showRemove onRemove={() => removeFromPlaylist(openPlaylist.id, t.url)}
                                         isActive={currentTrack?.url === t.url} isHovered={hoveredTrackUrl === t.url}
                                         isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
@@ -3968,15 +3951,15 @@ export default function Veluna() {
                 <div style={{marginBottom:"20px"}}>
                   <div className="v-section-head">
                     <h2>Last 7 Days</h2>
-                    <span className="ml-auto text-xs text-neutral-600">{days.reduce((s,d)=>s+d.count,0)} total plays</span>
+                    <span style={{fontSize:"11px",color:"#363230",marginLeft:"auto"}}>{days.reduce((s,d)=>s+d.count,0)} plays</span>
                   </div>
                   <div style={{background:"#161414",border:"1px solid #1c1a1a",borderRadius:"12px",padding:"16px"}}>
-                    <div className="flex items-end gap-3" style={{height:'140px'}}>
+                    <div style={{display:"flex",alignItems:"flex-end",gap:"8px",height:"130px"}}>
                       {days.map(({ label, count }, di) => {
                         const isToday = di === 6;
                         const barH = count === 0 ? 6 : Math.max(20, Math.round((count / maxDay) * 110));
                         return (
-                          <div key={label} className="flex-1 flex flex-col items-center justify-end gap-1.5 h-full">
+                          <div key={label} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",gap:"4px",height:"100%"}}>
                             {count > 0 && (
                               <span className="text-[11px] font-bold tabular-nums" style={{color: isToday ? '#e2ddd9' : '#5c5755'}}>{count}</span>
                             )}
@@ -3985,8 +3968,8 @@ export default function Veluna() {
                                 background:count===0?'rgba(255,255,255,0.04)':isToday?'linear-gradient(180deg,rgba(226,221,217,0.9),rgba(226,221,217,0.4))':'rgba(226,221,217,0.22)',
                                 transition:'height .5s cubic-bezier(0.2,0,0,1)',
                               }} />
-                            <span className={`text-[11px] font-semibold ${isToday ? 'text-[#d4cfcf]' : 'text-neutral-500'}`}>{label}</span>
-                            {isToday && <span className="text-[9px] text-[#d4cfcf]/60 font-bold -mt-1">TODAY</span>}
+                            <span style={{fontSize:"10px",fontWeight:600,color:isToday?"#9e9894":"#363230"}}>{label}</span>
+                            {isToday && <span style={{fontSize:'8px',color:'rgba(226,221,217,0.4)',fontWeight:700,marginTop:'-2px'}}>TODAY</span>}
                           </div>
                         );
                       })}
@@ -4033,21 +4016,19 @@ export default function Veluna() {
                         {topArtists.map(([artist, count], i) => {
                           const thumb = artistThumbs[artist];
                           return (
-                          <div key={artist} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors cursor-pointer"
+                          <div key={artist} className="v-track"
                             onClick={() => { setSearchQuery(artist); searchMusic(artist); setActiveNav('home'); }}>
-                            <span className="text-xs font-bold text-neutral-600 w-4 tabular-nums shrink-0">{i + 1}</span>
-                            <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700/60 flex items-center justify-center shrink-0 overflow-hidden">
-                              {thumb
-                                ? <img src={thumb} alt={artist} className="w-full h-full object-cover" />
-                                : <span className="text-xs font-bold text-neutral-400">{artist.slice(0, 2).toUpperCase()}</span>}
+                            <div className="v-track__num">{i+1}</div>
+                            <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+                              {thumb ? <img src={thumb} alt={artist} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:"11px",fontWeight:700,color:"#5c5755"}}>{artist.slice(0,2).toUpperCase()}</span>}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-white truncate">{artist}</p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <div className="flex-1 h-0.5 bg-neutral-800 rounded-full overflow-hidden">
-                                  <div style={{height:"100%",background:"rgba(226,221,217,0.3)",borderRadius:"1px",width:`${(count/(topArtists[0]?.[1]||1))*100}%`}} />
+                            <div className="v-track__info">
+                              <div className="v-track__title">{artist}</div>
+                              <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"3px"}}>
+                                <div style={{flex:1,height:"2px",background:"#232020",borderRadius:"1px",overflow:"hidden"}}>
+                                  <div style={{height:"100%",background:"rgba(226,221,217,0.3)",borderRadius:"1px",width:`${(count/(topArtists[0]?.[1]||1))*100}%`}}/>
                                 </div>
-                                <span className="text-[10px] text-neutral-600 tabular-nums shrink-0">{count} plays</span>
+                                <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{count}×</span>
                               </div>
                             </div>
                           </div>
@@ -4060,7 +4041,7 @@ export default function Veluna() {
 
                 {/* Recent history */}
                 {playHistory.length > 0 && (
-                  <div className="mt-6">
+                  <div style={{marginTop:"16px"}}>
                     <div className="v-section-head">
                       <h2>Recent Plays</h2>
                       <button onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); }}
@@ -4416,7 +4397,7 @@ export default function Veluna() {
               style={{ top: ctxMenu.y, left: ctxMenu.x }} onClick={e => e.stopPropagation()}>
               <div className="px-4 py-2.5 border-b border-neutral-800 mb-1">
                 <span className="text-white font-bold text-[13px] truncate block">{playlist.name}</span>
-                <span className="text-xs text-neutral-600">{playlist.tracks.length} tracks</span>
+                <span style={{fontSize:"11px",color:"#5c5755"}}>{playlist.tracks.length} tracks</span>
               </div>
               <button onClick={() => { playAll(playlist.tracks); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Play size={15} /> Play All</button>
               <button onClick={() => { const s = [...playlist.tracks].sort(() => Math.random() - 0.5); if (s.length) { handlePlayTrack(s[0]); setQueue(s.slice(1)); } setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Shuffle size={15} /> Shuffle Play</button>
@@ -4438,21 +4419,21 @@ export default function Veluna() {
       {}
       {addToPlaylistTrack && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md" onClick={() => setAddToPlaylistTrack(null)}>
-          <div className="bg-[#0d0d0d] border border-neutral-800/60 rounded-2xl w-80 overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.95)]" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800/60">
+          <div className="v-ctx" style={{width:"280px"}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:"1px solid #1c1a1a"}}>
               <div>
-                <h3 className="font-bold text-white text-sm">Add to Playlist</h3>
-                <p className="text-[11px] text-neutral-600 mt-0.5 truncate max-w-[180px]">{addToPlaylistTrack.title}</p>
+                <div style={{fontWeight:700,color:"#e2ddd9",fontSize:"13px"}}>Add to Playlist</div>
+                <div style={{fontSize:"11px",color:"#5c5755",marginTop:"2px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"170px"}}>{addToPlaylistTrack.title}</div>
               </div>
-              <button onClick={() => setAddToPlaylistTrack(null)} className="w-7 h-7 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-all"><X size={14} /></button>
+              <button onClick={()=>setAddToPlaylistTrack(null)} style={{width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"none",background:"transparent",color:"#5c5755",cursor:"pointer"}} onMouseEnter={e=>{e.currentTarget.style.background="rgba(226,221,217,0.06)";e.currentTarget.style.color="#e2ddd9";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#5c5755";}}><X size={13}/></button>
             </div>
-            <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
+            <div style={{padding:"4px 0",maxHeight:"220px",overflowY:"auto"}} className="custom-scrollbar">
               {playlists.map(p => {
                 const alreadyIn = p.tracks.some(t => t.url === addToPlaylistTrack.url);
                 return (
                   <button key={p.id} onClick={() => !alreadyIn && addTrackToPlaylist(p.id, addToPlaylistTrack)}
                     disabled={alreadyIn}
-                    className={`w-full flex items-center gap-3 px-5 py-3 transition-colors text-left ${alreadyIn ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/[0.04]'}`}>
+                    className="v-ctx__item" style={{opacity:alreadyIn?0.4:1,cursor:alreadyIn?"not-allowed":"pointer"}}>
                     <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 bg-neutral-800 flex items-center justify-center border border-neutral-700/60">
                       {p.id === 'p1' ? <Heart size={13} className="text-red-400" /> : <ListMusic size={13} className="text-neutral-500" />}
                     </div>
@@ -4553,7 +4534,7 @@ export default function Veluna() {
                     onClick={() => copyToClipboard(value)}
                     title={`Click to copy ${label}`}>
                     <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center ${color} shrink-0`}><Icon size={15} /></div>
-                    <div className="flex-1 min-w-0">
+                    <div style={{flex:1,minWidth:0}}>
                       <p className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">{label}</p>
                       <p className="text-sm font-semibold text-white truncate leading-snug">{value || '—'}</p>
                     </div>
@@ -4564,7 +4545,7 @@ export default function Veluna() {
 
               {}
               <div className="px-6 pb-5 flex flex-col gap-2.5">
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
                   <CopyButton text={ytId || ''} label="Copy ID" icon={Copy} disabled={!ytId} />
                   <CopyButton text={ytUrl} label="Copy Link" icon={Share2} />
                 </div>
@@ -4642,13 +4623,13 @@ export default function Veluna() {
               <div className="p-5 border-b border-neutral-800 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-white">Duplicate Finder</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">{showDuplicatesPlaylist.name}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{showDuplicatesPlaylist.name}</p>
                 </div>
                 <button onClick={() => setShowDuplicatesPlaylist(null)} className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"><X size={16} /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 {dupes.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-neutral-600">
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 0",color:"#5c5755"}}>
                     <CheckCircle size={32} className="mb-2 text-[#d4cfcf]" />
                     <p className="text-sm text-white">No duplicates found.</p>
                   </div>
@@ -4658,7 +4639,7 @@ export default function Veluna() {
                     {dupes.map((t, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900/60 border border-neutral-800-500/20">
                         <img src={t.cover} className="w-10 h-10 rounded-md object-cover shrink-0" alt="" />
-                        <div className="flex-1 min-w-0">
+                        <div style={{flex:1,minWidth:0}}>
                           <p className="text-sm font-semibold text-white truncate">{t.title}</p>
                           <p className="text-xs text-neutral-500 truncate">{t.artist}</p>
                         </div>
@@ -4687,7 +4668,7 @@ export default function Veluna() {
               <div className="p-5 border-b border-neutral-800 flex items-center justify-between shrink-0">
                 <div>
                   <h3 className="font-bold text-white">Bulk Tag Editor</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">{bulkEditPlaylist.tracks.length} tracks in {bulkEditPlaylist.name}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{bulkEditPlaylist.tracks.length} tracks in {bulkEditPlaylist.name}</p>
                 </div>
                 <button onClick={() => setBulkEditPlaylist(null)} className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"><X size={16} /></button>
               </div>
@@ -4813,7 +4794,7 @@ export default function Veluna() {
               <h2 className="text-base font-bold text-white">Keyboard Shortcuts</h2>
               <button onClick={() => setShowShortcuts(false)} className="text-neutral-500 hover:text-white transition-colors"><X size={16} /></button>
             </div>
-            <div className="px-6 py-4 grid grid-cols-2 gap-x-8 gap-y-1">
+            <div style={{padding:"14px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",columnGap:"24px",rowGap:"4px"}}>
               {([
                 ['Playback', null],
                 ['Space', 'Play / Pause'],
@@ -4837,7 +4818,7 @@ export default function Veluna() {
               )}
             </div>
             <div className="px-6 py-4 border-t border-neutral-800 text-center">
-              <p className="text-xs text-neutral-600">Press <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-400">?</kbd> or <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-400">Esc</kbd> to close</p>
+              <p style={{fontSize:"11px",color:"#5c5755"}}>Press <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-400">?</kbd> or <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-400">Esc</kbd> to close</p>
             </div>
           </div>
         </div>
@@ -4870,8 +4851,7 @@ export default function Veluna() {
       )}
 
       {toast && (
-        <div className="fixed bottom-28 left-1/2 z-50 bg-[#111] border border-neutral-800/80 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-2xl pointer-events-none"
-          style={{ animation: 'toastIn 0.2s cubic-bezier(0.25,0,0,1) both' }}>
+        <div style={{position:"fixed",bottom:"80px",left:"50%",transform:"translateX(-50%)",zIndex:300,background:"#1c1a1a",border:"1px solid #2e2b2b",color:"#e2ddd9",fontSize:"12.5px",fontWeight:600,padding:"8px 14px",borderRadius:"10px",boxShadow:"0 8px 24px rgba(0,0,0,0.8)",pointerEvents:"none",animation:"toastIn 0.2s cubic-bezier(0.25,0,0,1) both",whiteSpace:"nowrap"}}>
           {toast}
         </div>
       )}
