@@ -604,7 +604,7 @@ function CsvImportModal({
             </div>
             <h2 className="text-base font-bold text-white">Import Spotify Playlist</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
             {phase === 'matching' && (
               <button onClick={onClose} title="Minimize — import continues in background"
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-[#d4cfcf] hover:bg-[#d4cfcf]/10 transition-all text-xs font-bold border border-neutral-800">
@@ -948,7 +948,7 @@ function SettingsPanel({
 
         {}
         {activeTab === 'updates' && (
-          <div className="space-y-5">
+          <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Updates</h2>
               <p className="text-sm text-neutral-500">Check for new releases of Veluna.</p>
@@ -984,7 +984,7 @@ function SettingsPanel({
         )}
 
         {activeTab === 'downloads' && (
-          <div className="space-y-5">
+          <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Downloads</h2>
               <p className="text-sm text-neutral-500">Configure download quality and destination folder.</p>
@@ -999,7 +999,7 @@ function SettingsPanel({
               <div className="px-5 py-5 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-white">Download Quality</p>
-                  <p className="text-xs text-neutral-600 mt-1">
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
                     {downloadQuality === 'High' ? 'Best available audio bitrate (320kbps+)' : downloadQuality === 'Medium' ? 'Balanced quality (~128kbps)' : 'Smallest file size'}
                   </p>
                 </div>
@@ -1023,7 +1023,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-4 cursor-pointer group hover:bg-white/[0.02] transition-colors" onClick={handleSelectDirectory}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-mono text-neutral-300 truncate">{downloadPath}</p>
-                  {diskInfo && <p className="text-xs text-neutral-600 mt-1">{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} audio files</p>}
+                  {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} audio files</p>}
                 </div>
                 <button className="p-2 ml-4 text-neutral-600 group-hover:text-[#d4cfcf] transition-colors shrink-0 rounded-lg">
                   <FolderOpen size={17} />
@@ -1040,7 +1040,7 @@ function SettingsPanel({
               <div className="px-5 py-5 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-white">Format</p>
-                  <p className="text-xs text-neutral-600 mt-1">
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
                     {downloadFormat === 'opus' ? 'Best compression, native YouTube codec' : downloadFormat === 'm4a' ? 'AAC in M4A, great Apple/car stereo compat' : downloadFormat === 'flac' ? 'Lossless — largest files' : 'MP3 — widest compatibility'}
                   </p>
                 </div>
@@ -1065,7 +1065,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800/30">
                 <div>
                   <p className="text-sm font-medium text-white">Embed Thumbnail</p>
-                  <p className="text-xs text-neutral-600 mt-1">{embedThumbnail ? 'Cover art written into file tags' : 'No cover art in downloaded files'}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{embedThumbnail ? 'Cover art written into file tags' : 'No cover art in downloaded files'}</p>
                 </div>
                 <button onClick={() => setEmbedThumbnail(!embedThumbnail)}
                   className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${embedThumbnail ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
@@ -1075,7 +1075,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="text-sm font-medium text-white">Duplicate Detection</p>
-                  <p className="text-xs text-neutral-600 mt-1">{duplicateDetect ? 'Skips tracks already in your download folder' : 'Always download regardless of duplicates'}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{duplicateDetect ? 'Skips tracks already in your download folder' : 'Always download regardless of duplicates'}</p>
                 </div>
                 <button onClick={() => setDuplicateDetect(!duplicateDetect)}
                   className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${duplicateDetect ? 'bg-[#d4cfcf]/80' : 'bg-neutral-700'}`}>
@@ -1087,7 +1087,7 @@ function SettingsPanel({
         )}
 
         {activeTab === 'playback' && (
-          <div className="space-y-5">
+          <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Playback</h2>
               <p className="text-sm text-neutral-500">Audio engine and playback behaviour settings.</p>
@@ -1102,7 +1102,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="text-sm font-medium text-white">Loudnorm (EBU R128)</p>
-                  <p className="text-xs text-neutral-600 mt-1">{loudnormEnabled ? 'Active — consistent volume across tracks' : 'Disabled — faster start, raw volume'}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{loudnormEnabled ? 'Active — consistent volume across tracks' : 'Disabled — faster start, raw volume'}</p>
                 </div>
                 <button onClick={() => {
                   const next = !loudnormEnabled;
@@ -1125,7 +1125,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-5">
                 <div>
                   <p className="text-sm font-medium text-white">Streaming Format</p>
-                  <p className="text-xs text-neutral-600 mt-1">Preferred audio codec for streaming playback</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Preferred audio codec for streaming playback</p>
                 </div>
                 <ThemedSelect
                   value={streamQuality}
@@ -1147,7 +1147,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="text-sm font-medium text-white">Skip Silence</p>
-                  <p className="text-xs text-neutral-600 mt-1">{skipSilence ? 'Auto-skips silent parts between tracks' : 'Play all audio including silence'}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{skipSilence ? 'Auto-skips silent parts between tracks' : 'Play all audio including silence'}</p>
                 </div>
                 <button onClick={() => {
                   const next = !skipSilence;
@@ -1219,7 +1219,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-5">
                 <div>
                   <p className="text-sm font-medium text-white">Primary source</p>
-                  <p className="text-xs text-neutral-600 mt-1">
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
                     {lyricsSource === 'musixmatch' ? 'Musixmatch — word-level richsync when available'
                       : lyricsSource === 'netease' ? 'NetEase — strong for C-pop / K-pop'
                       : 'lrclib — open, fast, no rate limits'}
@@ -1295,7 +1295,7 @@ function SettingsPanel({
 
         {}
         {activeTab === 'storage' && (
-          <div className="space-y-5">
+          <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Storage</h2>
               <p className="text-sm text-neutral-500">Backup and restore your playlists, queue, settings, and history.</p>
@@ -1315,7 +1315,7 @@ function SettingsPanel({
               }}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-mono text-neutral-300 truncate">{backupPath || downloadPath}</p>
-                  <p className="text-xs text-neutral-600 mt-1">Backup file: veluna_backup.json</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Backup file: veluna_backup.json</p>
                 </div>
                 <button className="p-2 ml-4 text-neutral-600 group-hover:text-[#d4cfcf] transition-colors shrink-0 rounded-lg">
                   <FolderOpen size={17} />
@@ -1362,7 +1362,7 @@ function SettingsPanel({
         )}
 
         {activeTab === 'appearance' && (
-          <div className="space-y-5">
+          <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Appearance</h2>
               <p className="text-sm text-neutral-500">Tray icon and window behaviour.</p>
@@ -1375,7 +1375,7 @@ function SettingsPanel({
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="text-sm font-medium text-white">Enable Tray Icon</p>
-                  <p className="text-xs text-neutral-600 mt-1">{trayEnabled ? 'Active — close button hides to tray' : 'Disabled — close exits app'}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{trayEnabled ? 'Active — close button hides to tray' : 'Disabled — close exits app'}</p>
                 </div>
                 <button onClick={async () => {
                   const next = !trayEnabled;
@@ -3373,16 +3373,16 @@ export default function Veluna() {
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-6">
                     <div className="relative">
-                      <div style={{width:'64px',height:'64px',borderRadius:'14px',background:'#161414',border:'1px solid #1c1a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <Music size={28} strokeWidth={1} style={{color:'#363230'}} />
+                      <div style={{width:'56px',height:'56px',borderRadius:'12px',background:'#161414',border:'1px solid #1c1a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <Music size={24} strokeWidth={1} style={{color:'#363230'}} />
                       </div>
                       <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-[#d4cfcf]/10 rounded-full flex items-center justify-center border border-[#d4cfcf]/20">
                         <Search size={12} className="text-[#d4cfcf]/60" />
                       </div>
                     </div>
                     <div className="text-center flex flex-col gap-1.5">
-                      <p className="text-sm font-semibold text-neutral-500">Search YouTube to start</p>
-                      <p className="text-xs text-neutral-700">Type above and press Enter, or use <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-500">Ctrl+F</kbd></p>
+                      <p style={{fontSize:"13px",fontWeight:600,color:"#5c5755"}}>Search YouTube to start</p>
+                      <p style={{fontSize:"11px",color:"#363230"}}>Type above and press <kbd>Ctrl+F</kbd></p>
                     </div>
                   </div>
                 )}
@@ -3455,38 +3455,45 @@ export default function Veluna() {
                   const recentHistory = playHistory.slice(0, 5);
 
                   return (
-                    <div className="space-y-8 pt-1">
+                    <div style={{display:"flex",flexDirection:"column",gap:"28px",paddingTop:"4px"}}>
 
                       {/* Recently Played */}
                       <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="w-1 h-5 bg-[#d4cfcf] rounded-full shrink-0" />
-                          <h2 className="text-sm font-bold text-white uppercase tracking-widest flex-1">Recently Played</h2>
-                          <button onClick={() => setQuickPicks([])} className="text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors">Clear</button>
+                        <div className="v-section-head">
+                          <h2>Recently Played</h2>
+                          <button className="v-section-head__action" onClick={() => setQuickPicks([])}>Clear</button>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px'}}>
                           {quickPicks.slice(0, 8).map((track, cardIdx) => {
                             const isActive = currentTrack?.url === track.url;
                             return (
                               <div key={track.url}
                                 onClick={() => handlePlayInContext(track, quickPicks.slice(0, 8))}
                                 onContextMenu={e => openCtx(e, { type: 'quickpick', track })}
-                                className={`home-card flex items-center gap-3 rounded-xl p-3 cursor-pointer transition-all duration-200 group border
-                                  ${isActive ? 'bg-white/[0.05] border-white/[0.08]' : 'bg-neutral-900/50 border-neutral-800/40 hover:bg-neutral-800/70 hover:border-neutral-700/60'}`}
-                                style={{ animationDelay: `${cardIdx * 35}ms` }}>
-                                <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 transition-transform duration-200 group-hover:scale-105">
-                                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover" loading="lazy" />
-                                  <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity ${isActive && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                    {isActive && isLoadingTrack
-                                      ? <div className="w-3.5 h-3.5 border-2 border-[#d4cfcf] border-t-transparent rounded-full animate-spin" />
-                                      : isActive && isPlaying
-                                        ? <div className="flex gap-[2px] items-end h-3">{[100, 65, 80].map((h, i) => <div key={i} style={{width:"2px",background:"#9e9894",borderRadius:"1px"}} style={{ height: `${h}%`, animation: `barBounce ${0.7 + i * 0.12}s ease-in-out ${i * 110}ms infinite`, transformOrigin: 'bottom' }} />)}</div>
-                                        : <Play size={13} fill="white" className="text-white ml-0.5" />}
-                                  </div>
+                                style={{
+                                  display:'flex',alignItems:'center',gap:'10px',
+                                  padding:'8px 10px',borderRadius:'9px',cursor:'pointer',
+                                  background:isActive?'rgba(226,221,217,0.06)':'rgba(255,255,255,0.025)',
+                                  border:`1px solid ${isActive?'rgba(226,221,217,0.12)':'rgba(255,255,255,0.05)'}`,
+                                  transition:'background .12s,border-color .12s',
+                                  animation:`fadeUpSm .18s cubic-bezier(0.2,0,0,1) ${cardIdx*35}ms both`,
+                                }}
+                                onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';}}}
+                                onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.025)';e.currentTarget.style.borderColor='rgba(255,255,255,0.05)';}}}
+                              >
+                                <div style={{width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,position:'relative',background:'#1c1a1a'}}>
+                                  <img src={track.cover} alt={track.title} style={{width:'100%',height:'100%',objectFit:'cover'}} loading="lazy" />
+                                  {(isActive&&isPlaying) && (
+                                    <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                      <div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'10px'}}>
+                                        {[100,65,80].map((h,i)=><div key={i} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+i*0.12}s ease-in-out ${i*110}ms infinite`,transformOrigin:'bottom'}}/>)}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-sm font-semibold truncate leading-tight ${isActive ? 'text-[#d4cfcf]' : 'text-white'}`}>{track.title}</p>
-                                  <p className="text-xs text-neutral-500 truncate mt-0.5">{track.artist}</p>
+                                <div style={{flex:1,minWidth:0}}>
+                                  <div style={{fontSize:'12.5px',fontWeight:600,color:isActive?'#e2ddd9':'#c8c4c0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',lineHeight:1.3}}>{track.title}</div>
+                                  <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>
                                 </div>
                               </div>
                             );
@@ -3499,14 +3506,11 @@ export default function Veluna() {
                         const genreTracks = genreScores[genre.id].tracks.slice(0, 10);
                         return (
                           <div key={genre.id} style={{ animation: `fadeUp 0.22s cubic-bezier(0.2,0,0,1) ${gIdx * 60 + 100}ms both` }}>
-                            <div className="flex items-center gap-3 mb-3">
-                              <span className="w-1 h-5 bg-[#d4cfcf] rounded-full shrink-0" />
-                              <h2 className="text-sm font-bold text-white uppercase tracking-widest flex-1">
-                                {genre.label}
-                              </h2>
-                              <span className="text-[10px] text-neutral-600">{genreTracks.length} tracks</span>
+                            <div className="v-section-head">
+                              <h2>{genre.label}</h2>
+                              <span style={{fontSize:'10px',color:'#363230'}}>{genreTracks.length}</span>
                             </div>
-                            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+                            <div style={{display:"flex",gap:"10px",overflowX:"auto",paddingBottom:"6px",scrollbarWidth:"none"}}>
                               {genreTracks.map((track, tIdx) => {
                                 const isActive = currentTrack?.url === track.url;
                                 return (
@@ -3605,8 +3609,8 @@ export default function Veluna() {
 
                 {}
                 {(isSearching || tracks.length > 0) && (
-                  <div className="v-section-head" style={{paddingTop:'6px',paddingBottom:'6px'}}>
-                    <h2>{isSearching ? 'Searching...' : 'Results'}</h2>
+                  <div className="v-section-head">
+                    <h2>{isSearching ? 'Searching...' : `Results`}</h2>
                     {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} className="w-1 bg-[#d4cfcf]/60 rounded-full" style={{ height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
                     {tracks.length > 0 && !isSearching && (
                       <button onClick={() => playAll(tracks)} style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:'rgba(226,221,217,0.06)',border:'1px solid rgba(226,221,217,0.12)',color:'#9e9894',borderRadius:'7px',cursor:'pointer',fontSize:'11px',fontWeight:600,transition:'background .12s'}}>
@@ -3933,13 +3937,15 @@ export default function Veluna() {
             }
 
             return (
-              <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-8">
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px"}}>
                 {/* Header with reset button */}
-                <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-lg font-black text-white uppercase tracking-widest">Stats</h1>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"20px"}}>
+                  <h1 style={{fontSize:"18px",fontWeight:800,color:"#e2ddd9",margin:0}}>Stats</h1>
                   <button onClick={resetStats}
-                    className="text-xs text-neutral-600 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-red-500/40">
-                    Reset Stats
+                    style={{fontSize:"11px",color:"#363230",cursor:"pointer",padding:"5px 10px",borderRadius:"7px",border:"1px solid #252222",background:"transparent",transition:"color .12s,border-color .12s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.color="#b05555";e.currentTarget.style.borderColor="rgba(180,40,40,0.3)"}}
+                    onMouseLeave={e=>{e.currentTarget.style.color="#363230";e.currentTarget.style.borderColor="#252222"}}>
+                    Reset
                   </button>
                 </div>
 
@@ -3959,12 +3965,12 @@ export default function Veluna() {
                 </div>
 
                 {/* Daily plays bar chart */}
-                <div className="mb-8">
+                <div style={{marginBottom:"20px"}}>
                   <div className="v-section-head">
                     <h2>Last 7 Days</h2>
                     <span className="ml-auto text-xs text-neutral-600">{days.reduce((s,d)=>s+d.count,0)} total plays</span>
                   </div>
-                  <div className="bg-neutral-900/40 border border-neutral-800/40 rounded-xl p-5">
+                  <div style={{background:"#161414",border:"1px solid #1c1a1a",borderRadius:"12px",padding:"16px"}}>
                     <div className="flex items-end gap-3" style={{height:'140px'}}>
                       {days.map(({ label, count }, di) => {
                         const isToday = di === 6;
@@ -3988,14 +3994,14 @@ export default function Veluna() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px"}}>
                   {/* Top tracks */}
                   {topTracks.length > 0 && (
                     <div>
                       <div className="v-section-head">
                         <h2>Top Tracks</h2>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div style={{display:"flex",flexDirection:"column",gap:"5px"}}>
                         {topTracks.map(({ track, count }, i) => (
                           <div key={track.url}
                             onClick={() => handlePlayInContext(track, topTracks.map(x => x.track))}
@@ -4023,7 +4029,7 @@ export default function Veluna() {
                       <div className="v-section-head">
                         <h2>Top Artists</h2>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div style={{display:"flex",flexDirection:"column",gap:"5px"}}>
                         {topArtists.map(([artist, count], i) => {
                           const thumb = artistThumbs[artist];
                           return (
@@ -4647,7 +4653,7 @@ export default function Veluna() {
                     <p className="text-sm text-white">No duplicates found.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
                     <p style={{fontSize:"12px",color:"#9e9894",marginBottom:"10px"}}>{dupes.length} duplicate{dupes.length > 1 ? 's' : ''} found</p>
                     {dupes.map((t, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900/60 border border-neutral-800-500/20">
