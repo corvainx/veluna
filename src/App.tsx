@@ -19,7 +19,7 @@ import {
   Loader2, CheckCircle2, XCircle, ArrowUpCircle, Image, Mic2
 } from 'lucide-react';
 
-const __APP_VERSION__ = '0.1.1';
+const __APP_VERSION__ = '0.1.0';
 
 type Track = {
   id: number;
@@ -973,7 +973,7 @@ function SettingsPanel({
                     <p className="text-xs text-neutral-500 mb-3">A new version of Veluna is ready to download.</p>
                     <a
                       href="#"
-                      onClick={e => { e.preventDefault(); openUrl('https://github.com/ishmweet/veluna-player/releases/latest'); }}
+                      onClick={e => { e.preventDefault(); openUrl('https://github.com/ishmweet/veluna/releases/latest'); }}
                       className="inline-flex items-center gap-2 text-xs font-semibold text-[#d4cfcf] hover:underline"
                     >
                       <ExternalLink size={13} />
