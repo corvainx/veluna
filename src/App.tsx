@@ -1469,7 +1469,7 @@ function DownloadsPanel({
 
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px",zIndex:10}}>
       {}
       <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"14px"}}>
         <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-[#d4cfcf]/10 border border-[#d4cfcf]/30 shrink-0">
@@ -3163,6 +3163,7 @@ export default function Veluna() {
         *{-webkit-user-select:none!important;user-select:none!important;}
         input,textarea{-webkit-user-select:text!important;user-select:text!important;}
         kbd{background:#1c1a1a!important;border-color:#2e2b2b!important;color:#9e9894!important;border-radius:4px!important;padding:2px 5px!important;font-size:10px!important;}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         .home-card{animation:fadeUp 0.22s cubic-bezier(0.2,0,0,1) both;}
         .playlist-card{transition:background .12s;}
       `}</style>
@@ -3351,7 +3352,7 @@ export default function Veluna() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 pb-4 z-10 custom-scrollbar" onClick={() => setShowHistory(false)}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px 24px",zIndex:10}} onClick={()=>setShowHistory(false)}>
                 {}
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-6">
@@ -3647,7 +3648,7 @@ export default function Veluna() {
           {}
           {activeNav === 'library' && (
             openPlaylist ? (
-              <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px",zIndex:10}}>
                 <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }} className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-8 group">
                   <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
                   <span className="text-sm font-medium">Playlists</span>
@@ -3777,7 +3778,7 @@ export default function Veluna() {
                 }
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px",zIndex:10}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
                   <h2 style={{fontSize:'20px',fontWeight:800,color:'#e2ddd9',margin:0}}>Playlists</h2>
                   <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
@@ -4178,169 +4179,202 @@ export default function Veluna() {
       </div>
 
       {}
-      <div style={{height:"72px",background:"#111010",borderTop:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 18px",position:"relative",zIndex:20,flexShrink:0}}>
-        {isPlaying && !isLoadingTrack && <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(226,221,217,0.08)"}} />}
+      <div style={{height:"72px",background:"#111010",borderTop:"1px solid #1c1a1a",display:"flex",alignItems:"center",padding:"0 16px",position:"relative",zIndex:20,flexShrink:0,gap:0}}>
+        {/* Loading bar */}
         {isLoadingTrack && (
           <div style={{position:"absolute",top:0,left:0,width:"100%",height:"1px",overflow:"hidden",background:"#1c1a1a"}}>
-            <div style={{height:"100%",background:"rgba(226,221,217,0.4)",animation:"loadbar 1.6s ease-in-out infinite",width:"35%"}} />
+            <div style={{height:"100%",background:"rgba(226,221,217,0.4)",animation:"loadbar 1.6s ease-in-out infinite",width:"35%"}}/>
           </div>
         )}
-        {}
-        <div style={{display:"flex",alignItems:"center",gap:"11px",width:"230px",flexShrink:0}}>
+        {isPlaying&&!isLoadingTrack&&<div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(226,221,217,0.06)"}}/>}
+
+        {/* ── LEFT: art + info + like ── */}
+        <div style={{display:"flex",alignItems:"center",gap:"10px",width:"240px",flexShrink:0,minWidth:0}}>
           {currentTrack ? (
             <>
-              <div className="group" style={{position:"relative",width:"44px",height:"44px",borderRadius:"7px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}
-                onClick={() => { if (!currentTrack.url.startsWith('local://')) setInfoModalTrack(currentTrack); }}
-                onContextMenu={e => { if (!currentTrack.url.startsWith('local://')) openCtx(e, { type: 'track', track: currentTrack }); }}>
+              {/* Art */}
+              <div style={{position:"relative",width:"42px",height:"42px",borderRadius:"7px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}
+                onClick={()=>{ if(!currentTrack.url.startsWith('local://')) setInfoModalTrack(currentTrack); }}
+                onContextMenu={e=>{ if(!currentTrack.url.startsWith('local://')) openCtx(e,{type:'track',track:currentTrack}); }}
+                onMouseEnter={e=>{ const ov=e.currentTarget.querySelector<HTMLElement>('.art-ov'); if(ov) ov.style.opacity='1'; }}
+                onMouseLeave={e=>{ const ov=e.currentTarget.querySelector<HTMLElement>('.art-ov'); if(ov) ov.style.opacity='0'; }}>
                 {currentTrack.cover
-                  ? <img src={currentTrack.cover} alt={currentTrack.title} className={`w-full h-full object-cover transition-opacity ${isLoadingTrack ? 'opacity-40' : 'opacity-100'}`} />
-                  : <FileMusic size={22} className="text-neutral-500" />}
-                {isLoadingTrack ? <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-5 h-5 border-2 border-[#d4cfcf] border-t-transparent rounded-full animate-spin" /></div>
-                  : !currentTrack.url.startsWith('local://') ? <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Info size={16} className="text-white" /></div>
-                  : null}
-              </div>
-              <div key={currentTrack.url} className="flex flex-col overflow-hidden max-w-[140px]" style={{ animation: 'fadeIn 0.25s ease both' }}>
-                <span style={{fontWeight:600,color:"#e2ddd9",fontSize:"13px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.title}</span>
+                  ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover",opacity:isLoadingTrack?0.4:1,transition:"opacity .2s"}}/>
+                  : <FileMusic size={18} style={{color:"#5c5755"}}/>}
                 {isLoadingTrack
-                  ? <span className="text-xs text-[#d4cfcf]/70 flex items-center gap-1.5 mt-0.5">
-                      <span style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"12px"}}>{[1, 0.6, 0.8, 0.5].map((h, i) => <span key={i} className="w-[2px] bg-[#d4cfcf]/60 rounded-full inline-block" style={{ height: `${h * 100}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</span>
-                      Buffering...
-                    </span>
-                  : <span style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist}</span>}
-                {audioInfo && !isLoadingTrack && (
-                  <span className="text-[10px] text-neutral-600 truncate mt-0.5 font-mono">
-                    {audioInfo.codec.toUpperCase()}{audioInfo.samplerate > 0 ? ` · ${Math.round(audioInfo.samplerate / 1000)}kHz` : ''}
-                  </span>
+                  ? <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <div style={{width:"16px",height:"16px",border:"2px solid #9e9894",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                    </div>
+                  : !currentTrack.url.startsWith('local://')
+                    ? <div className="art-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"}}>
+                        <Info size={14} style={{color:"#e2ddd9"}}/>
+                      </div>
+                    : null}
+              </div>
+              {/* Info */}
+              <div key={currentTrack.url} style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:"1px",animation:"fadeIn 0.25s ease both"}}>
+                <div style={{fontWeight:600,color:"#e2ddd9",fontSize:"12.5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:"1.3"}}>{currentTrack.title}</div>
+                {isLoadingTrack
+                  ? <div style={{display:"flex",alignItems:"center",gap:"5px"}}>
+                      <div style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"10px"}}>
+                        {[1,0.6,0.8,0.5].map((h,i)=><span key={i} style={{width:"2px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",display:"inline-block",height:`${h*100}%`,animation:`barBounce ${0.65+i*0.1}s ease-in-out ${i*100}ms infinite`,transformOrigin:"bottom"}}/>)}
+                      </div>
+                      <span style={{fontSize:"10px",color:"rgba(226,221,217,0.5)"}}>Buffering</span>
+                    </div>
+                  : <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist||"Unknown artist"}</div>}
+                {audioInfo&&!isLoadingTrack&&(
+                  <div style={{fontSize:"9.5px",color:"#363230",fontFamily:"monospace"}}>
+                    {audioInfo.codec.toUpperCase()}{audioInfo.samplerate>0?` · ${Math.round(audioInfo.samplerate/1000)}kHz`:''}
+                  </div>
                 )}
               </div>
+              {/* Like + Download */}
               {!currentTrack.url.startsWith('local://') && (
-                <button onClick={() => toggleLikeTrack(currentTrack)} className="ml-1 p-1.5 focus:outline-none hover:scale-110 active:scale-95 transition-transform shrink-0">
-                  <Heart size={18} style={isTrackLiked(currentTrack.url)?{color:'#e2ddd9',fill:'#e2ddd9'}:{color:'#5c5755'}} />
-                </button>
-              )}
-              {currentTrack && !currentTrack.url.startsWith('local://') && (() => {
-                const dl = downloadingTracks[currentTrack.url];
-                return (
-                  <button onClick={() => handleDownload(currentTrack)} className="p-1.5 focus:outline-none hover:scale-110 active:scale-95 transition-transform shrink-0" title="Download">
-                    {dl > 0
-                      ? <svg width="20" height="20" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#333" strokeWidth="1.5"/><circle cx="7" cy="7" r="5.5" fill="none" stroke="#9e9894" strokeWidth="1.5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*5.5}`} strokeDashoffset={`${2*Math.PI*5.5*(1-Math.min(dl,100)/100)}`} style={{transformOrigin:'7px 7px',transform:'rotate(-90deg)',transition:'stroke-dashoffset 0.3s ease'}}/>{dl>=100&&<path d="M4.5 7l2 2 3-3" stroke="#9e9894" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>}</svg>
-                      : <Download size={20} className="text-neutral-400 hover:text-white" />}
+                <div style={{display:"flex",alignItems:"center",gap:"2px",flexShrink:0}}>
+                  <button onClick={()=>toggleLikeTrack(currentTrack)} style={{background:"none",border:"none",cursor:"pointer",padding:"5px",display:"flex",color:"#5c5755",transition:"color .12s,transform .1s"}}
+                    onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                    <Heart size={15} style={isTrackLiked(currentTrack.url)?{color:"#e2ddd9",fill:"#e2ddd9"}:{}}/>
                   </button>
-                );
-              })()}
+                  {(()=>{ const dl=downloadingTracks[currentTrack.url]; return (
+                    <button onClick={()=>handleDownload(currentTrack)} title="Download" style={{background:"none",border:"none",cursor:"pointer",padding:"5px",display:"flex",color:"#5c5755",transition:"color .12s,transform .1s"}}
+                      onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                      {dl>0
+                        ? <svg width="15" height="15" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#2a2727" strokeWidth="1.5"/><circle cx="7" cy="7" r="5.5" fill="none" stroke="#9e9894" strokeWidth="1.5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*5.5}`} strokeDashoffset={`${2*Math.PI*5.5*(1-Math.min(dl,100)/100)}`} style={{transformOrigin:"7px 7px",transform:"rotate(-90deg)",transition:"stroke-dashoffset .3s"}}/>{dl>=100&&<path d="M4.5 7l2 2 3-3" stroke="#9e9894" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>}</svg>
+                        : <Download size={15}/>}
+                    </button>
+                  ); })()}
+                </div>
+              )}
             </>
           ) : (
             <>
-              <div style={{width:"44px",height:"44px",borderRadius:"7px",border:"1px solid #1c1a1a",background:"#161414",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Music size={16} style={{color:"#363230"}} /></div>
-              <div style={{display:"flex",flexDirection:"column",overflow:"hidden"}}><span style={{fontWeight:600,color:"#363230",fontSize:"13px"}}>No track</span><span style={{fontSize:"11px",color:"#363230"}}>---</span></div>
+              <div style={{width:"42px",height:"42px",borderRadius:"7px",border:"1px solid #1c1a1a",background:"#161414",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <Music size={16} style={{color:"#363230"}}/>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,color:"#363230",fontSize:"12.5px"}}>Nothing playing</div>
+                <div style={{fontSize:"11px",color:"#2a2727"}}>Search YouTube to start</div>
+              </div>
             </>
           )}
         </div>
 
-        {}
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flex:"1 1 0%",gap:"8px",maxWidth:"580px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:"18px"}}>
-            <button onClick={toggleShuffle} style={{background:'none',border:'none',cursor:'pointer',color:shuffle?'#9e9894':'#363230',padding:'4px',transition:'color .12s'}}><Shuffle size={16} /></button>
-            <button onClick={handleSkipBack} style={{background:'none',border:'none',cursor:currentTrack?'pointer':'not-allowed',color:currentTrack?'#9e9894':'#363230',padding:'4px',transition:'color .12s'}}><SkipBack size={18} /></button>
-            <button onClick={togglePlayPause} disabled={!currentTrack || isLoadingTrack}
-              style={{width:"38px",height:"38px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#e2ddd9",color:"#0c0b0b",border:"none",cursor:"pointer",flexShrink:0,opacity:(!currentTrack||isLoadingTrack)?0.35:1,boxShadow:"0 2px 10px rgba(0,0,0,0.5)",transition:"transform .1s,box-shadow .12s"}}>
-              {isLoadingTrack ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                : isPlaying ? <Pause fill="currentColor" size={22} />
-                : <Play fill="currentColor" size={22} className="ml-0.5" />}
+        {/* ── CENTER: controls + progress ── */}
+        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"7px",padding:"0 16px",minWidth:0}}>
+          {/* Transport controls */}
+          <div style={{display:"flex",alignItems:"center",gap:"14px"}}>
+            <button onClick={toggleShuffle} title="Shuffle" style={{background:"none",border:"none",cursor:"pointer",color:shuffle?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+              onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+              <Shuffle size={14}/>
             </button>
-            <button onClick={handleSkipForward} style={{background:'none',border:'none',cursor:(queue.length>0||playlistContextRef.current!==null)?'pointer':'not-allowed',color:(queue.length>0||playlistContextRef.current!==null)?'#9e9894':'#363230',padding:'4px',transition:'color .12s'}}><SkipForward size={18} /></button>
-            <button onClick={cycleRepeat} style={{background:'none',border:'none',cursor:'pointer',color:repeatMode!=='off'?'#9e9894':'#363230',padding:'4px',transition:'color .12s'}}>
-              {repeatMode === 'one' ? <Repeat1 size={20} /> : <Repeat size={20} />}
+            <button onClick={handleSkipBack} title="Previous" style={{background:"none",border:"none",cursor:currentTrack?"pointer":"not-allowed",color:currentTrack?"#9e9894":"#2a2727",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+              onMouseEnter={e=>{if(currentTrack)e.currentTarget.style.transform="scale(1.15)";}} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+              <SkipBack size={16}/>
+            </button>
+            <button onClick={togglePlayPause} disabled={!currentTrack||isLoadingTrack}
+              style={{width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#e2ddd9",color:"#0c0b0b",border:"none",cursor:(!currentTrack||isLoadingTrack)?"not-allowed":"pointer",flexShrink:0,opacity:(!currentTrack||isLoadingTrack)?0.4:1,boxShadow:"0 2px 10px rgba(0,0,0,0.5)",transition:"transform .1s,box-shadow .12s"}}
+              onMouseEnter={e=>{if(currentTrack&&!isLoadingTrack){e.currentTarget.style.transform="scale(1.07)";e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.6)";} }}
+              onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 2px 10px rgba(0,0,0,0.5)";}}>
+              {isLoadingTrack
+                ? <div style={{width:"14px",height:"14px",border:"2px solid #0c0b0b",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                : isPlaying ? <Pause fill="currentColor" size={16}/> : <Play fill="currentColor" size={16} style={{marginLeft:"2px"}}/>}
+            </button>
+            <button onClick={handleSkipForward} title="Next" style={{background:"none",border:"none",cursor:(queue.length>0||playlistContextRef.current!==null)?"pointer":"not-allowed",color:(queue.length>0||playlistContextRef.current!==null)?"#9e9894":"#2a2727",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+              onMouseEnter={e=>{if(queue.length>0||playlistContextRef.current!==null)e.currentTarget.style.transform="scale(1.15)";}} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+              <SkipForward size={16}/>
+            </button>
+            <button onClick={cycleRepeat} title={`Repeat: ${repeatMode}`} style={{background:"none",border:"none",cursor:"pointer",color:repeatMode!=='off'?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+              onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+              {repeatMode==='one' ? <Repeat1 size={14}/> : <Repeat size={14}/>}
             </button>
           </div>
 
-          {}
-          <div style={{width:"100%",display:"flex",alignItems:"center",gap:"9px"}}>
-            <SpeedSelector speed={playbackSpeed} onChange={setPlaybackSpeed} />
-            {/* A-B Loop — same style as SpeedSelector */}
+          {/* Progress row */}
+          <div style={{width:"100%",display:"flex",alignItems:"center",gap:"7px"}}>
+            {/* Speed */}
+            <SpeedSelector speed={playbackSpeed} onChange={setPlaybackSpeed}/>
+            {/* A-B loop */}
             <button
-              title={abLoop.a === null ? 'Set loop start (A)' : abLoop.b === null ? 'Set loop end (B)' : 'Clear A-B loop'}
-              onClick={() => {
-                if (abLoop.a === null) {
-                  const a = progressSecondsRef.current;
-                  setAbLoop({ a, b: null }); abLoopRef.current = { a, b: null };
-                  showToast(`Loop start: ${formatTime(a)}`);
-                } else if (abLoop.b === null) {
-                  const b = progressSecondsRef.current;
-                  if (b > (abLoop.a ?? 0) + 1) {
-                    setAbLoop(prev => ({ ...prev, b })); abLoopRef.current = { ...abLoopRef.current, b };
-                    showToast(`Loop: ${formatTime(abLoop.a!)} → ${formatTime(b)}`);
-                  } else { showToast('B must be after A'); }
-                } else {
-                  setAbLoop({ a: null, b: null }); abLoopRef.current = { a: null, b: null };
-                  showToast('A-B loop cleared');
-                }
+              title={abLoop.a===null?'Set A (loop start)':abLoop.b===null?'Set B (loop end)':'Clear A-B loop'}
+              onClick={()=>{
+                if(abLoop.a===null){const a=progressSecondsRef.current;setAbLoop({a,b:null});abLoopRef.current={a,b:null};showToast(`Loop A: ${formatTime(a)}`);}
+                else if(abLoop.b===null){const b=progressSecondsRef.current;if(b>(abLoop.a??0)+1){setAbLoop(p=>({...p,b}));abLoopRef.current={...abLoopRef.current,b};showToast(`Loop: ${formatTime(abLoop.a!)} → ${formatTime(b)}`);}else{showToast('B must be after A');}}
+                else{setAbLoop({a:null,b:null});abLoopRef.current={a:null,b:null};showToast('Loop cleared');}
               }}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold transition-all border shrink-0
-                ${abLoop.b !== null
-                  ? 'text-[#d4cfcf] border-[#d4cfcf]/30 bg-[#d4cfcf]/10'
-                  : abLoop.a !== null
-                  ? 'text-neutral-300 border-neutral-600 bg-white/[0.06]'
-                  : 'text-neutral-600 border-neutral-800 hover:text-neutral-400 hover:border-neutral-700'}`}>
-              A-B{abLoop.b !== null ? ' ✓' : abLoop.a !== null ? ' …' : ''}
-            </button>
-            <span style={{fontSize:"10px",color:"#363230",minWidth:"28px",textAlign:"right",fontVariantNumeric:"tabular-nums"}}>
-              {currentTrack ? formatTime(progressSeconds) : '0:00'}
-            </span>
-            <div ref={progressRef}
-              className="slider-track group/prog" style={{position:"relative",flex:"1 1 0%",height:"3px",background:"#232020",borderRadius:"2px",cursor:"pointer"}}
-              onMouseDown={e => { isDraggingProgressRef.current = true; setIsDraggingProgress(true); updateProgressFromEvent(e.clientX); }}
-              onMouseMove={e => {
-                if (!progressRef.current || !currentTrack) return;
-                const rect = progressRef.current.getBoundingClientRect();
-                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                const total = trackDurationRef.current || parseDurationToSeconds(currentTrack.duration);
-                const el = progressRef.current.querySelector<HTMLElement>('.prog-tooltip');
-                if (el) {
-                  el.textContent = formatTime(total * pct);
-                  el.style.left = `${pct * 100}%`;
-                }
+              style={{
+                display:"flex",alignItems:"center",gap:"3px",padding:"2px 6px",
+                borderRadius:"5px",border:"1px solid",
+                fontSize:"10px",fontWeight:700,flexShrink:0,cursor:"pointer",
+                background:abLoop.b!==null?"rgba(226,221,217,0.08)":abLoop.a!==null?"rgba(226,221,217,0.04)":"transparent",
+                borderColor:abLoop.b!==null?"rgba(226,221,217,0.25)":abLoop.a!==null?"rgba(226,221,217,0.12)":"#252222",
+                color:abLoop.b!==null?"#e2ddd9":abLoop.a!==null?"#9e9894":"#363230",
+                transition:"all .12s",
               }}>
-              {/* Hover timestamp tooltip */}
-              {currentTrack && <div className="prog-tooltip absolute -top-7 -translate-x-1/2 px-1.5 py-0.5 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold text-neutral-300 opacity-0 group-hover/prog:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10" style={{ left: '0%' }} />}
-              {waveformData.length > 0 && <WaveformBar waveform={waveformData} progressPercent={calculateProgressPercent()} isDragging={isDraggingProgress} />}
+              A·B{abLoop.b!==null?" ✓":abLoop.a!==null?" …":""}
+            </button>
+            {/* Time elapsed */}
+            <span style={{fontSize:"10px",color:"#363230",flexShrink:0,fontVariantNumeric:"tabular-nums",minWidth:"30px",textAlign:"right"}}>
+              {currentTrack?formatTime(progressSeconds):'0:00'}
+            </span>
+            {/* Progress track */}
+            <div ref={progressRef} className="slider-track"
+              style={{position:"relative",flex:"1 1 0%",height:"3px",background:"#232020",borderRadius:"2px",cursor:currentTrack?"pointer":"default"}}
+              onMouseDown={e=>{if(!currentTrack)return;isDraggingProgressRef.current=true;setIsDraggingProgress(true);updateProgressFromEvent(e.clientX);}}
+              onMouseMove={e=>{
+                if(!progressRef.current||!currentTrack)return;
+                const rect=progressRef.current.getBoundingClientRect();
+                const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+                const total=trackDurationRef.current||parseDurationToSeconds(currentTrack.duration);
+                const el=progressRef.current.querySelector<HTMLElement>('.prog-tooltip');
+                if(el){el.textContent=formatTime(total*pct);el.style.left=`${pct*100}%`;}
+              }}
+              onMouseEnter={e=>{const el=e.currentTarget.querySelector<HTMLElement>('.prog-tooltip');if(el)el.style.opacity='1';}}
+              onMouseLeave={e=>{const el=e.currentTarget.querySelector<HTMLElement>('.prog-tooltip');if(el)el.style.opacity='0';}}>
+              {/* Hover tooltip */}
+              {currentTrack&&<div className="prog-tooltip" style={{position:"absolute",top:"-26px",left:"0%",transform:"translateX(-50%)",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",zIndex:10,opacity:0,transition:"opacity .15s"}}/>}
+              {waveformData.length>0&&<WaveformBar waveform={waveformData} progressPercent={calculateProgressPercent()} isDragging={isDraggingProgress}/>}
+              {/* Fill + thumb */}
               <div style={{position:"absolute",top:0,left:0,height:"100%",background:"#e2ddd9",borderRadius:"2px",pointerEvents:"none",width:`${calculateProgressPercent()}%`,transition:isDraggingProgress?'none':'width 0.5s linear'}}>
-                <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none" />
+                <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"11px",height:"11px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
               </div>
             </div>
-            <span style={{fontSize:"10px",color:"#363230",minWidth:"28px",fontVariantNumeric:"tabular-nums"}}>
-              {currentTrack ? formatTime(trackDurationSeconds || parseDurationToSeconds(currentTrack.duration)) : '0:00'}
+            {/* Duration */}
+            <span style={{fontSize:"10px",color:"#363230",flexShrink:0,fontVariantNumeric:"tabular-nums",minWidth:"30px"}}>
+              {currentTrack?formatTime(trackDurationSeconds||parseDurationToSeconds(currentTrack.duration)):'0:00'}
             </span>
           </div>
         </div>
 
-        {}
-        <div style={{width:"220px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"12px",flexShrink:0}}>
-          {}
-          {crossfadeSeconds > 0 && (
-            <span style={{fontSize:"10px",color:"#9e9894",fontWeight:700,fontVariantNumeric:"tabular-nums"}} title={`Crossfade: ${crossfadeSeconds}s`}>
+        {/* ── RIGHT: lyrics + crossfade + mute + volume ── */}
+        <div style={{width:"200px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"10px",flexShrink:0}}>
+          {crossfadeSeconds>0&&(
+            <span style={{fontSize:"9.5px",color:"#5c5755",fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}} title={`Crossfade: ${crossfadeSeconds}s`}>
               ×{crossfadeSeconds}s
             </span>
           )}
-          {/* Lyrics button */}
-          <button
-            onClick={() => { if (currentTrack) setShowLyrics(o => !o); }}
-            disabled={!currentTrack}
-            title="Lyrics"
-            style={showLyrics?{background:'none',border:'none',cursor:'pointer',color:'#9e9894',flexShrink:0}:{background:'none',border:'none',cursor:'pointer',color:'#363230',flexShrink:0,transition:'color .12s'}}>
-            <Mic2 size={18} />
+          <button onClick={()=>{if(currentTrack)setShowLyrics(o=>!o);}} disabled={!currentTrack} title="Lyrics"
+            style={{background:"none",border:"none",cursor:currentTrack?"pointer":"not-allowed",color:showLyrics?"#9e9894":"#363230",flexShrink:0,display:"flex",padding:"3px",transition:"color .12s",opacity:currentTrack?1:0.4}}
+            onMouseEnter={e=>{if(currentTrack)e.currentTarget.style.color="#9e9894";}} onMouseLeave={e=>{if(!showLyrics)e.currentTarget.style.color="#363230";}}>
+            <Mic2 size={15}/>
           </button>
-          <button onClick={toggleMute} style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px",color:"#5c5755",transition:"color .12s"}}>
-            {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          <button onClick={toggleMute} title={volume===0?"Unmute":"Mute"}
+            style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"3px",color:"#5c5755",display:"flex",transition:"color .12s"}}
+            onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
+            {volume===0 ? <VolumeX size={15}/> : <Volume2 size={15}/>}
           </button>
-          <div ref={volumeRef} title={`Volume: ${Math.round(volume)}%`}
-            className="slider-track group/vol" style={{position:"relative",width:"68px",height:"3px",background:"#232020",borderRadius:"2px",cursor:"pointer"}}
-            onMouseDown={e => { setIsDraggingVolume(true); updateVolumeFromEvent(e.clientX); }}>
-            <div className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
-              style={{position:'absolute',top:0,left:0,height:'100%',borderRadius:'2px',pointerEvents:'none',width:`${volume}%`,background:volume>0?'#e2ddd9':'#232020',transition:isDraggingVolume?'none':'width 0.15s ease-out'}}>
-              <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none" />
+          {/* Volume + tooltip */}
+          <div style={{position:"relative",display:"flex",alignItems:"center",gap:"5px",flexShrink:0}}>
+            <div ref={volumeRef}
+              className="slider-track"
+              style={{position:"relative",width:"64px",height:"3px",background:"#232020",borderRadius:"2px",cursor:"pointer"}}
+              onMouseDown={e=>{setIsDraggingVolume(true);updateVolumeFromEvent(e.clientX);}}
+              onMouseEnter={e=>{const tip=e.currentTarget.nextElementSibling as HTMLElement;if(tip)tip.style.opacity='1';}}
+              onMouseLeave={e=>{const tip=e.currentTarget.nextElementSibling as HTMLElement;if(tip)tip.style.opacity='0';}}>
+              <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${volume}%`,background:volume>0?"#e2ddd9":"#232020",transition:isDraggingVolume?"none":"width 0.15s ease-out"}}>
+                <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"11px",height:"11px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
+              </div>
             </div>
-            <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold text-neutral-300 opacity-0 group-hover/vol:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <div style={{position:"absolute",bottom:"14px",left:"50%",transform:"translateX(-50%)",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",opacity:0,transition:"opacity .15s",zIndex:10}}>
               {Math.round(volume)}%
             </div>
           </div>
@@ -4469,57 +4503,37 @@ export default function Veluna() {
               onClick={e => e.stopPropagation()}>
 
               {}
-              <div className="relative h-44 w-full shrink-0 overflow-hidden">
-                <img src={infoModalTrack.cover} className="w-full h-full object-cover opacity-30" style={{ filter: 'blur(20px)', transform: 'scale(1.1)' }} alt="" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0c0c0c]" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <img src={infoModalTrack.cover} className="h-28 w-28 rounded-xl shadow-2xl object-cover border border-white/10" alt="" />
+              <div style={{position:"relative",height:"130px",width:"100%",flexShrink:0,overflow:"hidden"}}>
+                <img src={infoModalTrack.cover} style={{width:"100%",height:"100%",objectFit:"cover",opacity:.25,filter:"blur(20px)",transform:"scale(1.1)"}} alt=""/>
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent,#161414)"}}/>
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <img src={infoModalTrack.cover} style={{width:"80px",height:"80px",borderRadius:"10px",objectFit:"cover",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 24px rgba(0,0,0,0.6)"}} alt=""/>
                 </div>
-                <button onClick={() => setInfoModalTrack(null)}
-                  className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/70 text-neutral-400 hover:text-white hover:bg-black transition-colors">
-                  <X size={14} />
+                <button onClick={()=>setInfoModalTrack(null)}
+                  style={{position:"absolute",top:"10px",right:"10px",width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"rgba(0,0,0,0.6)",border:"none",cursor:"pointer",color:"#9e9894",transition:"color .12s"}}
+                  onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#9e9894")}>
+                  <X size={13}/>
                 </button>
               </div>
-
-              {}
-              <div className="px-6 pt-3 pb-4 text-center">
-                <p className="text-base font-bold text-white leading-snug">{infoModalTrack.title}</p>
-                <p className="text-sm text-neutral-500 mt-0.5">{infoModalTrack.artist}</p>
+              <div style={{padding:"10px 16px 12px",textAlign:"center"}}>
+                <div style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",lineHeight:1.3}}>{infoModalTrack.title}</div>
+                <div style={{fontSize:"12px",color:"#5c5755",marginTop:"2px"}}>{infoModalTrack.artist}</div>
               </div>
 
               {}
-              <div className="flex gap-2 px-6 pb-4 flex-wrap justify-center">
-                {infoModalTrack.duration && infoModalTrack.duration !== '0:00' && (
-                  <span className="bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full text-xs font-bold text-neutral-400 flex items-center gap-1.5">
-                    <Clock size={10} /> {infoModalTrack.duration}
+              <div style={{display:"flex",gap:"5px",padding:"0 14px 12px",flexWrap:"wrap",justifyContent:"center"}}>
+                {[
+                  infoModalTrack.duration&&infoModalTrack.duration!=='0:00'&&{icon:<Clock size={9}/>,label:infoModalTrack.duration},
+                  isYt&&{icon:<Youtube size={9}/>,label:"YouTube"},
+                  trackAudioInfo?.codec&&trackAudioInfo.codec!=='unknown'&&{icon:<BarChart2 size={9}/>,label:`${trackAudioInfo.codec.toUpperCase()}${trackAudioInfo.bitrate>0?` · ${Math.round(trackAudioInfo.bitrate/1000)}k`:''}`},
+                  trackAudioInfo?.samplerate>0&&{icon:<Gauge size={9}/>,label:`${(trackAudioInfo.samplerate/1000).toFixed(1)}kHz`},
+                  trackAudioInfo?.channels&&{icon:<AlignLeft size={9}/>,label:trackAudioInfo.channels},
+                  trackAudioInfo?.format&&{icon:<FileCode2 size={9}/>,label:trackAudioInfo.format},
+                ].filter(Boolean).map((item:any,i)=>(
+                  <span key={i} style={{display:"flex",alignItems:"center",gap:"4px",background:"#1c1a1a",border:"1px solid #252222",padding:"3px 8px",borderRadius:"20px",fontSize:"10px",fontWeight:600,color:"#9e9894"}}>
+                    {item.icon}{item.label}
                   </span>
-                )}
-                {isYt && (
-                  <span className="bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full text-xs font-bold text-red-500 flex items-center gap-1.5">
-                    <Youtube size={10} /> YouTube
-                  </span>
-                )}
-                {trackAudioInfo && trackAudioInfo.codec && trackAudioInfo.codec !== 'unknown' && (
-                  <span className="bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full text-xs font-bold text-neutral-400 flex items-center gap-1.5">
-                    <BarChart2 size={10} /> {trackAudioInfo.codec.toUpperCase()}
-                    {trackAudioInfo.bitrate > 0 ? ` ${Math.round(trackAudioInfo.bitrate / 1000)}kbps` : ''}
-                  </span>
-                )}
-                {trackAudioInfo && trackAudioInfo.samplerate > 0 && (
-                  <span className="bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full text-xs font-bold text-violet-400 flex items-center gap-1.5">
-                    <Gauge size={10} /> {(trackAudioInfo.samplerate / 1000).toFixed(1)}kHz
-                  </span>
-                )}
-                {trackAudioInfo && trackAudioInfo.channels && (
-                  <span className="bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full text-xs font-bold text-neutral-400 flex items-center gap-1.5">
-                    <AlignLeft size={10} /> {trackAudioInfo.channels}
-                  </span>
-                )}
-                {trackAudioInfo && trackAudioInfo.format && (
-                  <span className="bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full text-xs font-bold text-neutral-400 flex items-center gap-1.5">
-                    <FileCode2 size={10} /> {trackAudioInfo.format}
-                  </span>
-                )}
+                ))}
               </div>
 
               {}
@@ -4618,7 +4632,7 @@ export default function Veluna() {
           else seen.set(key, t);
         });
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
+          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.9)"}} onClick={()=>setInfoModalTrack(null)}>
             <div className="bg-[#0d0d0d] border border-neutral-800 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl">
               <div className="p-5 border-b border-neutral-800 flex items-center justify-between">
                 <div>
@@ -4786,13 +4800,13 @@ export default function Veluna() {
       {}
       {/* Keyboard Shortcuts Overlay — press ? to toggle */}
       {showShortcuts && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setShowShortcuts(false)}>
-          <div className="bg-[#0e0e0e] border border-neutral-800 rounded-2xl w-[520px] max-h-[80vh] overflow-y-auto shadow-2xl custom-scrollbar"
-            onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800">
-              <h2 className="text-base font-bold text-white">Keyboard Shortcuts</h2>
-              <button onClick={() => setShowShortcuts(false)} className="text-neutral-500 hover:text-white transition-colors"><X size={16} /></button>
+        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}
+          onClick={()=>setShowShortcuts(false)}>
+          <div style={{background:"#161414",border:"1px solid #252222",borderRadius:"14px",width:"500px",maxHeight:"80vh",overflowY:"auto",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}} className="custom-scrollbar"
+            onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",borderBottom:"1px solid #1c1a1a"}}>
+              <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Keyboard Shortcuts</h2>
+              <button onClick={()=>setShowShortcuts(false)} style={{background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",padding:"3px",borderRadius:"5px",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><X size={15}/></button>
             </div>
             <div style={{padding:"14px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",columnGap:"24px",rowGap:"4px"}}>
               {([
@@ -4808,17 +4822,17 @@ export default function Veluna() {
                 ['Esc', 'Close any overlay'],
               ] as [string, string | null][]).map(([key, action], i) =>
                 action === null ? (
-                  <div key={i} className="col-span-2 mt-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-neutral-600">{key}</div>
+                  <div key={i} style={{gridColumn:"1/-1",marginTop:"10px",marginBottom:"4px",fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>{key}</div>
                 ) : (
-                  <div key={i} className="flex items-center justify-between py-1.5 border-b border-neutral-800/40 col-span-2 md:col-span-1">
-                    <span className="text-sm text-neutral-400">{action}</span>
-                    <kbd className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-neutral-900 border border-neutral-700 text-[#d4cfcf] ml-4 shrink-0">{key}</kbd>
+                  <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #1c1a1a"}}>
+                    <span style={{fontSize:"12px",color:"#9e9894"}}>{action}</span>
+                    <kbd style={{padding:"2px 7px",borderRadius:"5px",fontSize:"10px",fontWeight:700,background:"#1c1a1a",border:"1px solid #252222",color:"#5c5755",marginLeft:"12px",flexShrink:0,fontFamily:"monospace"}}>{key}</kbd>
                   </div>
                 )
               )}
             </div>
-            <div className="px-6 py-4 border-t border-neutral-800 text-center">
-              <p style={{fontSize:"11px",color:"#5c5755"}}>Press <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-400">?</kbd> or <kbd className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-800 text-neutral-400">Esc</kbd> to close</p>
+            <div style={{padding:"10px 18px",borderTop:"1px solid #1c1a1a",textAlign:"center"}}>
+              <p style={{fontSize:"11px",color:"#363230"}}>Press <kbd style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9.5px",background:"#1c1a1a",border:"1px solid #252222",color:"#5c5755",fontFamily:"monospace"}}>?</kbd> or <kbd style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9.5px",background:"#1c1a1a",border:"1px solid #252222",color:"#5c5755",fontFamily:"monospace"}}>Esc</kbd> to close</p>
             </div>
           </div>
         </div>
@@ -4826,23 +4840,27 @@ export default function Veluna() {
 
       {/* Custom confirm dialog — replaces window.confirm to avoid double native boxes */}
       {confirmModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setConfirmModal(null)}>
-          <div className="bg-[#111] border border-neutral-700 rounded-xl w-96 shadow-2xl overflow-hidden"
-            onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-5 border-b border-neutral-800">
-              <h3 className="text-base font-bold text-white">Confirm</h3>
+        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}
+          onClick={()=>setConfirmModal(null)}>
+          <div style={{background:"#161414",border:"1px solid #252222",borderRadius:"12px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)",overflow:"hidden"}}
+            onClick={e=>e.stopPropagation()}>
+            <div style={{padding:"14px 18px",borderBottom:"1px solid #1c1a1a"}}>
+              <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Confirm</h3>
             </div>
-            <div className="px-6 py-5">
-              <p className="text-sm text-neutral-300 leading-relaxed">{confirmModal.message}</p>
+            <div style={{padding:"14px 18px"}}>
+              <p style={{fontSize:"13px",color:"#9e9894",lineHeight:1.5,margin:0}}>{confirmModal.message}</p>
             </div>
-            <div className="px-6 pb-5 flex justify-end gap-3">
-              <button onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors rounded-lg hover:bg-neutral-800">
+            <div style={{display:"flex",justifyContent:"flex-end",gap:"8px",padding:"10px 18px",borderTop:"1px solid #1c1a1a"}}>
+              <button onClick={()=>setConfirmModal(null)}
+                style={{padding:"7px 14px",borderRadius:"8px",border:"1px solid #252222",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
+                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}}
+                onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
                 Cancel
               </button>
-              <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }}
-                className="px-4 py-2 text-sm font-bold bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/60 rounded-lg transition-all">
+              <button onClick={()=>{confirmModal.onConfirm();setConfirmModal(null);}}
+                style={{padding:"7px 14px",borderRadius:"8px",background:"rgba(180,40,40,0.1)",border:"1px solid rgba(180,40,40,0.25)",color:"#a05050",fontWeight:700,cursor:"pointer",fontSize:"12px",transition:"background .12s"}}
+                onMouseEnter={e=>(e.currentTarget.style.background="rgba(180,40,40,0.18)")}
+                onMouseLeave={e=>(e.currentTarget.style.background="rgba(180,40,40,0.1)")}>
                 Confirm
               </button>
             </div>
