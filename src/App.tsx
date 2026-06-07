@@ -19,7 +19,7 @@ import {
   Loader2, CheckCircle2, XCircle, ArrowUpCircle, Image, Mic2
 } from 'lucide-react';
 
-const __APP_VERSION__ = '0.1.0';
+const __APP_VERSION__ = '0.1.1';
 
 type Track = {
   id: number;
@@ -194,7 +194,7 @@ const TrackRow = React.memo(({
             <MoreVertical size={13} />
           </button>}
     </div>
-    <span className="text-[13px] text-neutral-500 tabular-nums w-12 text-right shrink-0">{track.duration && track.duration !== '0:00' ? track.duration : '—'}</span>
+    <span className="v-track__dur">{track.duration && track.duration !== '0:00' ? track.duration : '—'}</span>
   </div>
 ));
 
@@ -213,9 +213,9 @@ const WaveformBar = React.memo(({ waveform, progressPercent, isDragging }: { wav
   if (!waveform.length) return null;
   const max = Math.max(...waveform, 0.01);
   return (
-    <div className="absolute inset-0 flex items-center gap-[1px] px-0 pointer-events-none overflow-hidden rounded-full opacity-50">
+    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",gap:"1px",pointerEvents:"none",overflow:"hidden"}}>
       {waveform.map((v, i) => (
-        <div key={i} className="flex-1 rounded-sm"
+        <div key={i} style={{flex:1,borderRadius:"1px"}}
           style={{
             height: `${Math.max(8, (v / max) * 100)}%`,
             background: (i / waveform.length) * 100 <= progressPercent ? '#e2ddd9' : '#232020',
@@ -312,7 +312,7 @@ const ThemedSelect = ({ value, options, onChange }: {
         onClick={handleOpen}
         style={{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'8px',fontSize:'12px',fontWeight:600,border:`1px solid ${open?'#2e2b2b':'#252222'}`,background:open?'rgba(226,221,217,0.05)':'transparent',color:open?'#9e9894':'#5c5755',cursor:'pointer',minWidth:'110px',transition:'border-color .12s,color .12s'}}
       >
-        <span className="flex-1 text-left">{current?.label}</span>
+        <span style={{flex:1,textAlign:"left"}}>{current?.label}</span>
         <ChevronDown size={14} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
       {typeof document !== 'undefined' && dropdown
@@ -331,36 +331,38 @@ function ImportResultModal({
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md">
-      <div className="w-[420px] rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.95)]"
-        style={{ background: '#0e0e0e', border: '1px solid rgba(212,207,207,0.2)' }}>
-        <div className="px-7 py-5 border-b border-neutral-800/60">
-          <h2 className="text-base font-bold text-white">Save Playlist</h2>
-          <p className="text-xs text-neutral-500 mt-1">
-            <span style={{ color: '#9e9894' }} className="font-bold">{matchedCount}</span> tracks matched
-            {failedCount > 0 && <span className="text-neutral-600"> · {failedCount} not found</span>}
+    <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}}>
+      <div style={{width:"380px",borderRadius:"14px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.95)",background:"#161414",border:"1px solid #252222"}}>
+        <div style={{padding:"14px 18px",borderBottom:"1px solid #1c1a1a"}}>
+          <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Save Playlist</h2>
+          <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>
+            <span style={{color:"#9e9894",fontWeight:700}}>{matchedCount}</span> tracks matched
+            {failedCount>0&&<span style={{color:"#363230"}}> · {failedCount} not found</span>}
           </p>
         </div>
-        <div className="px-7 py-5 flex flex-col gap-4">
+        <div style={{padding:"14px 18px",display:"flex",flexDirection:"column",gap:"10px"}}>
           <div>
-            <label className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-1.5 block">Playlist Name</label>
-            <input ref={inputRef} value={name} onChange={e => setName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSave(name.trim(), desc.trim()); }}
+            <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"6px"}}>Playlist Name</label>
+            <input ref={inputRef} value={name} onChange={e=>setName(e.target.value)}
+              onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onSave(name.trim(),desc.trim());}}
               placeholder="My Playlist" maxLength={80}
-              className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-700 outline-none focus:border-[#d4cfcf]/40 transition-colors" />
+              style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}/>
           </div>
           <div>
-            <label className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-1.5 block">Description <span className="text-neutral-700 normal-case font-normal">(optional)</span></label>
-            <input value={desc} onChange={e => setDesc(e.target.value)}
-              placeholder="e.g. Chill vibes, road trip..."  maxLength={160}
-              className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-700 outline-none focus:border-[#d4cfcf]/40 transition-colors" />
+            <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"6px"}}>Description <span style={{color:"#363230",textTransform:"none",fontWeight:400}}>(optional)</span></label>
+            <input value={desc} onChange={e=>setDesc(e.target.value)}
+              placeholder="e.g. Chill vibes, road trip..." maxLength={160}
+              style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}/>
           </div>
-          <div className="flex gap-3 mt-1">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-colors">Cancel</button>
-            <button onClick={() => { if (name.trim()) onSave(name.trim(), desc.trim()); }}
-              disabled={!name.trim()}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40 active:scale-[0.98]"
-              style={{ background: '#e2ddd9', color: '#000' }}>
+          <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
+            <button onClick={onClose}
+              style={{flex:1,padding:"8px",borderRadius:"8px",border:"1px solid #252222",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
+              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}}
+              onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+              Cancel
+            </button>
+            <button onClick={()=>{if(name.trim())onSave(name.trim(),desc.trim());}} disabled={!name.trim()}
+              style={{flex:1,padding:"8px",borderRadius:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,cursor:"pointer",fontSize:"12px",opacity:name.trim()?1:0.35}}>
               Save Playlist
             </button>
           </div>
@@ -424,8 +426,10 @@ function CopyButton({ text, label, icon: Icon, disabled = false, className = '' 
   };
   return (
     <button onClick={handleCopy} disabled={disabled}
-      className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 transition-colors disabled:opacity-30 ${className}`}>
-      {copied ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9e9894" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span style={{color:'#9e9894'}}>Copied!</span></> : <><Icon size={14} />{label}</>}
+      style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"7px",padding:"8px",borderRadius:"9px",border:"1px solid #252222",background:"#1c1a1a",color:copied?"#9e9894":"#5c5755",fontSize:"12px",fontWeight:600,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.3:1,transition:"border-color .12s,color .12s,background .12s",width:"100%"}}
+      onMouseEnter={e=>{if(!disabled){e.currentTarget.style.background="#232020";e.currentTarget.style.color="#9e9894";}}}
+      onMouseLeave={e=>{e.currentTarget.style.background="#1c1a1a";e.currentTarget.style.color=copied?"#9e9894":"#5c5755";}}>
+      {copied ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9e9894" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Copied!</> : <><Icon size={13}/>{label}</>}
     </button>
   );
 }
@@ -591,37 +595,36 @@ function CsvImportModal({
 
   return (
     <>
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md" onClick={phase === 'matching' ? undefined : onClose}>
-      <div className="w-[740px] max-h-[88vh] flex flex-col rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.95)]"
-        style={{ background: '#0e0e0e', border: '1px solid rgba(212,207,207,0.15)' }}
+    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}} onClick={phase==='matching'?undefined:onClose}>
+      <div style={{width:"700px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"14px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.95)",background:"#161414",border:"1px solid #252222"}}
         onClick={e => e.stopPropagation()}>
 
         {}
-        <div className="flex items-center justify-between px-7 py-5 border-b border-neutral-800/60 shrink-0">
-          <div className="flex items-center gap-3">
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#4a4a4a' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
             </div>
-            <h2 className="text-base font-bold text-white">Import Spotify Playlist</h2>
+            <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Import Spotify Playlist</h2>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
             {phase === 'matching' && (
               <button onClick={onClose} title="Minimize — import continues in background"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-[#d4cfcf] hover:bg-[#d4cfcf]/10 transition-all text-xs font-bold border border-neutral-800">
+                style={{width:"28px",height:"28px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"1px solid #252222",background:"transparent",color:"#5c5755",cursor:"pointer",fontSize:"12px",fontWeight:700,transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
                 —
               </button>
             )}
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-all">
-              <X size={16} />
+            <button onClick={onClose} style={{width:"28px",height:"28px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"none",background:"transparent",color:"#5c5755",cursor:"pointer",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
+              <X size={14}/>
             </button>
           </div>
         </div>
 
         {}
         {phase === 'instructions' && (
-          <div className="flex-1 flex flex-col px-7 py-6 gap-5 overflow-y-auto custom-scrollbar">
-            <p className="text-sm text-neutral-400 leading-relaxed">
-              Veluna uses <span className="text-white font-semibold">Exportify</span> to import Spotify playlists, no extra software needed.
+          <div style={{flex:1,display:"flex",flexDirection:"column",padding:"18px 20px",gap:"16px",overflowY:"auto"}} className="custom-scrollbar">
+            <p style={{fontSize:"13px",color:"#9e9894",lineHeight:1.6}}>
+              Veluna uses <span style={{color:"#e2ddd9",fontWeight:600}}>Exportify</span> to import Spotify playlists, no extra software needed.
             </p>
             {[
               { n: '1', title: 'Go to Exportify', desc: 'Open exportify.net in your browser', link: 'https://exportify.net', linkLabel: 'exportify.net →' },
@@ -629,11 +632,11 @@ function CsvImportModal({
               { n: '3', title: 'Export your playlist', desc: 'Find the playlist and click the green Export button. A .csv file will download.' },
               { n: '4', title: 'Upload the CSV here', desc: 'Click the button below and select the downloaded .csv file.' },
             ].map(step => (
-              <div key={step.n} className="flex gap-4 items-start">
+              <div key={step.n} style={{display:"flex",gap:"12px",alignItems:"flex-start"}}>
                 <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-black mt-0.5" style={{ background: '#e2ddd9' }}>{step.n}</div>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>{step.title}</p>
-                  <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">{step.desc}</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px",lineHeight:1.5}}>{step.desc}</p>
                   {step.link && <button onClick={() => openUrl(step.link!).catch(() => window.open(step.link!, '_blank'))}
                     className="text-base mt-2 inline-block font-bold hover:underline cursor-pointer" style={{ color: '#9e9894' }}>{step.linkLabel}</button>}
                 </div>
@@ -642,7 +645,7 @@ function CsvImportModal({
             <input ref={fileInputRef} type="file" accept=".csv" className="hidden"
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
             <button onClick={() => fileInputRef.current?.click()}
-              className="mt-2 w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              style={{marginTop:"6px",width:"100%",padding:"10px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",cursor:"pointer"}}
               style={{ background: '#e2ddd9', color: '#000' }}>
               <Upload size={16} /> Upload Exportify CSV
             </button>
@@ -652,34 +655,34 @@ function CsvImportModal({
         {}
         {(phase === 'matching' || phase === 'saving' || phase === 'done') && (
           <>
-            <div className="px-7 py-3 border-b border-neutral-800/40 shrink-0">
-              <div className="flex items-center justify-between mb-2">
+            <div style={{padding:"10px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}>
                 <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: '#9e9894' }}>
                   {isDone ? `Done · ${matched.length} matched` : `Matching · ${matched.length + failed.length} / ${results.length}`}
-                  {failed.length > 0 && <span className="text-neutral-600 ml-2">· {failed.length} not found</span>}
+                  {failed.length>0&&<span style={{color:"#363230",marginLeft:"6px"}}>· {failed.length} not found</span>}
                 </span>
-                {statusMsg && <span className="text-[10px] text-neutral-600 font-mono">{statusMsg}</span>}
+                {statusMsg&&<span style={{fontSize:"10px",color:"#363230",fontFamily:"monospace"}}>{statusMsg}</span>}
               </div>
-              <div className="h-1 rounded-full bg-neutral-800 overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-300"
+              <div style={{height:"3px",borderRadius:"2px",background:"#232020",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:"2px",transition:"width .3s"}}
                   style={{ width: `${results.length > 0 ? ((matched.length + failed.length) / results.length) * 100 : 0}%`, background: '#e2ddd9' }} />
               </div>
             </div>
             <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar">
               {results.map((r, i) => (
-                <div key={i} className="flex items-center gap-4 px-7 py-2.5 border-b border-neutral-800/30 last:border-0">
-                  <div className="w-8 h-8 rounded-md shrink-0 overflow-hidden bg-neutral-900 flex items-center justify-center">
-                    {r.cover ? <img src={r.cover} className="w-full h-full object-cover" alt="" /> : <Music size={13} className="text-neutral-700" />}
+                <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"8px 20px",borderBottom:"1px solid rgba(28,26,26,0.6)"}}>
+                  <div style={{width:"32px",height:"32px",borderRadius:"6px",flexShrink:0,overflow:"hidden",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {r.cover?<img src={r.cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:<Music size={12} style={{color:"#363230"}}/>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <p className="text-sm font-semibold text-white truncate leading-snug">{r.title}</p>
-                    <p className="text-xs text-neutral-600 truncate">{r.artist}</p>
+                    <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
+                    <div style={{fontSize:"11px",color:"#363230",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.artist}</div>
                   </div>
-                  <div className="shrink-0 flex items-center gap-1.5 w-24 justify-end">
-                    {r.status === 'pending'  && <span className="text-xs text-neutral-800">·</span>}
-                    {r.status === 'fetching' && <Loader2 size={12} className="animate-spin text-neutral-500" />}
+                  <div style={{flexShrink:0,display:"flex",alignItems:"center",gap:"5px",width:"80px",justifyContent:"flex-end"}}>
+                    {r.status==='pending'&&<span style={{fontSize:"11px",color:"#2a2727"}}>·</span>}
+                    {r.status === 'fetching' && <Loader2 size={12} style={{animation:"spin 0.8s linear infinite",color:"#5c5755"}} />}
                     {r.status === 'matched'  && <CheckCircle2 size={13} style={{ color: '#9e9894' }} />}
-                    {r.status === 'failed'   && <XCircle size={13} className="text-red-600" />}
+                    {r.status === 'failed'   && <XCircle size={13} style={{color:"#a05050"}} />}
                   </div>
                 </div>
               ))}
@@ -759,61 +762,60 @@ function YtImportModal({
 
   return (
     <>
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md" onClick={onClose}>
-      <div className="w-[680px] max-h-[86vh] flex flex-col rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.95)]"
-        style={{ background: '#0e0e0e', border: '1px solid rgba(255,0,0,0.15)' }}
+    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}} onClick={onClose}>
+      <div style={{width:"640px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"14px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.95)",background:"#161414",border:"1px solid #252222"}}
         onClick={e => e.stopPropagation()}>
 
         {}
-        <div className="flex items-center justify-between px-7 py-5 border-b border-neutral-800/60 shrink-0">
-          <div className="flex items-center gap-3">
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
             <div style={{width:"32px",height:"32px",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(180,40,40,0.7)"}}>
               <svg width="18" height="14" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
             </div>
-            <h2 className="text-base font-bold text-white">Import YouTube Playlist</h2>
+            <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Import YouTube Playlist</h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/[0.06] transition-all">
+          <button onClick={onClose} style={{width:"28px",height:"28px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"none",background:"transparent",color:"#5c5755",cursor:"pointer",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
             <X size={16} />
           </button>
         </div>
 
         {}
         {(phase === 'input' || phase === 'loading') && (
-          <div className="flex-1 flex flex-col px-7 py-6 gap-5">
-            <p className="text-sm text-neutral-400">Paste a public YouTube playlist URL below. All videos will be imported instantly, no matching needed.</p>
-            <div className="flex gap-3">
-              <div className="flex-1 flex items-center gap-2 bg-[#0a0a0a] border border-neutral-800 rounded-xl px-4 py-2.5 focus-within:border-red-500/40 transition-colors">
-                <svg width="14" height="11" viewBox="0 0 18 14" fill="#666" className="shrink-0"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
+          <div style={{flex:1,display:"flex",flexDirection:"column",padding:"18px 20px",gap:"14px"}}>
+            <p style={{fontSize:"13px",color:"#9e9894"}}>Paste a public YouTube playlist URL below. All videos will be imported instantly, no matching needed.</p>
+            <div style={{display:"flex",gap:"8px"}}>
+              <div style={{flex:1,display:"flex",alignItems:"center",gap:"8px",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"9px",padding:"0 12px",height:"38px"}}>
+                <svg width="14" height="11" viewBox="0 0 18 14" fill="#5c5755" style={{flexShrink:0}}><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
                 <input ref={inputRef} value={url} onChange={e => setUrl(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && phase === 'input' && isYtUrl) handleImport(); }}
                   placeholder="https://youtube.com/playlist?list=..."
                   disabled={phase === 'loading'}
-                  className="flex-1 bg-transparent text-sm text-neutral-300 placeholder-neutral-700 outline-none" />
+                  style={{flex:1,background:"transparent",fontSize:"13px",color:"#e2ddd9",outline:"none",border:"none"}} />
               </div>
               <button onClick={handleImport} disabled={phase === 'loading' || !isYtUrl}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40 flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white">
-                {phase === 'loading' ? <Loader2 size={15} className="animate-spin" /> : <><svg width="13" height="10" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>Import</>}
+                style={{padding:"0 16px",height:"38px",borderRadius:"9px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,fontSize:"13px",cursor:"pointer",display:"flex",alignItems:"center",gap:"7px",flexShrink:0,opacity:phase==="loading"||!isYtUrl?0.4:1,transition:"opacity .12s"}}>
+                {phase === 'loading' ? <Loader2 size={15} style={{animation:"spin 0.8s linear infinite"}}/> : <><svg width="13" height="10" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>Import</>}
               </button>
             </div>
-            {statusMsg && <p className="text-xs text-neutral-500 font-mono">{statusMsg}</p>}
+            {statusMsg && <p style={{fontSize:"11px",color:"#5c5755",fontFamily:"monospace"}}>{statusMsg}</p>}
           </div>
         )}
 
         {}
         {phase === 'saving' && (
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-7 py-4">
-            <p className="text-xs text-neutral-500 mb-3">{results.length} videos found. Enter a name and save.</p>
+          <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}} className="custom-scrollbar">
+            <p style={{fontSize:"11px",color:"#5c5755",marginBottom:"10px"}}>{results.length} videos found. Enter a name and save.</p>
             <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
               {results.slice(0, 50).map((r, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <img src={r.cover} className="w-10 h-7 rounded object-cover shrink-0 bg-neutral-900" alt="" />
+                <div key={i} style={{display:"flex",alignItems:"center",gap:"10px"}}>
+                  <img src={r.cover} style={{width:"48px",height:"27px",borderRadius:"5px",objectFit:"cover",flexShrink:0,background:"#1c1a1a"}} alt="" />
                   <div style={{flex:1,minWidth:0}}>
-                    <p className="text-sm text-white truncate">{r.title}</p>
-                    <p className="text-xs text-neutral-600 truncate">{r.artist}</p>
+                    <p style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
+                    <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.artist}</div>
                   </div>
                 </div>
               ))}
-              {results.length > 50 && <p className="text-xs text-neutral-700 pt-1">+ {results.length - 50} more...</p>}
+              {results.length > 50 && <p style={{fontSize:"11px",color:"#363230",paddingTop:"4px"}}>+ {results.length - 50} more...</p>}
             </div>
           </div>
         )}
@@ -962,28 +964,25 @@ function SettingsPanel({
               <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Check for new releases of Veluna.</p>
             </div>
 
-            <div className={`rounded-xl border p-5 flex items-start gap-4 ${updateAvailable ? 'bg-[#d4cfcf]/[0.04] border-[#d4cfcf]/20' : 'bg-neutral-900/40 border-neutral-800/40'}`}>
-              <div className={`mt-0.5 shrink-0 ${updateAvailable ? 'text-[#d4cfcf]' : 'text-neutral-600'}`}>
-                {updateAvailable ? <ArrowUpCircle size={22} /> : <CheckCircle size={22} />}
+            <div style={{borderRadius:"10px",border:`1px solid ${updateAvailable?"rgba(226,221,217,0.12)":"#1c1a1a"}`,padding:"14px",display:"flex",alignItems:"flex-start",gap:"12px",background:updateAvailable?"rgba(226,221,217,0.04)":"#161414"}}>
+              <div style={{marginTop:"1px",flexShrink:0,color:updateAvailable?"#9e9894":"#363230"}}>
+                {updateAvailable ? <ArrowUpCircle size={20}/> : <CheckCircle size={20}/>}
               </div>
               <div style={{flex:1,minWidth:0}}>
                 {updateAvailable ? (
                   <>
-                    <p className="text-sm font-semibold text-white mb-0.5">Update available — v{updateAvailable}</p>
-                    <p className="text-xs text-neutral-500 mb-3">A new version of Veluna is ready to download.</p>
-                    <a
-                      href="#"
-                      onClick={e => { e.preventDefault(); openUrl('https://github.com/ishmweet/veluna/releases/latest'); }}
-                      className="inline-flex items-center gap-2 text-xs font-semibold text-[#d4cfcf] hover:underline"
-                    >
-                      <ExternalLink size={13} />
-                      View release on GitHub
+                    <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",marginBottom:"3px"}}>Update available — v{updateAvailable}</div>
+                    <div style={{fontSize:"11px",color:"#5c5755",marginBottom:"10px"}}>A new version of Veluna is ready to download.</div>
+                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna-player/releases/latest');}}
+                      style={{display:"inline-flex",alignItems:"center",gap:"5px",fontSize:"11px",fontWeight:600,color:"#9e9894",textDecoration:"none"}}
+                      onMouseEnter={e=>(e.currentTarget.style.textDecoration="underline")} onMouseLeave={e=>(e.currentTarget.style.textDecoration="none")}>
+                      <ExternalLink size={11}/> View release on GitHub
                     </a>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-semibold text-white mb-0.5">You're up to date</p>
-                    <p style={{fontSize:"11px",color:"#5c5755"}}>Veluna v{appVersion} is the latest release.</p>
+                    <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",marginBottom:"3px"}}>You're up to date</div>
+                    <div style={{fontSize:"11px",color:"#5c5755"}}>Veluna v{appVersion} is the latest release.</div>
                   </>
                 )}
               </div>
@@ -999,12 +998,12 @@ function SettingsPanel({
             </div>
 
             {}
-            <div className="border border-neutral-800/60 rounded-xl overflow-visible">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Quality</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Quality of downloaded MP3 files.</p>
               </div>
-              <div className="px-5 py-5 flex items-center justify-between">
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Download Quality</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
@@ -1040,12 +1039,12 @@ function SettingsPanel({
             </div>
 
             {}
-            <div className="border border-neutral-800/60 rounded-xl overflow-visible">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Format</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Container format for downloaded files.</p>
               </div>
-              <div className="px-5 py-5 flex items-center justify-between">
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Format</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
@@ -1068,7 +1067,7 @@ function SettingsPanel({
             {}
             <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Image size={14} className="text-[#d4cfcf]" /> File Options</h3>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Image size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> File Options</h3>
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",borderBottom:"1px solid #1c1a1a"}}>
                 <div>
@@ -1104,7 +1103,7 @@ function SettingsPanel({
             {/* Loudnorm */}
             <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Zap size={14} className="text-[#d4cfcf]" /> Audio Normalization</h3>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Zap size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Audio Normalization</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Equalizes loudness across all tracks so nothing is too loud or too quiet.</p>
               </div>
               <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -1125,12 +1124,12 @@ function SettingsPanel({
             </div>
 
             {/* Playback Quality */}
-            <div className="border border-neutral-800/60 rounded-xl overflow-visible">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Gauge size={14} className="text-[#d4cfcf]" /> Stream Quality</h3>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Gauge size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Stream Quality</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Higher quality uses more bandwidth. Opus is native YouTube codec with best compression.</p>
               </div>
-              <div className="flex items-center justify-between px-5 py-5">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Streaming Format</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Preferred audio codec for streaming playback</p>
@@ -1150,7 +1149,7 @@ function SettingsPanel({
             {/* Skip Silence */}
             <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2"><SkipForward size={14} className="text-[#d4cfcf]" /> Smart Playback</h3>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><SkipForward size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Smart Playback</h3>
               </div>
               <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
@@ -1173,15 +1172,15 @@ function SettingsPanel({
             <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Volume2 size={14} className="text-[#d4cfcf]" /> Audio Output</h3>
+                  <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Volume2 size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Audio Output</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Select output device. Switches instantly without restarting playback.</p>
                 </div>
                 <button onClick={() => invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices').then(setAudioDevices).catch(() => {})}
-                  className="p-1.5 text-neutral-600 hover:text-[#d4cfcf] transition-colors rounded-lg" title="Refresh">
+                  style={{padding:"5px",background:"none",border:"none",cursor:"pointer",color:"#363230",borderRadius:"6px",display:"flex",transition:"color .12s"}} title="Refresh" onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#363230")}>
                   <RefreshCw size={13} />
                 </button>
               </div>
-              <div className="flex flex-col divide-y divide-neutral-800/40">
+              <div style={{display:"flex",flexDirection:"column"}}>
                 {audioDevices.length === 0 ? (
                   <div style={{padding:"10px 14px",fontSize:"12px",color:"#5c5755"}}>No devices found</div>
                 ) : audioDevices.map(dev => {
@@ -1201,17 +1200,17 @@ function SettingsPanel({
                       style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 14px",textAlign:"left",cursor:"pointer",width:"100%",background:"transparent",border:"none",transition:"background .1s"}} className={`
                         ${isDefault ? 'bg-white/[0.04]' : 'hover:bg-white/[0.03] cursor-pointer'}
                         ${switchingDevice && !isDefault ? 'opacity-40' : ''}`}>
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border
+                      <div style={{width:"26px",height:"26px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"rgba(226,221,217,0.2)":"rgba(255,255,255,0.05)"}`,background:isDefault?"rgba(226,221,217,0.06)":"#1c1a1a"}} className={"dummy
                         ${isDefault ? 'bg-white/[0.06] border-white/[0.12]' : 'bg-neutral-900 border-neutral-800'}`}>
                         {dev.form === 'headphones'
                           ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? '#9e9894' : '#3a3a3a'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                          : <Volume2 size={13} className={isDefault ? 'text-[#d4cfcf]' : 'text-neutral-600'} />}
+                          : <Volume2 size={13} style={{color:isDefault?"#9e9894":"#363230"}}/>}
                       </div>
                       <div style={{flex:1,minWidth:0}}>
-                        <p className={`text-sm font-medium truncate ${isDefault ? 'text-white' : 'text-neutral-400'}`}>{dev.name}</p>
-                        {dev.form && <p className="text-xs text-neutral-600 capitalize mt-0.5">{dev.form}</p>}
+                        <p style={{fontSize:"12.5px",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isDefault?"#e2ddd9":"#5c5755"}}>{dev.name}</p>
+                        {dev.form&&<p style={{fontSize:"10px",color:"#363230",textTransform:"capitalize",marginTop:"1px"}}>{dev.form}</p>}
                       </div>
-                      {isDefault && <span className="text-[10px] font-bold text-[#d4cfcf] shrink-0">ACTIVE</span>}
+                      {isDefault&&<span style={{fontSize:"9.5px",fontWeight:700,color:"#9e9894",flexShrink:0,letterSpacing:".05em"}}>ACTIVE</span>}
                     </button>
                   );
                 })}
@@ -1219,12 +1218,12 @@ function SettingsPanel({
             </div>
 
             {/* Lyrics Source */}
-            <div className="border border-neutral-800/60 rounded-xl overflow-visible">
+            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Mic2 size={14} className="text-[#d4cfcf]" /> Lyrics Source</h3>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Mic2 size={14} className="text-[#d4cfcf]" /> Lyrics Source</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Primary source for synced lyrics. Falls back to lrclib → lyrics.ovh automatically.</p>
               </div>
-              <div className="flex items-center justify-between px-5 py-5">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Primary source</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>
@@ -1245,33 +1244,33 @@ function SettingsPanel({
             <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
               <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2"><BarChart2 size={14} className="text-[#d4cfcf]" /> Equalizer</h3>
+                  <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><BarChart2 size={14} className="text-[#d4cfcf]" /> Equalizer</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Adjust bass, mid, and treble. Applied in real-time via mpv.</p>
                 </div>
                 <button onClick={() => { setEq({ bass: 0, mid: 0, treble: 0 }); invoke('set_equalizer', { bass: 0, mid: 0, treble: 0 }).catch(() => {}); }}
-                  className="text-xs text-neutral-600 hover:text-neutral-300 transition-colors px-2 py-1 rounded border border-neutral-800 hover:border-neutral-700">
+                  style={{fontSize:"11px",color:"#5c5755",cursor:"pointer",padding:"3px 8px",borderRadius:"6px",border:"1px solid #252222",background:"transparent"}}>
                   Reset
                 </button>
               </div>
-              <div className="px-5 py-5 flex flex-col gap-5">
+              <div style={{padding:"14px",flex,flex-col,gap-5}}>
                 {([
                   { label: 'Bass', key: 'bass' as const, desc: 'Low frequencies (60–250Hz)' },
                   { label: 'Mid', key: 'mid' as const, desc: 'Mids (500Hz–2kHz)' },
                   { label: 'Treble', key: 'treble' as const, desc: 'High frequencies (4–16kHz)' },
                 ] as { label: string; key: 'bass' | 'mid' | 'treble'; desc: string }[]).map(({ label, key, desc }) => (
                   <div key={key}>
-                    <div className="flex items-center justify-between mb-2">
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}>
                       <div>
                         <span style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>{label}</span>
-                        <span className="text-xs text-neutral-600 ml-2">{desc}</span>
+                        <span style={{fontSize:"11px",color:"#5c5755",marginLeft:"6px"}}>{desc}</span>
                       </div>
-                      <span className={`text-xs font-bold tabular-nums w-12 text-right ${eq[key] > 0 ? 'text-[#d4cfcf]' : eq[key] < 0 ? 'text-red-400' : 'text-neutral-500'}`}>
+                      <span style={{fontSize:"11px",fontWeight:700,fontVariantNumeric:"tabular-nums",width:"38px",textAlign:"right",color:eq[key]>0?"#9e9894":eq[key]<0?"#5c5755":"#363230"}}>
                         {eq[key] > 0 ? `+${eq[key]}` : eq[key]}dB
                       </span>
                     </div>
-                    <div className="relative h-2 bg-neutral-800 rounded-full">
+                    <div style={{position:"relative",height:"4px",background:"#232020",borderRadius:"2px"}}>
                       {/* center tick */}
-                      <div className="absolute top-0 left-1/2 w-px h-full bg-neutral-600 rounded-full pointer-events-none" />
+                      <div style={{position:"absolute",top:0,left:"50%",width:"1px",height:"100%",background:"#2e2b2b",borderRadius:"1px",pointerEvents:"none"}}/>
                       <input type="range" min="-12" max="12" step="1" value={eq[key]}
                         onChange={e => {
                           const v = parseInt(e.target.value);
@@ -1279,10 +1278,10 @@ function SettingsPanel({
                           setEq(next);
                           invoke('set_equalizer', { bass: next.bass, mid: next.mid, treble: next.treble }).catch(() => {});
                         }}
-                        className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+                        style={{position:"absolute",inset:0,width:"100%",opacity:0,cursor:"pointer",height:"100%"}}
                       />
                       {/* filled track */}
-                      <div className="absolute top-0 h-full rounded-full pointer-events-none transition-all"
+                      <div style={{position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s"}}
                         style={{
                           left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
                           width: `${(Math.abs(eq[key]) / 24) * 100}%`,
@@ -1361,8 +1360,8 @@ function SettingsPanel({
                   <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Reset Veluna App</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Clear all data and reset the app to its default state.</p>
                 </div>
-                <button className="p-2 text-neutral-700 group-hover:text-red-400 transition-colors rounded-lg ml-4 shrink-0">
-                  <Trash2 size={17} />
+                <button style={{padding:"6px",color:"#a05050",background:"none",border:"none",cursor:"pointer",display:"flex",flexShrink:0,marginLeft:"10px"}}>
+                  <Trash2 size={16}/>
                 </button>
               </div>
             </div>
@@ -1472,23 +1471,28 @@ function DownloadsPanel({
     <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px",zIndex:10}}>
       {}
       <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"14px"}}>
-        <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-[#d4cfcf]/10 border border-[#d4cfcf]/30 shrink-0">
+        <div style={{width:"40px",height:"40px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(226,221,217,0.06)",border:"1px solid rgba(226,221,217,0.1)",flexShrink:0}}>
           <HardDrive size={22} className="text-[#d4cfcf]" />
         </div>
         <div style={{flex:1,minWidth:0}}>
-          <h2 className="text-2xl font-bold text-white">Offline</h2>
+          <h2 style={{fontSize:"20px",fontWeight:800,color:"#e2ddd9",margin:0}}>Offline</h2>
           {}
           <button onClick={onChangeFolder}
-            className="flex items-center gap-1.5 mt-0.5 text-sm text-neutral-500 hover:text-[#d4cfcf] transition-colors font-mono truncate max-w-full group" title="Change folder">
-            <span className="truncate">{downloadPath}</span>
-            <FolderOpen size={13} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+            style={{display:"flex",alignItems:"center",gap:"5px",marginTop:"2px",fontSize:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",fontFamily:"monospace",overflow:"hidden",maxWidth:"100%",padding:0,transition:"color .12s"}}
+            onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")} title="Change folder">
+            <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{downloadPath}</span>
+            <FolderOpen size={12} style={{flexShrink:0}}/>
           </button>
           {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} files</p>}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={onChangeFolder} className="p-2 text-neutral-500 hover:text-[#d4cfcf] transition-colors rounded-lg hover:bg-white/5" title="Change folder"><FolderOpen size={16} /></button>
+        <div style={{display:"flex",alignItems:"center",gap:"5px",flexShrink:0}}>
+          <button onClick={onChangeFolder} title="Change folder"
+            style={{padding:"7px",borderRadius:"8px",border:"1px solid #252222",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
+            onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}><FolderOpen size={15}/></button>
           {tracks.length > 0 && (
-            <button onClick={() => onExportM3u(tracks)} className="p-2 text-neutral-500 hover:text-[#d4cfcf] transition-colors rounded-lg hover:bg-white/5" title="Export M3U"><FileOutput size={16} /></button>
+            <button onClick={()=>onExportM3u(tracks)} title="Export M3U"
+              style={{padding:"7px",borderRadius:"8px",border:"1px solid #252222",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
+              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}><FileOutput size={15}/></button>
           )}
           <button onClick={scan} disabled={scanning} className="p-2 text-neutral-500 hover:text-[#d4cfcf] disabled:opacity-40 rounded-lg hover:bg-white/5" title="Refresh"><RefreshCw size={16} className={scanning ? 'animate-spin' : ''} /></button>
         </div>
@@ -1511,8 +1515,8 @@ function DownloadsPanel({
       )}
 
       {error && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-6">
-          <AlertCircle size={16} className="shrink-0" /><span>{error}</span>
+        <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderRadius:"8px",background:"rgba(160,40,40,0.08)",border:"1px solid rgba(160,40,40,0.2)",color:"#a05050",fontSize:"12px",marginBottom:"16px"}}>
+          <AlertCircle size={15} style={{flexShrink:0}}/><span>{error}</span>
         </div>
       )}
 
@@ -1551,13 +1555,13 @@ function DownloadsPanel({
           </div>
 
           {filtered.length === 0 && searchQ && (
-            <div className="flex flex-col items-center justify-center h-32 text-neutral-700 gap-2">
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"110px",color:"#363230",gap:"7px"}}>
               <Search size={28} strokeWidth={1} />
-              <p className="text-sm text-neutral-600">No tracks match "{searchQ}"</p>
+              <p style={{fontSize:"12px",color:"#5c5755"}}>No tracks match "{searchQ}"</p>
             </div>
           )}
 
-          <div className="flex flex-col gap-1">
+          <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
             {filtered.map((track, i) => {
               const isActive = currentTrackPath === track.path;
               const isHov = hovered === track.path;
@@ -1650,20 +1654,20 @@ const SpeedSelector = React.memo(({ speed, onChange }: { speed: number; onChange
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold transition-all border
+        style={{display:"flex",alignItems:"center",gap:"5px",padding:"5px 8px",borderRadius:"7px",fontSize:"11px",fontWeight:700,border:"1px solid #252222",background:"transparent",cursor:"pointer",color:"rgba(255,255,255,0.5)",transition:"all .12s"}} className={"dummy
           ${speed !== 1 ? 'text-[#e2ddd9] border-[#e2ddd9]/20 bg-[#e2ddd9]/[0.07]' : 'text-neutral-600 border-neutral-800 hover:text-neutral-400 hover:border-neutral-700'}`}>
         <Gauge size={11} />
         {speed}x
       </button>
       {open && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0e0e0e] border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50"
+        <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:"50%",transform:"translateX(-50%)",background:"#161414",border:"1px solid #252222",borderRadius:"10px",overflow:"hidden",boxShadow:"0 12px 36px rgba(0,0,0,0.85)",zIndex:50,minWidth:"200px"}}
           style={{ animation: 'dropIn 0.12s ease-out' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-600 px-3 pt-2.5 pb-1">Speed</p>
+          <p style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230",padding:"8px 12px 4px"}}>Speed</p>
           {speeds.map(s => (
             <button key={s} onClick={() => { onChange(s); setOpen(false); }}
-              className={`w-full text-left px-4 py-2 text-sm font-semibold transition-colors
+              style={{width:"100%",textAlign:"left",padding:"7px 12px",fontSize:"12px",fontWeight:600,border:"none",background:"transparent",cursor:"pointer",transition:"background .08s,color .08s"}} className={"dummy
                 ${speed === s ? 'text-[#e2ddd9] bg-[#e2ddd9]/[0.07]' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
-              {s}x {s === 1 && <span className="text-neutral-700 text-xs font-normal ml-1">normal</span>}
+              {s}× {s===1&&<span style={{color:"#363230",fontSize:"10px",fontWeight:400,marginLeft:"4px"}}>normal</span>}
             </button>
           ))}
         </div>
@@ -1680,21 +1684,21 @@ function LyricsAudioDropdown({ devices, switching, onSwitch }: {
   const [open, setOpen] = React.useState(false);
   const active = devices.find(d => d.is_default) ?? devices[0];
   return (
-    <div className="w-full relative">
+    <div style={{width:"100%",position:"relative"}}>
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all"
+        style={{width:"100%",display:"flex",alignItems:"center",gap:"8px",padding:"8px 10px",borderRadius:"8px",textAlign:"left",border:"none",background:"transparent",cursor:"pointer"}}
         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <Volume2 size={12} className="text-[#d4cfcf] shrink-0" />
+        <Volume2 size={12} style={{color:"#9e9894",flexShrink:0}}/>
         <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{active?.name ?? 'No device'}</span>
         <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} className="shrink-0" />
       </button>
       {open && (
-        <div className="absolute bottom-full left-0 right-0 mb-1 rounded-xl overflow-hidden z-20"
+        <div style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,right:0,borderRadius:"10px",overflow:"hidden",zIndex:20,background:"#161414",border:"1px solid #252222",boxShadow:"0 12px 36px rgba(0,0,0,0.85)"}}
           style={{ background: 'rgba(12,12,16,0.95)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
           {devices.map(dev => (
             <button key={dev.id} disabled={switching}
               onClick={() => { if (!dev.is_default) onSwitch(dev.id); setOpen(false); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.05]">
+              style={{width:"100%",display:"flex",alignItems:"center",gap:"9px",padding:"8px 12px",textAlign:"left",border:"none",background:"transparent",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.04)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
               <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dev.is_default ? '#9e9894' : 'rgba(255,255,255,0.2)' }} />
               <span className="text-xs truncate" style={{ color: dev.is_default ? '#fff' : 'rgba(255,255,255,0.5)' }}>{dev.name}</span>
             </button>
@@ -3165,6 +3169,11 @@ export default function Veluna() {
         kbd{background:#1c1a1a!important;border-color:#2e2b2b!important;color:#9e9894!important;border-radius:4px!important;padding:2px 5px!important;font-size:10px!important;}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         .home-card{animation:fadeUp 0.22s cubic-bezier(0.2,0,0,1) both;}
+        .v-track__dur{font-size:11px;color:#363230;font-variant-numeric:tabular-nums;flex-shrink:0;min-width:36px;text-align:right;}
+        .v-pl-card:hover .pl-hover-overlay{opacity:1!important;}
+        .v-pl-card:hover .v-pl-card__art{transform:scale(1.02);}
+        .v-pl-card:hover .pl-card-del{opacity:1!important;}
+        [class*="cursor-pointer"]:hover .pl-cover-ov,.pl-cover-trigger:hover .pl-cover-ov{opacity:1!important;}
         .playlist-card{transition:background .12s;}
       `}</style>
 
@@ -3186,9 +3195,9 @@ export default function Veluna() {
               onClick={() => setShowSleepPopover(o => !o)}
               style={sleepTimer>0?{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'7px',border:'1px solid rgba(226,221,217,0.12)',background:'rgba(226,221,217,0.05)',color:'#9e9894',cursor:'pointer',fontSize:'11px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#363230',cursor:'pointer',fontSize:'11px',fontWeight:500}}>
               <Moon size={14} style={sleepTimer > 0 ? {color:'#9e9894',animation:'velunaPulse 2s ease-in-out infinite'} : {color:'#363230'}} />
-              <span className="flex-1">{sleepTimer > 0 ? 'Sleep in ' + Math.ceil(sleepTimer / 60) + 'm' : 'Sleep Timer'}</span>
+              <span style={{flex:1}}>{sleepTimer>0?'Sleep in '+Math.ceil(sleepTimer/60)+'m':'Sleep Timer'}</span>
               {sleepTimer > 0
-                ? <button onClick={e => { e.stopPropagation(); cancelSleepTimer(); }} className="text-xs text-neutral-500 hover:text-red-400 px-1"><X size={11} /></button>
+                ? <button onClick={e => { e.stopPropagation(); cancelSleepTimer(); }} style={{fontSize:"11px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",padding:"2px 4px"}}><X size={11}/></button>
                 : <ChevronDown size={13} className={`transition-transform ${showSleepPopover ? 'rotate-180' : ''}`} />}
             </div>
             {showSleepPopover && (
@@ -3228,9 +3237,9 @@ export default function Veluna() {
           <div style={{marginTop:"14px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 8px",flexShrink:0,borderBottom:"1px solid #1c1a1a"}}>
               <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
-                style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#363230',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase'}}>
-                <ListMusic size={15} style={activeNav==='library'?{color:'#9e9894'}:{color:'#363230'}} />
-                <span className="font-medium">Playlists</span>
+                style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#363230',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .12s'}}>
+                <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#363230'}}/>
+                <span style={{fontWeight:500}}>Playlists</span>
                 <ChevronRight size={14} className={`ml-auto transition-transform duration-200 ${sidebarPlaylistsExpanded ? 'rotate-90' : ''}`} />
               </button>
               <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
@@ -3250,7 +3259,7 @@ export default function Veluna() {
                         onContextMenu={e => openCtx(e, { type: 'sidebar-playlist', playlist: pl })}
                         className={`v-pl-item${isOpen?' v-pl-item--active':''}`}>
                         <div className="v-pl-item__art">
-                          {cover ? <img src={cover} className="w-full h-full object-cover" alt="" />
+                          {cover ? <img src={cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
                             : pl.id === 'p1' ? <Heart size={11} style={{color:isOpen?'#9e9894':'#363230'}} />
                             : <ListMusic size={11} style={{color:isOpen?'#9e9894':'#363230'}} />}
                         </div>
@@ -3275,7 +3284,7 @@ export default function Veluna() {
         <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"#0c0b0b",overflow:"hidden",position:"relative"}}>
 
 
-          <div className="v-topbar">
+          <div className="v-topbar" style={{background:"#0c0b0b"}}>
             <button
               className="v-topbar__back"
               onClick={() => {
@@ -3299,13 +3308,13 @@ export default function Veluna() {
           <div key={activeNav + (openPlaylistId || '')} style={{animation:'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both',flex:'1 1 0%',display:'flex',flexDirection:'column',overflow:'hidden',minHeight:0}}>
           {activeNav === 'home' && (
             <>
-              <div className="p-6 pb-3 relative z-30 shrink-0">
-                <div className="relative w-full flex gap-3" onClick={e => e.stopPropagation()}>
-                  <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <div style={{padding:"16px 24px 10px",position:"relative",zIndex:30,flexShrink:0}}>
+                <div style={{position:"relative",width:"100%",display:"flex",gap:"8px"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{position:"relative",flex:1}}>
+                    <div style={{position:"absolute",top:0,bottom:0,left:0,paddingLeft:"12px",display:"flex",alignItems:"center",pointerEvents:"none"}}>
                       {isSearching
                         ? <div className="w-4 h-4 border-2 border-[#d4cfcf]/70 border-t-transparent rounded-full animate-spin" />
-                        : <Search size={18} className={`transition-colors duration-200 ${showHistory || searchQuery ? 'text-[#d4cfcf]' : 'text-neutral-500'}`} />}
+                        : <Search size={18} style={{color:showHistory||searchQuery?"#9e9894":"#363230",transition:"color .2s"}}/> }
                     </div>
                     <input ref={searchRef} type="text"
                       placeholder="Search YouTube... (Ctrl+F)"
@@ -3343,7 +3352,7 @@ export default function Veluna() {
                     <button
                       onClick={() => { setActiveNav('settings'); }}
                       title={`Update available — v${updateAvailable}`}
-                      className="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-[#d4cfcf]/30 bg-[#d4cfcf]/[0.06] text-[#d4cfcf] hover:bg-[#d4cfcf]/15 transition-all duration-200 relative"
+                      style={{flexShrink:0,width:"40px",height:"40px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"9px",border:"1px solid #252222",background:"#1c1a1a",cursor:"pointer",position:"relative"}}
                     >
                       <Info size={17} />
                       <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#d4cfcf]" />
@@ -3355,16 +3364,16 @@ export default function Veluna() {
               <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px 24px",zIndex:10}} onClick={()=>setShowHistory(false)}>
                 {}
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-6">
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:"280px",gap:"20px"}}>
                     <div className="relative">
                       <div style={{width:'56px',height:'56px',borderRadius:'12px',background:'#161414',border:'1px solid #1c1a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
                         <Music size={24} strokeWidth={1} style={{color:'#363230'}} />
                       </div>
-                      <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-[#d4cfcf]/10 rounded-full flex items-center justify-center border border-[#d4cfcf]/20">
+                      <div style={{position:"absolute",bottom:"-6px",right:"-6px",width:"26px",height:"26px",background:"rgba(226,221,217,0.06)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>
                         <Search size={12} className="text-[#d4cfcf]/60" />
                       </div>
                     </div>
-                    <div className="text-center flex flex-col gap-1.5">
+                    <div style={{textAlign:"center",display:"flex",flexDirection:"column",gap:"5px"}}>
                       <p style={{fontSize:"13px",fontWeight:600,color:"#5c5755"}}>Search YouTube to start</p>
                       <p style={{fontSize:"11px",color:"#363230"}}>Type above and press <kbd>Ctrl+F</kbd></p>
                     </div>
@@ -3528,7 +3537,7 @@ export default function Veluna() {
                           <div className="v-section-head">
                             <h2>Most Played</h2>
                           </div>
-                          <div className="flex flex-col gap-1">
+                          <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
                             {topTracks.map((track, i) => {
                               const isActive = currentTrack?.url === track.url;
                               const count = playCounts[track.url] || 0;
@@ -3563,7 +3572,7 @@ export default function Veluna() {
                           <div className="v-section-head">
                             <h2>Play History</h2>
                           </div>
-                          <div className="flex flex-col gap-1">
+                          <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
                             {recentHistory.map((track, i) => {
                               const isActive = currentTrack?.url === track.url;
                               return (
@@ -3604,16 +3613,16 @@ export default function Veluna() {
                   </div>
                 )}
                 {(tracks.length > 0 || isSearching) && (
-                  <div className="flex items-center gap-4 px-4 mb-1 border-b border-neutral-800/40 pb-2">
-                    <div className="w-8 shrink-0" /><div className="w-12 shrink-0" />
-                    <p className="flex-1 text-[11px] font-semibold uppercase tracking-widest text-neutral-600">Title</p>
-                    <div className="w-20 shrink-0" />
-                    <Clock size={12} className="text-neutral-600 w-12 shrink-0" />
+                  <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid #1c1a1a",marginBottom:"4px"}}>
+                    <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
+                    <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
+                    <div style={{width:"60px",flexShrink:0}}/>
+                    <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
                   </div>
                 )}
-                {isSearching && <div className="flex flex-col gap-1 mt-1">{Array.from({ length: 8 }).map((_, i) => <TrackRowSkeleton key={i} index={i} />)}</div>}
+                {isSearching && <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>{Array.from({ length: 8 }).map((_, i) => <TrackRowSkeleton key={i} index={i} />)}</div>}
                 {!isSearching && tracks.length > 0 && (
-                  <div className="flex flex-col gap-1 mt-1">
+                  <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>
                     {tracks.map((track, i) => (
                       <TrackRow key={track.id} track={track} index={i}
                         isActive={currentTrack?.url === track.url}
@@ -3649,37 +3658,37 @@ export default function Veluna() {
           {activeNav === 'library' && (
             openPlaylist ? (
               <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px",zIndex:10}}>
-                <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }} className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-8 group">
-                  <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-                  <span className="text-sm font-medium">Playlists</span>
+                <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }} style={{display:"flex",alignItems:"center",gap:"7px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",marginBottom:"20px",padding:0,transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
+                  <ChevronLeft size={18} style={{flexShrink:0}}/>
+                  <span style={{fontSize:"13px",fontWeight:500}}>Playlists</span>
                 </button>
-                <div className="flex items-end gap-6 mb-8">
-                  <div className={`w-28 h-28 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center shrink-0 relative overflow-hidden ${openPlaylist.id !== 'p1' ? 'group cursor-pointer' : ''}`}
-                    onClick={() => openPlaylist.id !== 'p1' && handleCoverUpload(openPlaylist.id)}>
+                <div style={{display:"flex",alignItems:"flex-end",gap:"18px",marginBottom:"18px"}}>
+                  <div style={{width:"100px",height:"100px",borderRadius:"12px",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",overflow:"hidden",cursor:openPlaylist.id!=="p1"?"pointer":"default"}}
+                    onClick={()=>openPlaylist.id!=='p1'&&handleCoverUpload(openPlaylist.id)} onMouseEnter={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='1';}} onMouseLeave={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='0';}}>
                     {getPlaylistCover(openPlaylist)
-                      ? <img src={getPlaylistCover(openPlaylist)!} className="w-full h-full object-cover" alt="" />
+                      ? <img src={getPlaylistCover(openPlaylist)!} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
                       : openPlaylist.id === 'p1' ? <Heart size={48} style={{color:'#9e9894',fill:'rgba(226,221,217,0.12)'}} /> : <ListMusic size={48} style={{color:'#5c5755'}} />}
-                    {openPlaylist.id !== 'p1' && <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><ImagePlus size={22} className="text-white" /></div>}
+                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s"}}><ImagePlus size={20} style={{color:"#e2ddd9"}}/></div>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500 mb-1">Playlist</p>
-                    <h2 className="text-3xl font-black text-white truncate">{openPlaylist.name}</h2>
+                    <p style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#5c5755",marginBottom:"4px"}}>Playlist</p>
+                    <h2 style={{fontSize:"22px",fontWeight:800,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",margin:0}}>{openPlaylist.name}</h2>
                     {openPlaylist.description && openPlaylist.description.trim() && (
-                      <p className="text-sm text-neutral-500 mt-1">{openPlaylist.description}</p>
+                      <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>{openPlaylist.description}</p>
                     )}
-                    <p className="text-sm text-neutral-600 mt-1">{openPlaylist.tracks.length} {openPlaylist.tracks.length === 1 ? 'track' : 'tracks'}</p>
-                    <div className="flex items-center gap-2 mt-4">
+                    <p style={{fontSize:"12px",color:"#363230",marginTop:"2px"}}>{openPlaylist.tracks.length} {openPlaylist.tracks.length === 1 ? 'track' : 'tracks'}</p>
+                    <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"14px"}}>
                       <button onClick={() => playAll(openPlaylist.tracks)} disabled={!openPlaylist.tracks.length}
-                        className="flex items-center gap-2 px-5 py-2 bg-[#d4cfcf] text-black font-bold rounded-lg transition-all disabled:opacity-40 text-sm">
+                        style={{display:"flex",alignItems:"center",gap:"7px",padding:"7px 16px",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"12.5px",opacity:openPlaylist.tracks.length?1:0.4}}>
                         <Play size={16} fill="currentColor" /> Play All
                       </button>
                       <button onClick={() => { setRenamingPlaylist(openPlaylist); setRenameVal(openPlaylist.name); setRenameDescVal(openPlaylist.description); }}
-                        className="flex items-center gap-1.5 px-3 py-2 text-neutral-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 text-sm font-medium border border-neutral-800 hover:border-neutral-700">
+                        style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid #252222",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
                         <Pencil size={14} /> Edit
                       </button>
                       {openPlaylist.id !== 'p1' && (
                         <button onClick={() => { deletePlaylist(openPlaylist.id); setOpenPlaylistId(null); }}
-                          className="flex items-center gap-1.5 px-3 py-2 text-neutral-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10 text-sm font-medium border border-neutral-800 hover:border-red-500/30">
+                          style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid #252222",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#a05050";e.currentTarget.style.borderColor="rgba(160,40,40,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
                           <Trash2 size={14} /> Delete
                         </button>
                       )}
@@ -3687,7 +3696,7 @@ export default function Veluna() {
                   </div>
                 </div>
                 {openPlaylist.tracks.length === 0
-                  ? <div className="flex flex-col items-center justify-center h-40 text-neutral-700 gap-3"><Music size={32} strokeWidth={1} /><p className="text-sm">No tracks yet.</p></div>
+                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"10px"}}><Music size={28} strokeWidth={1} /><p className="text-sm">No tracks yet.</p></div>
                   : (() => {
                       const q = playlistSearchQ.trim().toLowerCase();
                       const filteredTracks = q
@@ -3698,36 +3707,37 @@ export default function Veluna() {
                           })
                         : openPlaylist.tracks;
                       return (
-                        <div className="flex flex-col gap-1">
-                          <div className="relative mb-3">
-                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none" />
+                        <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
+                          <div style={{position:"relative",marginBottom:"10px"}}>
+                            <Search size={14} style={{position:"absolute",left:"10px",top:"50%",transform:"translateY(-50%)",color:"#5c5755",pointerEvents:"none"}} />
                             <input
                               type="text"
                               value={playlistSearchQ}
                               onChange={e => setPlaylistSearchQ(e.target.value)}
                               placeholder="Search in playlist..."
-                              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-8 py-2 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[#d4cfcf]/40 transition-colors"
+                              style={{width:"100%",background:"#161414",border:"1px solid #252222",borderRadius:"8px",padding:"7px 32px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}
                             />
                             {playlistSearchQ && (
-                              <button onClick={() => setPlaylistSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors">
+                              <button onClick={() => setPlaylistSearchQ('')} style={{position:"absolute",right:"8px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex"}}>
                                 <X size={13} />
                               </button>
                             )}
                           </div>
                           {filteredTracks.length === 0
-                            ? <div className="flex flex-col items-center justify-center h-32 text-neutral-700 gap-2"><Search size={24} strokeWidth={1} /><p className="text-sm">No results for "{playlistSearchQ}"</p></div>
+                            ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"110px",color:"#363230",gap:"7px"}}><Search size={24} strokeWidth={1} /><p className="text-sm">No results for "{playlistSearchQ}"</p></div>
                             : filteredTracks.map((t, i) => {
                                 const origIdx = openPlaylist.tracks.indexOf(t);
                                 return (
                                   <div key={t.url + origIdx}
-                                    className="relative group/row flex items-center gap-1"
+                                    style={{position:"relative",display:"flex",alignItems:"center",gap:"3px"}}
                                     onMouseEnter={() => { if (dragPlaylistIdx.current !== null) { dragOverPlaylistIdxRef.current = origIdx; setDragOverPlaylistIdx(origIdx); } }}>
                                     {dragOverPlaylistIdx === origIdx && dragPlaylistIdx.current !== null && dragPlaylistIdx.current !== origIdx && (
                                       <div className="absolute top-0 left-8 right-0 h-0.5 bg-[#d4cfcf] rounded-full z-10 pointer-events-none" />
                                     )}
                                     {!playlistSearchQ && (
                                       <div
-                                        className="px-1.5 py-4 cursor-grab flex items-center justify-center shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity"
+                                        style={{padding:"4px 3px",cursor:"grab",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:0,transition:"opacity .12s"}}
+                                        onMouseEnter={e=>(e.currentTarget.style.opacity="0.6")} onMouseLeave={e=>(e.currentTarget.style.opacity="0")}
                                         onMouseDown={e => {
                                           e.preventDefault();
                                           dragPlaylistIdx.current = origIdx;
@@ -3751,7 +3761,7 @@ export default function Veluna() {
                                           };
                                           window.addEventListener('mouseup', onUp);
                                         }}>
-                                        <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" className="text-neutral-500">
+                                        <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" style={{color:"#5c5755"}}>
                                           <circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/>
                                           <circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/>
                                           <circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/>
@@ -3800,7 +3810,7 @@ export default function Veluna() {
                         onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
                         onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
                         <div
-                          className="w-full aspect-square rounded-md overflow-hidden bg-neutral-900 flex items-center justify-center relative mb-2 shadow-md cursor-grab active:cursor-grabbing"
+                          style={{width:"100%",aspectRatio:"1",borderRadius:"7px",overflow:"hidden",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",marginBottom:"8px",cursor:"grab"}}
                           onMouseDown={e => {
                             e.preventDefault();
                             dragPlaylistCardIdx.current = plIdx;
@@ -3824,25 +3834,28 @@ export default function Veluna() {
                             window.addEventListener('mouseup', onUp);
                           }}>
                           {cover
-                            ? <img src={cover} className="w-full h-full object-cover" alt="" />
-                            : pl.id === 'p1'
-                              ? <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-900/60 to-neutral-900"><Heart size={28} className="text-red-400" /></div>
-                              : <div className="w-full h-full flex items-center justify-center bg-neutral-800/60"><ListMusic size={28} className="text-neutral-600 group-hover:text-[#d4cfcf] transition-colors" /></div>}
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <button onClick={e => { e.stopPropagation(); playAll(pl.tracks); }}
-                              className="w-9 h-9 bg-[#d4cfcf] rounded-full flex items-center justify-center shadow-[0_4px_14px_rgba(212,207,207,0.5)] hover:scale-105 active:scale-95 transition-transform">
-                              <Play size={15} fill="black" className="text-black ml-0.5" />
+                            ? <img src={cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
+                            : pl.id==='p1'
+                              ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#2a1515,#1c1a1a)"}}><Heart size={22} style={{color:"#9e9894"}}/></div>
+                              : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.03)"}}><ListMusic size={24} style={{color:"#363230"}}/></div>}
+                          <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s"}}>
+                            <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
+                              style={{width:"36px",height:"36px",background:"#e2ddd9",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 14px rgba(0,0,0,0.6)",transition:"transform .1s"}}
+                              onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.08)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                              <Play size={14} style={{fill:"#0c0b0b",color:"#0c0b0b",marginLeft:"2px"}}/>
                             </button>
                           </div>
                         </div>
-                        <p className="text-[13px] font-semibold text-white group-hover:text-[#d4cfcf] transition-colors truncate leading-snug">{pl.name}</p>
-                        <p className="text-[11px] text-neutral-600 mt-0.5 truncate">
-                          {pl.description ? pl.description : `${pl.tracks.length} track${pl.tracks.length !== 1 ? 's' : ''}`}
-                        </p>
-                        {pl.id !== 'p1' && (
-                          <button onClick={e => { e.stopPropagation(); deletePlaylist(pl.id); }}
-                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center bg-black/70 rounded-md hover:bg-red-500/40 hover:text-red-400 text-neutral-500 transition-all">
-                            <Trash2 size={11} />
+                        <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
+                        <div style={{fontSize:"11px",color:"#5c5755",marginTop:"2px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                          {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                        </div>
+                        {pl.id!=='p1'&&(
+                          <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
+                            className="pl-card-del"
+                            style={{position:"absolute",top:"6px",right:"6px",opacity:0,width:"22px",height:"22px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.7)",borderRadius:"5px",border:"none",cursor:"pointer",color:"#5c5755",transition:"color .12s,opacity .12s"}}
+                            onMouseEnter={e=>(e.currentTarget.style.color="#b05555")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
+                            <Trash2 size={10}/>
                           </button>
                         )}
                       </div>
@@ -3913,9 +3926,9 @@ export default function Veluna() {
             const hasAnyStats = totalPlays > 0 || totalSecs > 0 || Object.keys(dailyPlays).some(k => (dailyPlays[k] as number) > 0);
             if (!hasAnyStats) {
               return (
-                <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                  <BarChart2 size={36} className="text-neutral-700" strokeWidth={1} />
-                  <p className="text-sm text-neutral-600">Play something to start tracking stats</p>
+                <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"12px"}}>
+                  <BarChart2 size={36} style={{color:"#363230"}} strokeWidth={1}/>
+                  <p style={{fontSize:"12px",color:"#5c5755"}}>Play something to start tracking stats</p>
                 </div>
               );
             }
@@ -4046,9 +4059,9 @@ export default function Veluna() {
                     <div className="v-section-head">
                       <h2>Recent Plays</h2>
                       <button onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); }}
-                        className="ml-auto text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors">Clear</button>
+                        style={{marginLeft:"auto",fontSize:"11px",color:"#363230",background:"none",border:"none",cursor:"pointer",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#363230")}>Clear</button>
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
                       {playHistory.slice(0, 8).map((track: Track, i: number) => (
                         <div key={track.url + i}
                           onClick={() => handlePlayInContext(track, playHistory.slice(0, 8))}
@@ -4126,7 +4139,7 @@ export default function Veluna() {
               )}
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {queue.length === 0
-                  ? <div className="flex flex-col items-center justify-center h-40 text-neutral-700 gap-2"><ListOrdered size={26} strokeWidth={1} /><p className="text-sm">Queue is empty</p></div>
+                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"8px"}}><ListOrdered size={26} strokeWidth={1} /><p className="text-sm">Queue is empty</p></div>
                   : <>
                       <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',padding:'12px 14px 6px'}}>Up Next</div>
                       {queue.map((track, i) => (
@@ -4135,9 +4148,9 @@ export default function Veluna() {
                           onMouseEnter={() => { if (dragQueueIdx.current !== null) { dragOverQueueIdxRef.current = i; setDragOverQueueIdx(i); } }}
                           onContextMenu={e => openCtx(e, { type: 'queue-track', track })}>
                           {dragOverQueueIdx === i && dragQueueIdx.current !== null && dragQueueIdx.current !== i && (
-                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#d4cfcf] rounded-full z-10 pointer-events-none" />
+                            <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />
                           )}
-                          <div className="w-5 shrink-0 flex items-center justify-center"
+                          <div style={{width:"20px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}
                             onMouseDown={e => {
                               e.preventDefault();
                               dragQueueIdx.current = i;
@@ -4160,15 +4173,22 @@ export default function Veluna() {
                               };
                               window.addEventListener('mouseup', onUp);
                             }}>
-                            <span className="text-xs text-neutral-700 group-hover:hidden tabular-nums">{i + 1}</span>
-                            <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" className="text-neutral-600 hidden group-hover:block cursor-grab"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
+                            <div style={{width:"18px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"grab"}}
+                              onMouseEnter={e=>{(e.currentTarget.firstChild as HTMLElement).style.display="none";(e.currentTarget.lastChild as HTMLElement).style.display="block";}}
+                              onMouseLeave={e=>{(e.currentTarget.firstChild as HTMLElement).style.display="block";(e.currentTarget.lastChild as HTMLElement).style.display="none";}}>
+                              <span style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums",display:"block"}}>{i+1}</span>
+                              <svg width="9" height="13" viewBox="0 0 10 14" fill="#5c5755" style={{display:"none"}}><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
+                            </div>
                           </div>
-                          <img src={track.cover} className="w-10 h-10 rounded-md object-cover shrink-0 border border-neutral-800/60" alt="" onClick={() => { if (dragQueueIdx.current === null) { setQueue(prev => prev.filter((_, idx) => idx !== i)); handlePlayTrack(track, true); } }} />
-                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { if (dragQueueIdx.current === null) { setQueue(prev => prev.filter((_, idx) => idx !== i)); handlePlayTrack(track, true); } }}>
-                            <p className={`text-sm font-semibold truncate leading-snug ${currentTrack?.url === track.url ? 'text-[#d4cfcf]' : 'text-white'}`}>{track.title}</p>
-                            <p className="text-xs text-neutral-500 truncate mt-0.5">{track.artist}</p>
+                          <div style={{width:"38px",height:"38px",borderRadius:"6px",overflow:"hidden",flexShrink:0,border:"1px solid rgba(255,255,255,0.05)",cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                            <img src={track.cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
                           </div>
-                          <button onClick={e => { e.stopPropagation(); removeFromQueue(track.url); }} className="opacity-0 group-hover:opacity-100 p-1.5 text-neutral-600 hover:text-red-400 transition-all shrink-0 rounded"><X size={13} /></button>
+                          <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                            <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
+                            <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{track.artist}</div>
+                          </div>
+                          <button onClick={e=>{e.stopPropagation();removeFromQueue(track.url());}} style={{opacity:0,padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#363230",flexShrink:0,borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                            onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.color="#b05555";}} onMouseLeave={e=>{e.currentTarget.style.opacity="0";e.currentTarget.style.color="#363230";}}><X size={12}/></button>
                         </div>
                       ))}
                     </>}
@@ -4421,29 +4441,30 @@ export default function Veluna() {
                   : <Download size={15} />}
                 Download MP3
               </button>
-              <button onClick={() => { openInYouTube(track.url); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><ExternalLink size={15} /> Open in YouTube</button>
+              <button onClick={() => { openInYouTube(track.url); setCtxMenu(null); }} className="v-ctx__item"><ExternalLink size={13}/> Open in YouTube</button>
             </div>
           );
         }
         if ((ctxMenu.type === 'playlist' || ctxMenu.type === 'sidebar-playlist') && playlist) {
           return (
-            <div className="fixed z-50 bg-[#0a0a0a] border border-neutral-800 rounded-xl shadow-2xl py-2 w-56 text-sm font-medium text-neutral-300"
-              style={{ top: ctxMenu.y, left: ctxMenu.x }} onClick={e => e.stopPropagation()}>
-              <div className="px-4 py-2.5 border-b border-neutral-800 mb-1">
-                <span className="text-white font-bold text-[13px] truncate block">{playlist.name}</span>
-                <span style={{fontSize:"11px",color:"#5c5755"}}>{playlist.tracks.length} tracks</span>
+            <div className="v-ctx" style={{position:"fixed",zIndex:9999,width:"200px",top:ctxMenu.y,left:ctxMenu.x}} onClick={e=>e.stopPropagation()}>
+              <div className="v-ctx__header">
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:"13px",fontWeight:700,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{playlist.name}</div>
+                  <div style={{fontSize:"10px",color:"#5c5755",marginTop:"1px"}}>{playlist.tracks.length} tracks</div>
+                </div>
               </div>
-              <button onClick={() => { playAll(playlist.tracks); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Play size={15} /> Play All</button>
-              <button onClick={() => { const s = [...playlist.tracks].sort(() => Math.random() - 0.5); if (s.length) { handlePlayTrack(s[0]); setQueue(s.slice(1)); } setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Shuffle size={15} /> Shuffle Play</button>
-              <button onClick={() => { setQueue(p => [...p, ...playlist.tracks]); showToast(`Added ${playlist.tracks.length} tracks`); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><ListPlus size={15} /> Add to Queue</button>
-              <div className="h-px bg-neutral-800 my-1" />
-              <button onClick={() => { setRenamingPlaylist(playlist); setRenameVal(playlist.name); setRenameDescVal(playlist.description); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Pencil size={15} /> Edit</button>
-              <button onClick={() => { setShowDuplicatesPlaylist(playlist); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Copy size={15} /> Find Duplicates</button>
-              <button onClick={() => { setBulkEditPlaylist(playlist); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><Pencil size={15} /> Bulk Edit Tags</button>
-              <button onClick={() => { handleCoverUpload(playlist.id); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><ImagePlus size={15} /> Change Cover</button>
-              <div className="h-px bg-neutral-800 my-1" />
-              <button onClick={() => { handleExportPlaylistM3u(playlist); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-800/80 hover:text-white transition-colors"><FileOutput size={15} /> Export as M3U</button>
-              {playlist.id !== 'p1' && <button onClick={() => { deletePlaylist(playlist.id); setCtxMenu(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500/20 hover:text-red-400 transition-colors"><Trash2 size={15} /> Delete</button>}
+              <button className="v-ctx__item" onClick={()=>{playAll(playlist.tracks);setCtxMenu(null);}}><Play size={13}/>Play All</button>
+              <button className="v-ctx__item" onClick={()=>{const s=[...playlist.tracks].sort(()=>Math.random()-0.5);if(s.length){handlePlayTrack(s[0]);setQueue(s.slice(1));}setCtxMenu(null);}}><Shuffle size={13}/>Shuffle</button>
+              <button className="v-ctx__item" onClick={()=>{setQueue(p=>[...p,...playlist.tracks]);showToast(`Added ${playlist.tracks.length}`);setCtxMenu(null);}}><ListPlus size={13}/>Add to Queue</button>
+              <div className="v-ctx__sep"/>
+              <button className="v-ctx__item" onClick={()=>{setRenamingPlaylist(playlist);setRenameVal(playlist.name);setRenameDescVal(playlist.description);setCtxMenu(null);}}><Pencil size={13}/>Edit</button>
+              <button className="v-ctx__item" onClick={()=>{setShowDuplicatesPlaylist(playlist);setCtxMenu(null);}}><Copy size={13}/>Find Duplicates</button>
+              <button className="v-ctx__item" onClick={()=>{setBulkEditPlaylist(playlist);setCtxMenu(null);}}><Pencil size={13}/>Bulk Edit Tags</button>
+              <button className="v-ctx__item" onClick={()=>{handleCoverUpload(playlist.id);setCtxMenu(null);}}><ImagePlus size={13}/>Change Cover</button>
+              <div className="v-ctx__sep"/>
+              <button className="v-ctx__item" onClick={()=>{handleExportPlaylistM3u(playlist);setCtxMenu(null);}}><FileOutput size={13}/>Export M3U</button>
+              {playlist.id!=='p1'&&<button className="v-ctx__item v-ctx__item--danger" onClick={()=>{deletePlaylist(playlist.id);setCtxMenu(null);}}><Trash2 size={13}/>Delete</button>}
             </div>
           );
         }
@@ -4452,7 +4473,7 @@ export default function Veluna() {
 
       {}
       {addToPlaylistTrack && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md" onClick={() => setAddToPlaylistTrack(null)}>
+        <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}} onClick={()=>setAddToPlaylistTrack(null)}>
           <div className="v-ctx" style={{width:"280px"}} onClick={e=>e.stopPropagation()}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:"1px solid #1c1a1a"}}>
               <div>
@@ -4468,19 +4489,19 @@ export default function Veluna() {
                   <button key={p.id} onClick={() => !alreadyIn && addTrackToPlaylist(p.id, addToPlaylistTrack)}
                     disabled={alreadyIn}
                     className="v-ctx__item" style={{opacity:alreadyIn?0.4:1,cursor:alreadyIn?"not-allowed":"pointer"}}>
-                    <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 bg-neutral-800 flex items-center justify-center border border-neutral-700/60">
-                      {p.id === 'p1' ? <Heart size={13} className="text-red-400" /> : <ListMusic size={13} className="text-neutral-500" />}
+                    <div style={{width:"24px",height:"24px",borderRadius:"5px",overflow:"hidden",flexShrink:0,background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      {p.id === 'p1' ? <Heart size={12} style={{color:"#9e9894"}}/> : <ListMusic size={13} className="text-neutral-500" />}
                     </div>
-                    <span className="text-sm text-white truncate flex-1">{p.name}</span>
-                    {alreadyIn ? <span className="text-[10px] text-[#d4cfcf] font-bold shrink-0">Added</span>
-                      : <span className="text-xs text-neutral-700 shrink-0">{p.tracks.length}</span>}
+                    <span style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.name}</span>
+                    {alreadyIn?<span style={{fontSize:"9.5px",color:"#9e9894",fontWeight:700,flexShrink:0}}>Added</span>
+                      :<span style={{fontSize:"10px",color:"#363230",flexShrink:0}}>{p.tracks.length}</span>}
                   </button>
                 );
               })}
             </div>
-            <div className="px-5 py-3 border-t border-neutral-800/60">
+            <div style={{padding:"4px 0",borderTop:"1px solid #1c1a1a"}}>
               <button onClick={() => { setAddToPlaylistTrack(null); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                className="flex items-center gap-2 text-[#d4cfcf] text-sm font-semibold hover:text-[#d4cfcf]/80 transition-colors">
+                style={{display:"flex",alignItems:"center",gap:"7px",color:"#9e9894",fontSize:"12px",fontWeight:600,textDecoration:"none"}}>
                 <PlusCircle size={14} /> New Playlist
               </button>
             </div>
@@ -4495,10 +4516,10 @@ export default function Veluna() {
         const isYt = !!ytId;
         const trackAudioInfo = infoModalTrack.url === currentTrack?.url ? audioInfo : null;
         return (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.92)"}}
             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}
             onClick={() => setInfoModalTrack(null)}>
-            <div className="rounded-2xl w-full max-w-[420px] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.9)] flex flex-col"
+            <div style={{borderRadius:"14px",width:"100%",maxWidth:"420px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.9)",display:"flex",flexDirection:"column",background:"#161414",border:"1px solid #252222"}}
               style={{ background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)' }}
               onClick={e => e.stopPropagation()}>
 
@@ -4537,28 +4558,28 @@ export default function Veluna() {
               </div>
 
               {}
-              <div className="mx-6 mb-4 rounded-xl overflow-hidden border border-neutral-800/60 divide-y divide-neutral-800/60">
+              <div style={{margin:"0 14px 12px",borderRadius:"10px",overflow:"hidden",border:"1px solid #1c1a1a"}}>
                 {[
                   { icon: Music, label: 'Title', value: infoModalTrack.title, color: 'text-neutral-400', bg: 'bg-neutral-800/10' },
                   { icon: FileBadge2, label: 'Artist', value: infoModalTrack.artist, color: 'text-neutral-400', bg: 'bg-purple-500/10' },
                   ...(ytId ? [{ icon: Hash, label: 'Video ID', value: ytId, color: 'text-neutral-400', bg: 'bg-neutral-800/50' }] : []),
                 ].map(({ icon: Icon, label, value, color, bg }) => (
                   <div key={label}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] cursor-pointer transition-colors group"
+                    style={{display:"flex",alignItems:"flex-start",gap:"10px",padding:"10px",borderRadius:"9px",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.03)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
                     onClick={() => copyToClipboard(value)}
                     title={`Click to copy ${label}`}>
-                    <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center ${color} shrink-0`}><Icon size={15} /></div>
+                    <div style={{width:"28px",height:"28px",borderRadius:"7px",background:"rgba(226,221,217,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#5c5755"}}><Icon size={13}/></div>
                     <div style={{flex:1,minWidth:0}}>
-                      <p className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">{label}</p>
-                      <p className="text-sm font-semibold text-white truncate leading-snug">{value || '—'}</p>
+                      <div style={{fontSize:"9.5px",color:"#363230",letterSpacing:".08em",textTransform:"uppercase",fontWeight:700}}>{label}</div>
+                      <div style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"2px"}}>{value||'—'}</div>
                     </div>
-                    <Copy size={12} className="text-neutral-700 group-hover:text-neutral-400 shrink-0 transition-colors" />
+                    <Copy size={11} style={{color:"#363230",flexShrink:0,transition:"color .12s"}}/>
                   </div>
                 ))}
               </div>
 
               {}
-              <div className="px-6 pb-5 flex flex-col gap-2.5">
+              <div style={{padding:"0 14px 14px",display:"flex",flexDirection:"column",gap:"4px"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}}>
                   <CopyButton text={ytId || ''} label="Copy ID" icon={Copy} disabled={!ytId} />
                   <CopyButton text={ytUrl} label="Copy Link" icon={Share2} />
@@ -4566,7 +4587,7 @@ export default function Veluna() {
                 <button
                   onClick={() => { openInYouTube(ytUrl); }}
                   disabled={!ytUrl}
-                  className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-30"
+                  style={{width:"100%",padding:"9px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",cursor:"pointer"}}
                   style={{ background: 'rgb(220,38,38)', color: 'white' }}>
                   <svg width="14" height="11" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
                   Open in YouTube
@@ -4632,30 +4653,30 @@ export default function Veluna() {
           else seen.set(key, t);
         });
         return (
-          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.9)"}} onClick={()=>setInfoModalTrack(null)}>
-            <div className="bg-[#0d0d0d] border border-neutral-800 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl">
-              <div className="p-5 border-b border-neutral-800 flex items-center justify-between">
+          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.9)"}} onClick={()=>setShowDuplicatesPlaylist(null)}>
+            <div style={{background:"#161414",border:"1px solid #252222",borderRadius:"14px",width:"100%",maxWidth:"500px",maxHeight:"80vh",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+              <div style={{padding:"13px 16px",borderBottom:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <h3 className="font-bold text-white">Duplicate Finder</h3>
+                  <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Duplicate Finder</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{showDuplicatesPlaylist.name}</p>
                 </div>
-                <button onClick={() => setShowDuplicatesPlaylist(null)} className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"><X size={16} /></button>
+                <button onClick={() => setShowDuplicatesPlaylist(null)} style={{padding:"5px",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",borderRadius:"6px",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><X size={14}/></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              <div style={{flex:1,overflowY:"auto",padding:"12px 14px"}} className="custom-scrollbar">
                 {dupes.length === 0 ? (
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 0",color:"#5c5755"}}>
-                    <CheckCircle size={32} className="mb-2 text-[#d4cfcf]" />
-                    <p className="text-sm text-white">No duplicates found.</p>
+                    <CheckCircle size={28} style={{color:"#5c5755",marginBottom:"8px"}}/>
+                    <p style={{fontSize:"13px",color:"#9e9894"}}>No duplicates found.</p>
                   </div>
                 ) : (
                   <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
                     <p style={{fontSize:"12px",color:"#9e9894",marginBottom:"10px"}}>{dupes.length} duplicate{dupes.length > 1 ? 's' : ''} found</p>
                     {dupes.map((t, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900/60 border border-neutral-800-500/20">
-                        <img src={t.cover} className="w-10 h-10 rounded-md object-cover shrink-0" alt="" />
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px",borderRadius:"8px",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.05)"}}>
+                        <img src={t.cover} style={{width:"38px",height:"38px",borderRadius:"6px",objectFit:"cover",flexShrink:0}} alt=""/>
                         <div style={{flex:1,minWidth:0}}>
-                          <p className="text-sm font-semibold text-white truncate">{t.title}</p>
-                          <p className="text-xs text-neutral-500 truncate">{t.artist}</p>
+                          <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</div>
+                          <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.artist}</div>
                         </div>
                         <button onClick={() => {
                           setPlaylists(prev => prev.map(p => p.id === showDuplicatesPlaylist.id
@@ -4663,7 +4684,7 @@ export default function Veluna() {
                             : p));
                           setShowDuplicatesPlaylist(prev => prev ? { ...prev, tracks: (() => { let removed = false; return prev.tracks.filter(x => { if (!removed && x.url === t.url) { removed = true; return false; } return true; }); })() } : null);
                           showToast('Duplicate removed');
-                        }} className="text-xs px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors shrink-0">Remove</button>
+                        }} style={{fontSize:"11px",padding:"4px 10px",background:"rgba(160,40,40,0.08)",color:"#a05050",border:"1px solid rgba(160,40,40,0.2)",borderRadius:"6px",cursor:"pointer",flexShrink:0,transition:"background .12s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(160,40,40,0.15)")} onMouseLeave={e=>(e.currentTarget.style.background="rgba(160,40,40,0.08)")}>Remove</button>
                       </div>
                     ))}
                   </div>
@@ -4677,29 +4698,29 @@ export default function Veluna() {
       {}
       {bulkEditPlaylist && (() => {
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
-            <div className="bg-[#0d0d0d] border border-neutral-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
-              <div className="p-5 border-b border-neutral-800 flex items-center justify-between shrink-0">
+          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.9)"}}>
+            <div style={{background:"#161414",border:"1px solid #252222",borderRadius:"14px",width:"100%",maxWidth:"680px",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+              <div style={{padding:"13px 16px",borderBottom:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
                 <div>
-                  <h3 className="font-bold text-white">Bulk Tag Editor</h3>
+                  <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Bulk Tag Editor</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{bulkEditPlaylist.tracks.length} tracks in {bulkEditPlaylist.name}</p>
                 </div>
-                <button onClick={() => setBulkEditPlaylist(null)} className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"><X size={16} /></button>
+                <button onClick={() => setBulkEditPlaylist(null)} style={{padding:"5px",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",borderRadius:"6px",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><X size={14}/></button>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-[#0d0d0d] border-b border-neutral-800 z-10">
+              <div style={{flex:1,overflowY:"auto"}} className="custom-scrollbar">
+                <table style={{width:"100%",fontSize:"13px",borderCollapse:"collapse"}}>
+                  <thead style={{position:"sticky",top:0,background:"#161414",borderBottom:"1px solid #1c1a1a",zIndex:10}}>
                     <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 w-8">#</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500">Title</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500">Artist</th>
+                      <th style={{textAlign:"left",padding:"8px 14px",fontSize:"10px",fontWeight:700,color:"#5c5755",width:"32px",letterSpacing:".06em",textTransform:"uppercase"}}>#</th>
+                      <th style={{textAlign:"left",padding:"8px 14px",fontSize:"10px",fontWeight:700,color:"#5c5755",letterSpacing:".06em",textTransform:"uppercase"}}>Title</th>
+                      <th style={{textAlign:"left",padding:"8px 14px",fontSize:"10px",fontWeight:700,color:"#5c5755",letterSpacing:".06em",textTransform:"uppercase"}}>Artist</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bulkEditPlaylist.tracks.map((t, i) => (
-                      <tr key={t.url} className="border-b border-neutral-800/40 hover:bg-neutral-900/40">
-                        <td className="px-4 py-2 text-neutral-600 text-xs">{i + 1}</td>
-                        <td className="px-4 py-2">
+                      <tr key={t.url} style={{borderBottom:"1px solid #1c1a1a"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+                        <td style={{padding:"6px 14px",fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums"}}>{i+1}</td>
+                        <td style={{padding:"4px 8px"}}>
                           <input defaultValue={t.title}
                             onBlur={e => {
                               const newTitle = e.target.value.trim();
@@ -4710,9 +4731,9 @@ export default function Veluna() {
                                 setBulkEditPlaylist(prev => prev ? { ...prev, tracks: prev.tracks.map(x => x.url === t.url ? { ...x, title: newTitle } : x) } : null);
                               }
                             }}
-                            className="w-full bg-transparent text-white text-sm px-2 py-1 rounded border border-transparent hover:border-neutral-700 focus:border-[#d4cfcf] focus:outline-none transition-colors" />
+                            style={{width:"100%",background:"transparent",color:"#e2ddd9",fontSize:"12px",padding:"3px 6px",borderRadius:"4px",border:"1px solid transparent",outline:"none"}}/>
                         </td>
-                        <td className="px-4 py-2">
+                        <td style={{padding:"4px 8px"}}>
                           <input defaultValue={t.artist}
                             onBlur={e => {
                               const newArtist = e.target.value.trim();
@@ -4723,16 +4744,16 @@ export default function Veluna() {
                                 setBulkEditPlaylist(prev => prev ? { ...prev, tracks: prev.tracks.map(x => x.url === t.url ? { ...x, artist: newArtist } : x) } : null);
                               }
                             }}
-                            className="w-full bg-transparent text-neutral-400 text-sm px-2 py-1 rounded border border-transparent hover:border-neutral-700 focus:border-[#d4cfcf] focus:outline-none transition-colors" />
+                            style={{width:"100%",background:"transparent",color:"#9e9894",fontSize:"12px",padding:"3px 6px",borderRadius:"4px",border:"1px solid transparent",outline:"none"}}/>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <div className="p-4 border-t border-neutral-800 flex justify-end gap-3 shrink-0">
+              <div style={{padding:"10px 14px",borderTop:"1px solid #1c1a1a",display:"flex",justifyContent:"flex-end",gap:"8px",flexShrink:0}}>
                 <button onClick={() => { showToast('Tags saved'); setBulkEditPlaylist(null); }}
-                  className="px-5 py-2 bg-[#d4cfcf] text-black font-bold rounded-lg transition-all">
+                  style={{padding:"7px 16px",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"12px"}}>
                   Save & Close
                 </button>
               </div>
@@ -4743,25 +4764,28 @@ export default function Veluna() {
 
       {}
       {isPlaylistModalOpen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#d4cfcf]/40 p-6 rounded-xl w-96">
-            <h3 className="text-xl font-bold text-white mb-5">Create Playlist</h3>
-            <div className="flex flex-col gap-3 mb-6">
+        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}>
+          <div style={{background:"#161414",border:"1px solid #252222",borderRadius:"14px",padding:"20px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+            <h3 style={{fontSize:"15px",fontWeight:700,color:"#e2ddd9",margin:"0 0 16px"}}>Create Playlist</h3>
+            <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"16px"}}>
               <div>
-                <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5 block">Name</label>
-                <input autoFocus type="text" value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} placeholder="e.g. Cyberpunk Mix"
-                  className="w-full bg-[#050505] border border-neutral-800 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-[#d4cfcf] placeholder-neutral-700"
-                  onKeyDown={e => e.key === 'Enter' && confirmCreatePlaylist()} />
+                <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"5px"}}>Name</label>
+                <input autoFocus type="text" value={newPlaylistName} onChange={e=>setNewPlaylistName(e.target.value)} placeholder="e.g. Cyberpunk Mix"
+                  style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}
+                  onKeyDown={e=>e.key==='Enter'&&confirmCreatePlaylist()}/>
               </div>
               <div>
-                <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><AlignLeft size={11} /> Description <span className="text-neutral-700 normal-case font-normal">(optional)</span></label>
-                <textarea value={newPlaylistDesc} onChange={e => setNewPlaylistDesc(e.target.value)} placeholder="What's this playlist about?" rows={2}
-                  className="w-full bg-[#050505] border border-neutral-800 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-[#d4cfcf] placeholder-neutral-700 resize-none text-sm" />
+                <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"flex",alignItems:"center",gap:"5px",marginBottom:"5px"}}><AlignLeft size={10}/> Description <span style={{textTransform:"none",fontWeight:400,color:"#363230"}}>(optional)</span></label>
+                <textarea value={newPlaylistDesc} onChange={e=>setNewPlaylistDesc(e.target.value)} placeholder="What's this playlist about?" rows={2}
+                  style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",resize:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setIsPlaylistModalOpen(false)} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Cancel</button>
-              <button onClick={confirmCreatePlaylist} disabled={!newPlaylistName.trim()} className="px-4 py-2 bg-[#d4cfcf] text-black text-sm font-bold rounded-lg transition-all disabled:opacity-50">Create</button>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:"8px"}}>
+              <button onClick={()=>setIsPlaylistModalOpen(false)}
+                style={{padding:"7px 14px",borderRadius:"8px",border:"1px solid #252222",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
+                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>Cancel</button>
+              <button onClick={confirmCreatePlaylist} disabled={!newPlaylistName.trim()}
+                style={{padding:"7px 14px",borderRadius:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,cursor:"pointer",fontSize:"12px",opacity:newPlaylistName.trim()?1:0.35}}>Create</button>
             </div>
           </div>
         </div>
@@ -4769,26 +4793,29 @@ export default function Veluna() {
 
       {}
       {renamingPlaylist && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#111] border border-neutral-800 p-6 rounded-xl w-96 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-5">Edit Playlist</h3>
-            <div className="flex flex-col gap-4 mb-6">
+        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}>
+          <div style={{background:"#161414",border:"1px solid #252222",borderRadius:"14px",padding:"20px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+            <h3 style={{fontSize:"15px",fontWeight:700,color:"#e2ddd9",margin:"0 0 16px"}}>Edit Playlist</h3>
+            <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"16px"}}>
               <div>
-                <label className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-1.5 block">Name</label>
-                <input autoFocus type="text" value={renameVal} onChange={e => setRenameVal(e.target.value)}
-                  className="w-full bg-[#050505] border border-neutral-800 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-[#d4cfcf] transition-all text-sm"
-                  onKeyDown={e => { if (e.key === 'Enter') confirmRenamePlaylist(); if (e.key === 'Escape') setRenamingPlaylist(null); }} />
+                <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"5px"}}>Name</label>
+                <input autoFocus type="text" value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                  style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}
+                  onKeyDown={e=>{if(e.key==='Enter')confirmRenamePlaylist();if(e.key==='Escape')setRenamingPlaylist(null);}}/>
               </div>
               <div>
-                <label className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-1.5 block">Description <span className="text-neutral-700 normal-case font-normal">(optional)</span></label>
-                <textarea value={renameDescVal} onChange={e => setRenameDescVal(e.target.value)} rows={2}
+                <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"5px"}}>Description <span style={{textTransform:"none",fontWeight:400,color:"#363230"}}>(optional)</span></label>
+                <textarea value={renameDescVal} onChange={e=>setRenameDescVal(e.target.value)} rows={2}
                   placeholder="e.g. Chill vibes, road trip..."
-                  className="w-full bg-[#050505] border border-neutral-800 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-[#d4cfcf] resize-none text-sm placeholder-neutral-700" />
+                  style={{width:"100%",background:"#1c1a1a",border:"1px solid #252222",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",resize:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setRenamingPlaylist(null)} className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Cancel</button>
-              <button onClick={confirmRenamePlaylist} className="px-4 py-2 bg-[#d4cfcf] text-black text-sm font-bold rounded-lg transition-all">Save</button>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:"8px"}}>
+              <button onClick={()=>setRenamingPlaylist(null)}
+                style={{padding:"7px 14px",borderRadius:"8px",border:"1px solid #252222",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
+                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>Cancel</button>
+              <button onClick={confirmRenamePlaylist}
+                style={{padding:"7px 14px",borderRadius:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,cursor:"pointer",fontSize:"12px"}}>Save</button>
             </div>
           </div>
         </div>
@@ -4876,19 +4903,18 @@ export default function Veluna() {
 
       {/* Background import progress pill */}
       {bgImport && !showCsvImportModal && (
-        <div className="fixed bottom-28 right-6 z-[9998] flex items-center gap-3 px-4 py-2.5 rounded-xl shadow-2xl border border-[#1DB954]/30 bg-[#0d0d0d]"
-          style={{ animation: 'fadeUp 0.2s ease both' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-          <div className="flex flex-col gap-1 min-w-[160px]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-white">Importing Spotify…</span>
-              <span className="text-[10px] text-[#1DB954] font-bold tabular-nums">{bgImport.matched}/{bgImport.total}</span>
+        <div style={{position:"fixed",bottom:"84px",right:"16px",zIndex:9998,display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderRadius:"10px",border:"1px solid #252222",background:"#1c1a1a",boxShadow:"0 8px 24px rgba(0,0,0,0.7)",animation:"fadeUp 0.2s ease both"}}>
+          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#9e9894",animation:"velunaPulse 1.5s ease-in-out infinite",flexShrink:0}}/>
+          <div style={{display:"flex",flexDirection:"column",gap:"4px",minWidth:"140px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
+              <span style={{fontSize:"12px",fontWeight:600,color:"#e2ddd9"}}>Importing Spotify…</span>
+              <span style={{fontSize:"10px",color:"#5c5755",fontVariantNumeric:"tabular-nums"}}>{bgImport.matched}/{bgImport.total}</span>
             </div>
-            <div className="h-1 rounded-full bg-neutral-800 overflow-hidden w-full">
-              <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(bgImport.matched / bgImport.total) * 100}%`, background: '#1DB954' }} />
+            <div style={{height:"2px",borderRadius:"1px",background:"#232020",overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:"1px",background:"#9e9894",width:`${(bgImport.matched/bgImport.total)*100}%`,transition:"width .3s"}}/>
             </div>
           </div>
-          <button onClick={() => setBgImport(null)} className="text-neutral-600 hover:text-white transition-colors ml-1"><X size={12} /></button>
+          <button onClick={()=>setBgImport(null)} style={{color:"#363230",background:"none",border:"none",cursor:"pointer",display:"flex",marginLeft:"4px",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#363230")}><X size={12}/></button>
         </div>
       )}
 
@@ -4903,9 +4929,9 @@ export default function Veluna() {
         }
         const pct = trackDurationSeconds > 0 ? Math.min((progressSeconds / trackDurationSeconds) * 100, 100) : 0;
         return (
-          <div className="fixed inset-0 z-[9999] flex" style={{ userSelect: 'none', background: '#0a0a0a' }}>
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",userSelect:"none",background:"#0c0b0b"}}>
             {/* Always render gradient base so there's never a black void */}
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg,#0d1a10 0%,#080810 100%)' }} />
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(135deg,#0c0b0b 0%,#111010 100%)"}}/>
             {/* Full-screen blurred cover — overflow visible so blur doesn't get clipped */}
             {currentTrack.cover && (
               <div className="absolute pointer-events-none" style={{
@@ -4917,59 +4943,54 @@ export default function Veluna() {
               }} />
             )}
             {/* Scrim */}
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg,rgba(0,0,0,0.42) 0%,rgba(0,0,0,0.28) 100%)' }} />
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(0,0,0,0.38)"}}/>
 
             {/* Left panel */}
-            <div className="relative z-10 w-[360px] shrink-0 flex flex-col items-center justify-center px-8 gap-5">
-              <button onClick={() => setShowLyrics(false)}
-                className="absolute top-6 left-6 w-9 h-9 flex items-center justify-center rounded-full text-white transition-all"
-                style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}>
+            <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"18px"}}>
+              <button onClick={()=>setShowLyrics(false)}
+                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.7)",background:"rgba(0,0,0,0.45)",backdropFilter:"blur(8px)",transition:"color .12s"}}>
                 <X size={16} />
               </button>
 
               {/* Album art */}
-              <div className="w-44 h-44 rounded-2xl overflow-hidden shrink-0"
-                style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <div style={{width:"168px",height:"168px",borderRadius:"16px",overflow:"hidden",flexShrink:0,boxShadow:"0 20px 60px rgba(0,0,0,0.85)",border:"1px solid rgba(255,255,255,0.12)"}}>
                 {currentTrack.cover
-                  ? <img src={currentTrack.cover} alt={currentTrack.title} className="w-full h-full object-cover" />
-                  : <div className="w-full h-full bg-neutral-900 flex items-center justify-center"><Music size={36} className="text-neutral-600" /></div>}
+                  ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : <div style={{width:"100%",height:"100%",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
               </div>
 
-              <div className="text-center w-full">
-                <p className="text-lg font-black text-white truncate px-1">{currentTrack.title}</p>
-                <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{currentTrack.artist}</p>
+              <div style={{textAlign:"center",width:"100%"}}>
+                <p style={{fontSize:"16px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px"}}>{currentTrack.title}</p>
+                <p style={{fontSize:"12px",marginTop:"3px",color:"rgba(255,255,255,0.45)"}}>{currentTrack.artist}</p>
               </div>
 
               {/* Progress bar — identical to default player bar */}
-              <div className="w-full flex flex-col gap-1">
-                <div className="slider-track relative w-full h-1 rounded-full cursor-pointer hover:h-1.5 transition-[height] duration-150 ease-out"
-                  style={{ background: 'rgba(255,255,255,0.18)' }}
+              <div style={{width:"100%",display:"flex",flexDirection:"column",gap:"5px"}}>
+                <div className="slider-track" style={{position:"relative",width:"100%",height:"3px",borderRadius:"2px",cursor:"pointer",background:"rgba(255,255,255,0.18)"}}
                   onMouseDown={e => {
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                     const t = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * (trackDurationSeconds || 0);
                     invoke('seek_audio', { time: t }).catch(() => {});
                   }}>
-                  <div className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
-                    style={{ width: `${pct}%`, background: '#e2ddd9', transition: 'width 0.5s linear' }}>
+                  <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${pct}%`,background:"#e2ddd9",transition:"width 0.5s linear"}}>
                     <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none"
                       style={{ }} />
                   </div>
                 </div>
-                <div className="flex justify-between text-xs tabular-nums" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",fontVariantNumeric:"tabular-nums",color:"rgba(255,255,255,0.35)"}}>
                   <span>{formatTime(progressSeconds)}</span>
                   <span>{formatTime(trackDurationSeconds)}</span>
                 </div>
               </div>
 
               {/* Playback controls */}
-              <div className="flex items-center gap-6">
-                <button onClick={handleSkipBack} style={{ color: 'rgba(255,255,255,0.65)' }} className="hover:text-white transition-colors"><SkipBack size={20} /></button>
+              <div style={{display:"flex",alignItems:"center",gap:"22px"}}>
+                <button onClick={handleSkipBack} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipBack size={19}/></button>
                 <button onClick={togglePlayPause}
-                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center active:scale-95 transition-all"
-                  style={{ boxShadow: isPlaying ? '0 0 20px rgba(212,207,207,0.5)' : '0 4px 16px rgba(0,0,0,0.5)' }}>
-                  {isPlaying ? <Pause fill="black" size={20} className="text-black" /> : <Play fill="black" size={20} className="text-black ml-0.5" />}
+                  style={{width:"46px",height:"46px",borderRadius:"50%",background:"#e2ddd9",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",transition:"transform .1s"}} onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.06)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                  {isPlaying ? <Pause fill="#0c0b0b" size={19}/> : <Play fill="#0c0b0b" size={19} style={{marginLeft:"2px"}}/>}
                 </button>
-                <button onClick={handleSkipForward} style={{ color: 'rgba(255,255,255,0.65)' }} className="hover:text-white transition-colors"><SkipForward size={20} /></button>
+                <button onClick={handleSkipForward} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipForward size={19}/></button>
               </div>
 
               {/* Audio output — clean dropdown */}
@@ -4988,22 +5009,20 @@ export default function Veluna() {
             </div>
 
             {/* Divider */}
-            <div className="relative z-10 w-px shrink-0 my-8" style={{ background: 'rgba(255,255,255,0.07)' }} />
+            <div style={{position:"relative",zIndex:10,width:"1px",flexShrink:0,margin:"32px 0",background:"rgba(255,255,255,0.07)"}}/>
 
             {/* Lyrics panel */}
-            <div className="relative z-10 flex-1 overflow-hidden">
+            <div style={{position:"relative",zIndex:10,flex:1,overflow:"hidden"}}>
               {lyricsLoading ? (
-                <div className="flex flex-col items-center justify-center gap-4 h-full">
-                  <Loader2 size={24} className="animate-spin text-[#d4cfcf]" />
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Fetching lyrics…</p>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"14px",height:"100%"}}>
+                  <Loader2 size={24} style={{color:"rgba(255,255,255,0.4)",animation:"spin 1s linear infinite"}}/>
+                  <p style={{fontSize:"13px",color:"rgba(255,255,255,0.4)"}}>Fetching lyrics…</p>
                 </div>
               ) : lines.length > 0 ? (
-                <div className="relative h-full">
-                  <div className="absolute top-0 left-0 right-0 h-28 z-10 pointer-events-none"
-                    style={{ background: 'linear-gradient(to bottom,rgba(0,0,0,0.7) 0%,transparent 100%)' }} />
-                  <div className="absolute bottom-0 left-0 right-0 h-28 z-10 pointer-events-none"
-                    style={{ background: 'linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 100%)' }} />
-                  <div className="h-full overflow-y-auto px-10 py-24" style={{ scrollbarWidth: 'none' }}
+                <div style={{position:"relative",height:"100%"}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to bottom,rgba(8,7,7,0.8) 0%,transparent 100%)"}}/>
+                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to top,rgba(8,7,7,0.8) 0%,transparent 100%)"}}/>
+                  <div style={{height:"100%",overflowY:"auto",padding:"80px 36px",scrollbarWidth:"none"}}
                     ref={el => {
                       if (!el) return;
                       const active = el.querySelector('[data-active="true"]') as HTMLElement;
@@ -5014,9 +5033,9 @@ export default function Veluna() {
                       const isPast = idx < currentIdx;
                       return (
                         <p key={idx}
-                          data-active={isCurrent ? 'true' : 'false'}
-                          onClick={async () => { await invoke('seek_audio', { time: line.time }).catch(() => {}); }}
-                          className="cursor-pointer leading-snug py-2.5 select-none"
+                          data-active={isCurrent?'true':'false'}
+                          onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
+                          style={{cursor:"pointer",lineHeight:1.35,padding:"9px 0",userSelect:"none"}}
                           style={{
                             fontSize: '1.45rem',
                             fontWeight: isCurrent ? 700 : 500,
@@ -5032,7 +5051,7 @@ export default function Veluna() {
               ) : (
                 <div className="flex flex-col items-center justify-center gap-3 h-full" style={{ color: 'rgba(255,255,255,0.25)' }}>
                   <Mic2 size={36} strokeWidth={1} />
-                  <p className="text-base font-medium">No lyrics found</p>
+                  <p style={{fontSize:"14px",fontWeight:500,color:"rgba(255,255,255,0.4)"}}>No lyrics found</p>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.15)' }}>Try Genius or AZLyrics</p>
                 </div>
               )}
