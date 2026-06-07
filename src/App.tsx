@@ -810,7 +810,7 @@ function YtImportModal({
                 <div key={i} style={{display:"flex",alignItems:"center",gap:"10px"}}>
                   <img src={r.cover} style={{width:"48px",height:"27px",borderRadius:"5px",objectFit:"cover",flexShrink:0,background:"#1c1a1a"}} alt="" />
                   <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
+                    <div style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
                     <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.artist}</div>
                   </div>
                 </div>
