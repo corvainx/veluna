@@ -1251,7 +1251,7 @@ function SettingsPanel({
                   Reset
                 </button>
               </div>
-              <div style={{padding:"14px",flex,flex-col,gap-5}}>
+              <div style={{padding:"14px",display:"flex",flexDirection:"column",gap:"10px"}}>
                 {([
                   { label: 'Bass', key: 'bass' as const, desc: 'Low frequencies (60–250Hz)' },
                   { label: 'Mid', key: 'mid' as const, desc: 'Mids (500Hz–2kHz)' },
