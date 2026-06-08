@@ -1197,11 +1197,10 @@ function SettingsPanel({
                         } catch (e) { showToast(`Switch failed: ${e}`); }
                         finally { setSwitchingDevice(false); }
                       }}
-                      style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 14px",textAlign:"left",cursor:"pointer",width:"100%",background:"transparent",border:"none",transition:"background .1s"}} className={`
-                        ${isDefault ? 'bg-white/[0.04]' : 'hover:bg-white/[0.03] cursor-pointer'}
-                        ${switchingDevice && !isDefault ? 'opacity-40' : ''}`}>
-                      <div style={{width:"26px",height:"26px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"rgba(226,221,217,0.2)":"rgba(255,255,255,0.05)"}`,background:isDefault?"rgba(226,221,217,0.06)":"#1c1a1a"}} className={"dummy
-                        ${isDefault ? 'bg-white/[0.06] border-white/[0.12]' : 'bg-neutral-900 border-neutral-800'}`}>
+                      style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 14px",textAlign:"left",cursor:isDefault?"default":"pointer",width:"100%",background:isDefault?"rgba(255,255,255,0.025)":"transparent",border:"none",transition:"background .1s",opacity:switchingDevice&&!isDefault?0.4:1}}
+                      onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.035)";}}
+                      onMouseLeave={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="transparent";}}>
+                      <div style={{width:"26px",height:"26px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"rgba(226,221,217,0.2)":"rgba(255,255,255,0.05)"}`,background:isDefault?"rgba(226,221,217,0.06)":"#1c1a1a"}}>
                         {dev.form === 'headphones'
                           ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? '#9e9894' : '#3a3a3a'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
                           : <Volume2 size={13} style={{color:isDefault?"#9e9894":"#363230"}}/>}
@@ -1654,19 +1653,18 @@ const SpeedSelector = React.memo(({ speed, onChange }: { speed: number; onChange
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(o => !o)}
-        style={{display:"flex",alignItems:"center",gap:"5px",padding:"5px 8px",borderRadius:"7px",fontSize:"11px",fontWeight:700,border:"1px solid #252222",background:"transparent",cursor:"pointer",color:"rgba(255,255,255,0.5)",transition:"all .12s"}} className={"dummy
-          ${speed !== 1 ? 'text-[#e2ddd9] border-[#e2ddd9]/20 bg-[#e2ddd9]/[0.07]' : 'text-neutral-600 border-neutral-800 hover:text-neutral-400 hover:border-neutral-700'}`}>
+        style={{display:"flex",alignItems:"center",gap:"5px",padding:"5px 8px",borderRadius:"7px",fontSize:"11px",fontWeight:700,border:`1px solid ${speed!==1?"rgba(226,221,217,0.2)":"rgba(255,255,255,0.12)"}`,background:speed!==1?"rgba(226,221,217,0.07)":"transparent",cursor:"pointer",color:speed!==1?"rgba(226,221,217,0.9)":"rgba(255,255,255,0.5)",transition:"all .12s"}}>
         <Gauge size={11} />
         {speed}x
       </button>
       {open && (
-        <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:"50%",transform:"translateX(-50%)",background:"#161414",border:"1px solid #252222",borderRadius:"10px",overflow:"hidden",boxShadow:"0 12px 36px rgba(0,0,0,0.85)",zIndex:50,minWidth:"200px"}}
-          style={{ animation: 'dropIn 0.12s ease-out' }}>
+        <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:"50%",transform:"translateX(-50%)",background:"#161414",border:"1px solid #252222",borderRadius:"10px",overflow:"hidden",boxShadow:"0 12px 36px rgba(0,0,0,0.85)",zIndex:50,minWidth:"200px",animation:"dropIn 0.12s ease-out"}}>
           <p style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230",padding:"8px 12px 4px"}}>Speed</p>
           {speeds.map(s => (
             <button key={s} onClick={() => { onChange(s); setOpen(false); }}
-              style={{width:"100%",textAlign:"left",padding:"7px 12px",fontSize:"12px",fontWeight:600,border:"none",background:"transparent",cursor:"pointer",transition:"background .08s,color .08s"}} className={"dummy
-                ${speed === s ? 'text-[#e2ddd9] bg-[#e2ddd9]/[0.07]' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+              style={{width:"100%",textAlign:"left",padding:"7px 12px",fontSize:"12px",fontWeight:600,border:"none",background:speed===s?"rgba(226,221,217,0.06)":"transparent",cursor:"pointer",color:speed===s?"rgba(226,221,217,0.9)":"rgba(255,255,255,0.45)",transition:"background .08s,color .08s"}}
+              onMouseEnter={e=>{if(speed!==s){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.85)";}}}
+              onMouseLeave={e=>{if(speed!==s){(e.currentTarget as HTMLElement).style.background="transparent";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";}}} >
               {s}× {s===1&&<span style={{color:"#363230",fontSize:"10px",fontWeight:400,marginLeft:"4px"}}>normal</span>}
             </button>
           ))}
