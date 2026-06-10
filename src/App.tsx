@@ -170,7 +170,7 @@ const TrackRow = React.memo(({
     </div>
     <div className="v-track__actions">
       <button className="v-track__btn" onClick={e => { e.stopPropagation(); onLike(); }}>
-        <Heart size={13} style={isLiked?{color:'#e2ddd9',fill:'#e2ddd9'}:{}} />
+        <Heart size={13} style={isLiked?{color:'#e05555',fill:'#e05555'}:{color:'#5c5755'}}/>
       </button>
       <button className="v-track__btn" onClick={e => { e.stopPropagation(); onDownload(); }}>
         {isDownloading > 0
@@ -215,8 +215,8 @@ const WaveformBar = React.memo(({ waveform, progressPercent, isDragging }: { wav
   return (
     <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",gap:"1px",pointerEvents:"none",overflow:"hidden"}}>
       {waveform.map((v, i) => (
-        <div key={i} style={{flex:1,borderRadius:"1px"}}
-          style={{
+        <div key={i} style={{
+            flex:1, borderRadius:"1px",
             height: `${Math.max(8, (v / max) * 100)}%`,
             background: (i / waveform.length) * 100 <= progressPercent ? '#e2ddd9' : '#232020',
             transition: isDragging ? 'none' : 'background 0.3s',
@@ -313,7 +313,7 @@ const ThemedSelect = ({ value, options, onChange }: {
         style={{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'8px',fontSize:'12px',fontWeight:600,border:`1px solid ${open?'#2e2b2b':'#252222'}`,background:open?'rgba(226,221,217,0.05)':'transparent',color:open?'#9e9894':'#5c5755',cursor:'pointer',minWidth:'110px',transition:'border-color .12s,color .12s'}}
       >
         <span style={{flex:1,textAlign:"left"}}>{current?.label}</span>
-        <ChevronDown size={14} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} style={{transition:"transform .2s",transform:open?"rotate(180deg)":"none"}}/>
       </button>
       {typeof document !== 'undefined' && dropdown
         ? ReactDOM.createPortal(dropdown, document.body)
@@ -1688,7 +1688,7 @@ function LyricsAudioDropdown({ devices, switching, onSwitch }: {
         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <Volume2 size={12} style={{color:"#9e9894",flexShrink:0}}/>
         <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{active?.name ?? 'No device'}</span>
-        <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} className="shrink-0" />
+        <ChevronDown size={12} style={{color:"rgba(255,255,255,0.3)",transform:open?"rotate(180deg)":"none",transition:"transform 0.2s",flexShrink:0}}/>
       </button>
       {open && (
         <div style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,right:0,borderRadius:"10px",overflow:"hidden",zIndex:20,background:"#161414",border:"1px solid #252222",boxShadow:"0 12px 36px rgba(0,0,0,0.85)"}}
@@ -3196,7 +3196,7 @@ export default function Veluna() {
               <span style={{flex:1}}>{sleepTimer>0?'Sleep in '+Math.ceil(sleepTimer/60)+'m':'Sleep Timer'}</span>
               {sleepTimer > 0
                 ? <button onClick={e => { e.stopPropagation(); cancelSleepTimer(); }} style={{fontSize:"11px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",padding:"2px 4px"}}><X size={11}/></button>
-                : <ChevronDown size={13} className={`transition-transform ${showSleepPopover ? 'rotate-180' : ''}`} />}
+                : <ChevronDown size={13} style={{transition:"transform .2s",transform:showSleepPopover?"rotate(180deg)":"none"}}/>}
             </div>
             {showSleepPopover && (
               <div style={{position:"absolute",top:"100%",left:0,marginTop:"6px",zIndex:9999}}>
@@ -3238,7 +3238,7 @@ export default function Veluna() {
                 style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#363230',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .12s'}}>
                 <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#363230'}}/>
                 <span style={{fontWeight:500}}>Playlists</span>
-                <ChevronRight size={14} className={`ml-auto transition-transform duration-200 ${sidebarPlaylistsExpanded ? 'rotate-90' : ''}`} />
+                <ChevronRight size={14} style={{marginLeft:"auto",transition:"transform .2s",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
               </button>
               <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
                 style={{padding:"4px",border:"none",background:"transparent",cursor:"pointer",color:"#363230",borderRadius:"4px",flexShrink:0}} title="New playlist">
@@ -3258,7 +3258,7 @@ export default function Veluna() {
                         className={`v-pl-item${isOpen?' v-pl-item--active':''}`}>
                         <div className="v-pl-item__art">
                           {cover ? <img src={cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
-                            : pl.id === 'p1' ? <Heart size={11} style={{color:isOpen?'#9e9894':'#363230'}} />
+                            : pl.id === 'p1' ? <Heart size={11} style={{color:'#e05555',fill:isOpen?'rgba(220,60,60,0.4)':'none'}}/>
                             : <ListMusic size={11} style={{color:isOpen?'#9e9894':'#363230'}} />}
                         </div>
                         <span style={{fontSize:'12.5px',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>{pl.name}</span>
@@ -3311,7 +3311,7 @@ export default function Veluna() {
                   <div style={{position:"relative",flex:1}}>
                     <div style={{position:"absolute",top:0,bottom:0,left:0,paddingLeft:"12px",display:"flex",alignItems:"center",pointerEvents:"none"}}>
                       {isSearching
-                        ? <div className="w-4 h-4 border-2 border-[#d4cfcf]/70 border-t-transparent rounded-full animate-spin" />
+                        ? <div style={{width:"16px",height:"16px",border:"2px solid rgba(226,221,217,0.6)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
                         : <Search size={18} style={{color:showHistory||searchQuery?"#9e9894":"#363230",transition:"color .2s"}}/> }
                     </div>
                     <input ref={searchRef} type="text"
