@@ -604,8 +604,8 @@ function CsvImportModal({
         {}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#4a4a4a' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+            <div style={{width:"32px",height:"32px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(226,221,217,0.08)"}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#9e9894"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
             </div>
             <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Import Spotify Playlist</h2>
           </div>
@@ -635,20 +635,19 @@ function CsvImportModal({
               { n: '4', title: 'Upload the CSV here', desc: 'Click the button below and select the downloaded .csv file.' },
             ].map(step => (
               <div key={step.n} style={{display:"flex",gap:"12px",alignItems:"flex-start"}}>
-                <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-black mt-0.5" style={{ background: '#e2ddd9' }}>{step.n}</div>
+                <div style={{width:"26px",height:"26px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"12px",fontWeight:700,color:"#0c0b0b",marginTop:"2px",background:"#e2ddd9"}}>{step.n}</div>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>{step.title}</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px",lineHeight:1.5}}>{step.desc}</p>
                   {step.link && <button onClick={() => openUrl(step.link!).catch(() => window.open(step.link!, '_blank'))}
-                    className="text-base mt-2 inline-block font-bold hover:underline cursor-pointer" style={{ color: '#9e9894' }}>{step.linkLabel}</button>}
+                    style={{fontSize:"12px",marginTop:"8px",display:"inline-flex",alignItems:"center",gap:"4px",fontWeight:700,cursor:"pointer",color:"#9e9894",background:"rgba(226,221,217,0.06)",border:"1px solid #252222",borderRadius:"7px",padding:"5px 10px",textDecoration:"none"}} onMouseEnter={e=>{e.currentTarget.style.color="#e2ddd9";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#252222";}}>{step.linkLabel}</button>}
                 </div>
               </div>
             ))}
-            <input ref={fileInputRef} type="file" accept=".csv" className="hidden"
+            <input ref={fileInputRef} type="file" accept=".csv" style={{display:"none"}}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
             <button onClick={() => fileInputRef.current?.click()}
-              style={{marginTop:"6px",width:"100%",padding:"10px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",cursor:"pointer"}}
-              style={{ background: '#e2ddd9', color: '#000' }}>
+              style={{marginTop:"6px",width:"100%",padding:"10px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",cursor:"pointer"}}>
               <Upload size={16} /> Upload Exportify CSV
             </button>
           </div>
@@ -666,8 +665,7 @@ function CsvImportModal({
                 {statusMsg&&<span style={{fontSize:"10px",color:"#363230",fontFamily:"monospace"}}>{statusMsg}</span>}
               </div>
               <div style={{height:"3px",borderRadius:"2px",background:"#232020",overflow:"hidden"}}>
-                <div style={{height:"100%",borderRadius:"2px",transition:"width .3s"}}
-                  style={{ width: `${results.length > 0 ? ((matched.length + failed.length) / results.length) * 100 : 0}%`, background: '#e2ddd9' }} />
+                <div style={{height:"100%",borderRadius:"2px",transition:"width .3s",width:`${results.length>0?((matched.length+failed.length)/results.length)*100:0}%`,background:"#e2ddd9"}} />
               </div>
             </div>
             <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar">
@@ -1282,8 +1280,8 @@ function SettingsPanel({
                         style={{position:"absolute",inset:0,width:"100%",opacity:0,cursor:"pointer",height:"100%"}}
                       />
                       {/* filled track */}
-                      <div style={{position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s"}}
-                        style={{
+                      <div style={{
+                          position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s",
                           left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
                           width: `${(Math.abs(eq[key]) / 24) * 100}%`,
                           background: eq[key] >= 0 ? '#9e9894' : '#3a3a3a',
@@ -1495,7 +1493,11 @@ function DownloadsPanel({
               style={{padding:"7px",borderRadius:"8px",border:"1px solid #252222",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
               onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}><FileOutput size={15}/></button>
           )}
-          <button onClick={scan} disabled={scanning} className="p-2 text-neutral-500 hover:text-[#d4cfcf] disabled:opacity-40 rounded-lg hover:bg-white/5" title="Refresh"><RefreshCw size={16} className={scanning ? 'animate-spin' : ''} /></button>
+          <button onClick={scan} disabled={scanning} title="Refresh"
+            style={{padding:"7px",borderRadius:"8px",border:"1px solid #252222",background:"transparent",color:"#5c5755",cursor:scanning?"not-allowed":"pointer",display:"flex",opacity:scanning?0.4:1,transition:"color .12s,border-color .12s"}}
+            onMouseEnter={e=>{if(!scanning){e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+            <RefreshCw size={15} style={scanning?{animation:"spin 0.8s linear infinite"}:{}}/>
+          </button>
         </div>
       </div>
 
@@ -3154,6 +3156,18 @@ export default function Veluna() {
         .custom-scrollbar::-webkit-scrollbar-track{background:transparent;}
         .custom-scrollbar::-webkit-scrollbar-thumb{background:#2a2727;border-radius:2px;}
 
+        /* Critical layout fallbacks — Tailwind utilities don't load in Tauri webview */
+        .flex-1{flex:1 1 0%;min-height:0;min-width:0;}
+        .overflow-y-auto{overflow-y:auto;}
+        .overflow-x-auto{overflow-x:auto;}
+        .overflow-hidden{overflow:hidden;}
+        .relative{position:relative;}
+        .absolute{position:absolute;}
+        .hidden{display:none;}
+        .flex{display:flex;}
+        .w-full{width:100%;}
+        .h-full{height:100%;}
+
         @keyframes loadbar{0%{transform:translateX(-100%)}60%{transform:translateX(200%)}100%{transform:translateX(500%)}}
         @keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -3611,7 +3625,7 @@ export default function Veluna() {
                 {(isSearching || tracks.length > 0) && (
                   <div className="v-section-head">
                     <h2>{isSearching ? 'Searching...' : `Results`}</h2>
-                    {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} className="w-1 bg-[#d4cfcf]/60 rounded-full" style={{ height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
+                    {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} style={{ width:"4px",borderRadius:"2px",background:"rgba(226,221,217,0.4)",height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
                     {tracks.length > 0 && !isSearching && (
                       <button onClick={() => playAll(tracks)} style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:'rgba(226,221,217,0.06)',border:'1px solid rgba(226,221,217,0.12)',color:'#9e9894',borderRadius:'7px',cursor:'pointer',fontSize:'11px',fontWeight:600,transition:'background .12s'}}>
                         <Play size={11} style={{fill:'currentColor'}} /> Play All
@@ -4523,11 +4537,9 @@ export default function Veluna() {
         const isYt = !!ytId;
         const trackAudioInfo = infoModalTrack.url === currentTrack?.url ? audioInfo : null;
         return (
-          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.92)"}}
-            style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(0,0,0,0.8)",backdropFilter:"blur(20px)"}}
             onClick={() => setInfoModalTrack(null)}>
-            <div style={{borderRadius:"14px",width:"100%",maxWidth:"420px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.9)",display:"flex",flexDirection:"column",background:"#161414",border:"1px solid #252222"}}
-              style={{ background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)' }}
+            <div style={{borderRadius:"14px",width:"100%",maxWidth:"420px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.9)",display:"flex",flexDirection:"column",background:"#0c0c0c",border:"1px solid rgba(255,255,255,0.08)"}}
               onClick={e => e.stopPropagation()}>
 
               {}
@@ -4594,8 +4606,7 @@ export default function Veluna() {
                 <button
                   onClick={() => { openInYouTube(ytUrl); }}
                   disabled={!ytUrl}
-                  style={{width:"100%",padding:"9px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",cursor:"pointer"}}
-                  style={{ background: 'rgb(220,38,38)', color: 'white' }}>
+                  style={{width:"100%",padding:"9px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"rgb(220,38,38)",color:"white",cursor:ytUrl?"pointer":"not-allowed",opacity:ytUrl?1:0.4}}>
                   <svg width="14" height="11" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
                   Open in YouTube
                 </button>
@@ -5042,8 +5053,8 @@ export default function Veluna() {
                         <p key={idx}
                           data-active={isCurrent?'true':'false'}
                           onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
-                          style={{cursor:"pointer",lineHeight:1.35,padding:"9px 0",userSelect:"none"}}
                           style={{
+                            cursor:"pointer",lineHeight:1.35,padding:"9px 0",userSelect:"none",
                             fontSize: '1.45rem',
                             fontWeight: isCurrent ? 700 : 500,
                             color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.48)',
