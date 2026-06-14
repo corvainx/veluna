@@ -19,7 +19,7 @@ import {
   Loader2, CheckCircle2, XCircle, ArrowUpCircle, Image, Mic2
 } from 'lucide-react';
 
-const __APP_VERSION__ = '0.1.1';
+const __APP_VERSION__ = '0.1.0';
 
 type Track = {
   id: number;
@@ -299,8 +299,8 @@ const ThemedSelect = ({ value, options, onChange }: {
           onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(226,221,217,0.04)'; }}
           onMouseLeave={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
-          <span style={{ fontSize: '13px', fontWeight: 600 }}>{opt.label}</span>
-          {opt.desc && <span style={{ fontSize: '11px', color: '#5c5755', marginTop: '2px' }}>{opt.desc}</span>}
+          <span style={{ fontSize: '13.5px', fontWeight: 600 }}>{opt.label}</span>
+          {opt.desc && <span style={{ fontSize: '12px', color: '#5c5755', marginTop: '3px' }}>{opt.desc}</span>}
         </button>
       ))}
     </div>
@@ -310,7 +310,9 @@ const ThemedSelect = ({ value, options, onChange }: {
     <div style={{ position: 'relative' }}>
       <button ref={btnRef}
         onClick={handleOpen}
-        style={{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'8px',fontSize:'12px',fontWeight:600,border:`1px solid ${open?'#2e2b2b':'#252222'}`,background:open?'rgba(226,221,217,0.05)':'transparent',color:open?'#9e9894':'#5c5755',cursor:'pointer',minWidth:'110px',transition:'border-color .12s,color .12s'}}
+        style={{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',fontSize:'13px',fontWeight:500,border:`1px solid ${open?'#2e2b2b':'#252222'}`,background:open?'rgba(226,221,217,0.05)':'#161414',color:open?'#e2ddd9':'#9e9894',cursor:'pointer',minWidth:'130px',transition:'border-color .12s,color .12s,background .12s'}}
+        onMouseEnter={e=>{if(!open){(e.currentTarget as HTMLElement).style.borderColor='#2e2b2b';(e.currentTarget as HTMLElement).style.color='#e2ddd9';}}}
+        onMouseLeave={e=>{if(!open){(e.currentTarget as HTMLElement).style.borderColor='#252222';(e.currentTarget as HTMLElement).style.color='#9e9894';}}}
       >
         <span style={{flex:1,textAlign:"left"}}>{current?.label}</span>
         <ChevronDown size={14} style={{transition:"transform .2s",transform:open?"rotate(180deg)":"none"}}/>
@@ -973,7 +975,7 @@ function SettingsPanel({
                   <>
                     <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",marginBottom:"3px"}}>Update available — v{updateAvailable}</div>
                     <div style={{fontSize:"11px",color:"#5c5755",marginBottom:"10px"}}>A new version of Veluna is ready to download.</div>
-                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna-player/releases/latest');}}
+                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna/releases/latest');}}
                       style={{display:"inline-flex",alignItems:"center",gap:"5px",fontSize:"11px",fontWeight:600,color:"#9e9894",textDecoration:"none"}}
                       onMouseEnter={e=>(e.currentTarget.style.textDecoration="underline")} onMouseLeave={e=>(e.currentTarget.style.textDecoration="none")}>
                       <ExternalLink size={11}/> View release on GitHub
@@ -1684,21 +1686,26 @@ function LyricsAudioDropdown({ devices, switching, onSwitch }: {
   return (
     <div style={{width:"100%",position:"relative"}}>
       <button onClick={() => setOpen(o => !o)}
-        style={{width:"100%",display:"flex",alignItems:"center",gap:"8px",padding:"8px 10px",borderRadius:"8px",textAlign:"left",border:"none",background:"transparent",cursor:"pointer"}}
-        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        style={{width:"100%",display:"flex",alignItems:"center",gap:"8px",padding:"7px 10px",borderRadius:"8px",textAlign:"left",border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.06)",cursor:"pointer",transition:"background .12s"}}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.1)";}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)";}}>
         <Volume2 size={12} style={{color:"#9e9894",flexShrink:0}}/>
-        <span className="text-xs truncate flex-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{active?.name ?? 'No device'}</span>
-        <ChevronDown size={12} style={{color:"rgba(255,255,255,0.3)",transform:open?"rotate(180deg)":"none",transition:"transform 0.2s",flexShrink:0}}/>
+        <span style={{fontSize:"12px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,textAlign:"left",color:"rgba(255,255,255,0.7)"}}>{active?.name ?? 'No device'}</span>
+        <ChevronDown size={11} style={{color:"rgba(255,255,255,0.3)",transform:open?"rotate(180deg)":"none",transition:"transform 0.2s",flexShrink:0}}/>
       </button>
       {open && (
-        <div style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,right:0,borderRadius:"10px",overflow:"hidden",zIndex:20,background:"#161414",border:"1px solid #252222",boxShadow:"0 12px 36px rgba(0,0,0,0.85)"}}
-          style={{ background: 'rgba(12,12,16,0.95)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+        <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:0,right:0,borderRadius:"10px",overflow:"hidden",zIndex:20,background:"#161414",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 16px 40px rgba(0,0,0,0.9)"}}>
+          <div style={{padding:"7px 10px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <span style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)"}}>Output Device</span>
+          </div>
           {devices.map(dev => (
             <button key={dev.id} disabled={switching}
               onClick={() => { if (!dev.is_default) onSwitch(dev.id); setOpen(false); }}
-              style={{width:"100%",display:"flex",alignItems:"center",gap:"9px",padding:"8px 12px",textAlign:"left",border:"none",background:"transparent",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.04)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
-              <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dev.is_default ? '#9e9894' : 'rgba(255,255,255,0.2)' }} />
-              <span className="text-xs truncate" style={{ color: dev.is_default ? '#fff' : 'rgba(255,255,255,0.5)' }}>{dev.name}</span>
+              style={{width:"100%",display:"flex",alignItems:"center",gap:"9px",padding:"9px 12px",textAlign:"left",border:"none",background:dev.is_default?"rgba(255,255,255,0.05)":"transparent",cursor:dev.is_default?"default":"pointer",transition:"background .1s"}}
+              onMouseEnter={e=>{if(!dev.is_default)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";}}
+              onMouseLeave={e=>{if(!dev.is_default)(e.currentTarget as HTMLElement).style.background="transparent";}}>
+              <div style={{width:"6px",height:"6px",borderRadius:"50%",flexShrink:0,background:dev.is_default?"#9e9894":"rgba(255,255,255,0.15)"}}/>
+              <span style={{fontSize:"12px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:dev.is_default?"#fff":"rgba(255,255,255,0.5)",flex:1,textAlign:"left"}}>{dev.name}</span>
+              {dev.is_default && <span style={{fontSize:"9px",fontWeight:700,color:"#9e9894",flexShrink:0,letterSpacing:".05em"}}>ACTIVE</span>}
             </button>
           ))}
         </div>
@@ -3279,7 +3286,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"#0c0b0b",overflow:"hidden",position:"relative"}}>
+        <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"#0c0b0b",position:"relative",minHeight:0,overflow:"hidden"}}>
 
 
           <div className="v-topbar" style={{background:"#0c0b0b",padding:"12px 20px"}}>
@@ -3303,24 +3310,24 @@ export default function Veluna() {
           </div>
 
           {}
-          <div key={activeNav + (openPlaylistId || '')} style={{animation:'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both',flex:'1 1 0%',display:'flex',flexDirection:'column',overflow:'hidden',minHeight:0}}>
+          <div key={activeNav + (openPlaylistId || '')} style={{animation:'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both',flex:'1 1 0%',display:'flex',flexDirection:'column',minHeight:0,overflow:'hidden'}}>
           {activeNav === 'home' && (
             <>
               <div style={{padding:"16px 24px 10px",position:"relative",zIndex:30,flexShrink:0}}>
                 <div style={{position:"relative",width:"100%",display:"flex",gap:"8px"}} onClick={e=>e.stopPropagation()}>
                   <div style={{position:"relative",flex:1}}>
-                    <div style={{position:"absolute",top:0,bottom:0,left:0,paddingLeft:"12px",display:"flex",alignItems:"center",pointerEvents:"none"}}>
+                    <div style={{position:"absolute",top:0,bottom:0,left:0,paddingLeft:"14px",display:"flex",alignItems:"center",pointerEvents:"none"}}>
                       {isSearching
-                        ? <div style={{width:"16px",height:"16px",border:"2px solid rgba(226,221,217,0.6)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-                        : <Search size={18} style={{color:showHistory||searchQuery?"#9e9894":"#363230",transition:"color .2s"}}/> }
+                        ? <div style={{width:"15px",height:"15px",border:"2px solid rgba(226,221,217,0.5)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                        : <Search size={16} style={{color:showHistory||searchQuery?"#9e9894":"#5c5755",transition:"color .2s"}}/> }
                     </div>
                     <input ref={searchRef} type="text"
-                      placeholder="Search YouTube... (Ctrl+F)"
+                      placeholder="Search YouTube..."
                       value={searchQuery} readOnly={isSearching}
                       onChange={e => setSearchQuery(e.target.value)}
                       onFocus={() => !isSearching && setShowHistory(searchHistory.length > 0)}
                       onKeyDown={e => { if (e.key === 'Enter') { setShowHistory(false); searchMusic(); } if (e.key === 'Escape') setShowHistory(false); }}
-                      style={{width:'100%',height:'44px',background:'#161414',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.2)':'#252222'}`,borderRadius:'10px',padding:'0 14px 0 44px',fontSize:'14px',outline:'none',opacity:isSearching?0.6:1,cursor:isSearching?'not-allowed':'text'}}
+                      style={{width:'100%',height:'42px',background:'#161414',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'#252222'}`,borderRadius:'9px',padding:'0 12px 0 42px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
                     />
                     {showHistory && (
                       <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:'6px',background:'#161414',border:'1px solid #252222',borderRadius:'10px',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,0.7)',zIndex:100}}>
@@ -3342,7 +3349,9 @@ export default function Veluna() {
                   </div>
                   <button onClick={() => { setShowHistory(false); searchMusic(); }}
                     disabled={isSearching || !searchQuery.trim()}
-                    style={{height:'44px',padding:'0 16px',borderRadius:'10px',border:'1px solid #252222',background:'#161414',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'7px',flexShrink:0,transition:'border-color .12s,color .12s',whiteSpace:'nowrap'}}>
+                    style={{height:'42px',padding:'0 16px',borderRadius:'9px',border:'1px solid #252222',background:'#161414',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'6px',flexShrink:0,transition:'border-color .15s,color .15s,background .15s',whiteSpace:'nowrap'}}
+                    onMouseEnter={e=>{if(!isSearching&&searchQuery.trim()){(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.borderColor='#2e2b2b';}}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='#161414';(e.currentTarget as HTMLElement).style.borderColor='#252222';}}>
                     {isSearching ? <div style={{width:'14px',height:'14px',border:'2px solid #5c5755',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} /> : <Search size={15} />}
                     {!isSearching && 'Search'}
                   </button>
@@ -3350,16 +3359,16 @@ export default function Veluna() {
                     <button
                       onClick={() => { setActiveNav('settings'); }}
                       title={`Update available — v${updateAvailable}`}
-                      style={{flexShrink:0,width:"40px",height:"40px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"9px",border:"1px solid #252222",background:"#1c1a1a",cursor:"pointer",position:"relative"}}
+                      style={{flexShrink:0,width:"42px",height:"42px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"9px",border:"1px solid #252222",background:"#161414",cursor:"pointer",position:"relative"}}
                     >
                       <Info size={17} />
-                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#d4cfcf]" />
+                      <span style={{position:"absolute",top:"5px",right:"5px",width:"6px",height:"6px",borderRadius:"50%",background:"#9e9894"}}/>
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"20px 24px 24px",zIndex:10}} onClick={()=>setShowHistory(false)}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"22px 28px 28px",zIndex:10}} onClick={()=>setShowHistory(false)}>
                 {}
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:"280px",gap:"20px"}}>
