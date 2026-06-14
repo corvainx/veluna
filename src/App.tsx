@@ -4953,7 +4953,9 @@ export default function Veluna() {
             <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(135deg,#0c0b0b 0%,#111010 100%)"}}/>
             {/* Full-screen blurred cover — overflow visible so blur doesn't get clipped */}
             {currentTrack.cover && (
-              <div className="absolute pointer-events-none" style={{
+              <div style={{
+                position: 'absolute',
+                pointerEvents: 'none',
                 inset: '-60px',
                 backgroundImage: `url(${currentTrack.cover})`,
                 backgroundSize: 'cover',
@@ -4967,7 +4969,9 @@ export default function Veluna() {
             {/* Left panel */}
             <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"18px"}}>
               <button onClick={()=>setShowLyrics(false)}
-                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.7)",background:"rgba(0,0,0,0.45)",backdropFilter:"blur(8px)",transition:"color .12s"}}>
+                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.7)",background:"rgba(0,0,0,0.45)",backdropFilter:"blur(8px)",transition:"color .12s,background .12s"}}
+                onMouseEnter={e=>{e.currentTarget.style.color="#fff";e.currentTarget.style.background="rgba(0,0,0,0.65)";}}
+                onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.7)";e.currentTarget.style.background="rgba(0,0,0,0.45)";}}>
                 <X size={16} />
               </button>
 
@@ -4992,8 +4996,7 @@ export default function Veluna() {
                     invoke('seek_audio', { time: t }).catch(() => {});
                   }}>
                   <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${pct}%`,background:"#e2ddd9",transition:"width 0.5s linear"}}>
-                    <div className="slider-thumb absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 pointer-events-none"
-                      style={{ }} />
+                    <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"11px",height:"11px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
                   </div>
                 </div>
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",fontVariantNumeric:"tabular-nums",color:"rgba(255,255,255,0.35)"}}>
@@ -5039,9 +5042,9 @@ export default function Veluna() {
                 </div>
               ) : lines.length > 0 ? (
                 <div style={{position:"relative",height:"100%"}}>
-                  <div style={{position:"absolute",top:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to bottom,rgba(8,7,7,0.8) 0%,transparent 100%)"}}/>
-                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to top,rgba(8,7,7,0.8) 0%,transparent 100%)"}}/>
-                  <div style={{height:"100%",overflowY:"auto",padding:"80px 36px",scrollbarWidth:"none"}}
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:"120px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to bottom,#0c0b0b 0%,rgba(12,11,11,0.85) 35%,transparent 100%)"}}/>
+                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:"120px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to top,#0c0b0b 0%,rgba(12,11,11,0.85) 35%,transparent 100%)"}}/>
+                  <div style={{height:"100%",overflowY:"auto",padding:"120px 36px",scrollbarWidth:"none"}}
                     ref={el => {
                       if (!el) return;
                       const active = el.querySelector('[data-active="true"]') as HTMLElement;
@@ -5055,7 +5058,7 @@ export default function Veluna() {
                           data-active={isCurrent?'true':'false'}
                           onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
                           style={{
-                            cursor:"pointer",lineHeight:1.35,padding:"9px 0",userSelect:"none",
+                            cursor:"pointer",lineHeight:1.35,padding:"9px 0",userSelect:"none",margin:0,
                             fontSize: '1.45rem',
                             fontWeight: isCurrent ? 700 : 500,
                             color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.48)',
@@ -5068,10 +5071,10 @@ export default function Veluna() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center gap-3 h-full" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                  <Mic2 size={36} strokeWidth={1} />
-                  <p style={{fontSize:"14px",fontWeight:500,color:"rgba(255,255,255,0.4)"}}>No lyrics found</p>
-                  <p style={{fontSize:"13px",color:"rgba(255,255,255,0.15)"}}>Try Genius or AZLyrics</p>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"10px",height:"100%",color:"rgba(255,255,255,0.25)"}}>
+                  <Mic2 size={32} strokeWidth={1}/>
+                  <p style={{fontSize:"14px",fontWeight:500,color:"rgba(255,255,255,0.4)",margin:0}}>No lyrics found</p>
+                  <p style={{fontSize:"12px",color:"rgba(255,255,255,0.18)",margin:0}}>Try Genius or AZLyrics</p>
                 </div>
               )}
             </div>
