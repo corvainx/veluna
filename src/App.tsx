@@ -3001,7 +3001,8 @@ export default function Veluna() {
           --v-fg:#e2ddd9;--v-fg2:#9e9894;--v-fg3:#5c5755;--v-fg4:#363230;
           --v-bdr:#1c1a1a;--v-bdr2:#252222;--v-bdr3:#2e2b2b;
         }
-        html,body{background:#0c0b0b!important;color:#e2ddd9!important;color-scheme:dark!important;}
+        html,body{background:#0c0b0b!important;color:#e2ddd9!important;color-scheme:dark!important;height:100%;overflow:hidden;margin:0;padding:0;}
+        #root{height:100%;overflow:hidden;}
         [class*="bg-neutral-950"],[class*="bg-neutral-900"]{background-color:#111010!important;}
         [class*="bg-neutral-800"]{background-color:#1c1a1a!important;}
         [class*="bg-neutral-700"],[class*="bg-neutral-600"]{background-color:#232020!important;}
