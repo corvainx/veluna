@@ -4949,42 +4949,43 @@ export default function Veluna() {
         const pct = trackDurationSeconds > 0 ? Math.min((progressSeconds / trackDurationSeconds) * 100, 100) : 0;
         return (
           <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",userSelect:"none",background:"#0c0b0b"}}>
-            {/* Always render gradient base so there's never a black void */}
+            {/* Base */}
             <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(135deg,#0c0b0b 0%,#111010 100%)"}}/>
-            {/* Full-screen blurred cover — overflow visible so blur doesn't get clipped */}
+            {/* Full-screen blurred cover art — the hero background */}
             {currentTrack.cover && (
               <div style={{
                 position: 'absolute',
                 pointerEvents: 'none',
-                inset: '-60px',
+                inset: '-80px',
                 backgroundImage: `url(${currentTrack.cover})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'blur(80px) brightness(0.6) saturate(2.0)',
+                filter: 'blur(90px) saturate(1.6) brightness(0.75)',
+                opacity: 0.85,
               }} />
             )}
-            {/* Scrim */}
-            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(0,0,0,0.38)"}}/>
+            {/* Subtle top sheen for depth, no heavy darkening */}
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(180deg, rgba(12,11,11,0.25) 0%, rgba(12,11,11,0.05) 30%, rgba(12,11,11,0.35) 100%)"}}/>
 
             {/* Left panel */}
             <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"18px"}}>
               <button onClick={()=>setShowLyrics(false)}
-                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.7)",background:"rgba(0,0,0,0.45)",backdropFilter:"blur(8px)",transition:"color .12s,background .12s"}}
-                onMouseEnter={e=>{e.currentTarget.style.color="#fff";e.currentTarget.style.background="rgba(0,0,0,0.65)";}}
-                onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.7)";e.currentTarget.style.background="rgba(0,0,0,0.45)";}}>
+                style={{position:"absolute",top:"24px",left:"24px",width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(12px)",transition:"color .15s,background .15s,border-color .15s"}}
+                onMouseEnter={e=>{e.currentTarget.style.color="#fff";e.currentTarget.style.background="rgba(255,255,255,0.12)";e.currentTarget.style.borderColor="rgba(255,255,255,0.18)";}}
+                onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.6)";e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.borderColor="rgba(255,255,255,0.1)";}}>
                 <X size={16} />
               </button>
 
               {/* Album art */}
-              <div style={{width:"168px",height:"168px",borderRadius:"16px",overflow:"hidden",flexShrink:0,boxShadow:"0 20px 60px rgba(0,0,0,0.85)",border:"1px solid rgba(255,255,255,0.12)"}}>
+              <div style={{width:"208px",height:"208px",borderRadius:"20px",overflow:"hidden",flexShrink:0,boxShadow:"0 28px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",position:"relative"}}>
                 {currentTrack.cover
                   ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : <div style={{width:"100%",height:"100%",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
               </div>
 
               <div style={{textAlign:"center",width:"100%"}}>
-                <p style={{fontSize:"16px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px"}}>{currentTrack.title}</p>
-                <p style={{fontSize:"12px",marginTop:"3px",color:"rgba(255,255,255,0.45)"}}>{currentTrack.artist}</p>
+                <p style={{fontSize:"19px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px",margin:0,letterSpacing:"-0.01em"}}>{currentTrack.title}</p>
+                <p style={{fontSize:"13.5px",marginTop:"5px",color:"rgba(255,255,255,0.5)",margin:"5px 0 0"}}>{currentTrack.artist}</p>
               </div>
 
               {/* Progress bar — identical to default player bar */}
@@ -5031,20 +5032,20 @@ export default function Veluna() {
             </div>
 
             {/* Divider */}
-            <div style={{position:"relative",zIndex:10,width:"1px",flexShrink:0,margin:"32px 0",background:"rgba(255,255,255,0.07)"}}/>
+            <div style={{position:"relative",zIndex:10,width:"1px",flexShrink:0,margin:"56px 0",background:"linear-gradient(to bottom,transparent,rgba(255,255,255,0.08),transparent)"}}/>
 
             {/* Lyrics panel */}
             <div style={{position:"relative",zIndex:10,flex:1,overflow:"hidden"}}>
               {lyricsLoading ? (
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"14px",height:"100%"}}>
-                  <Loader2 size={24} style={{color:"rgba(255,255,255,0.4)",animation:"spin 1s linear infinite"}}/>
-                  <p style={{fontSize:"13px",color:"rgba(255,255,255,0.4)"}}>Fetching lyrics…</p>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"16px",height:"100%"}}>
+                  <Loader2 size={26} style={{color:"rgba(255,255,255,0.35)",animation:"spin 1s linear infinite"}}/>
+                  <p style={{fontSize:"13.5px",color:"rgba(255,255,255,0.4)",fontWeight:500}}>Fetching lyrics…</p>
                 </div>
               ) : lines.length > 0 ? (
                 <div style={{position:"relative",height:"100%"}}>
-                  <div style={{position:"absolute",top:0,left:0,right:0,height:"120px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to bottom,#0c0b0b 0%,rgba(12,11,11,0.85) 35%,transparent 100%)"}}/>
-                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:"120px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to top,#0c0b0b 0%,rgba(12,11,11,0.85) 35%,transparent 100%)"}}/>
-                  <div style={{height:"100%",overflowY:"auto",padding:"120px 36px",scrollbarWidth:"none"}}
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to bottom,#0c0b0b 0%,rgba(12,11,11,0) 100%)",opacity:0.35}}/>
+                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to top,#0c0b0b 0%,rgba(12,11,11,0) 100%)",opacity:0.35}}/>
+                  <div style={{height:"100%",overflowY:"auto",padding:"140px 48px",scrollbarWidth:"none"}}
                     ref={el => {
                       if (!el) return;
                       const active = el.querySelector('[data-active="true"]') as HTMLElement;
@@ -5057,12 +5058,17 @@ export default function Veluna() {
                         <p key={idx}
                           data-active={isCurrent?'true':'false'}
                           onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
+                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.8)';}}
+                          onMouseLeave={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color=isPast?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.45)';}}
                           style={{
-                            cursor:"pointer",lineHeight:1.35,padding:"9px 0",userSelect:"none",margin:0,
-                            fontSize: '1.45rem',
-                            fontWeight: isCurrent ? 700 : 500,
-                            color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.48)',
-                            transition: 'color 0.3s ease',
+                            cursor:"pointer",lineHeight:1.45,padding:"12px 0",userSelect:"none",margin:0,
+                            fontSize: '2rem',
+                            letterSpacing: '0.005em',
+                            fontWeight: isCurrent ? 800 : 600,
+                            color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.45)',
+                            transform: isCurrent ? 'scale(1.04)' : 'scale(1)',
+                            transformOrigin: 'left center',
+                            transition: 'color 0.35s ease, transform 0.35s ease',
                           }}>
                           {line.text || '\u00A0'}
                         </p>
@@ -5071,10 +5077,14 @@ export default function Veluna() {
                   </div>
                 </div>
               ) : (
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"10px",height:"100%",color:"rgba(255,255,255,0.25)"}}>
-                  <Mic2 size={32} strokeWidth={1}/>
-                  <p style={{fontSize:"14px",fontWeight:500,color:"rgba(255,255,255,0.4)",margin:0}}>No lyrics found</p>
-                  <p style={{fontSize:"12px",color:"rgba(255,255,255,0.18)",margin:0}}>Try Genius or AZLyrics</p>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"14px",height:"100%",color:"rgba(255,255,255,0.25)"}}>
+                  <div style={{width:"56px",height:"56px",borderRadius:"50%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <Mic2 size={24} strokeWidth={1.5} style={{color:"rgba(255,255,255,0.3)"}}/>
+                  </div>
+                  <div style={{textAlign:"center"}}>
+                    <p style={{fontSize:"15px",fontWeight:600,color:"rgba(255,255,255,0.5)",margin:0}}>No lyrics found</p>
+                    <p style={{fontSize:"12.5px",color:"rgba(255,255,255,0.2)",margin:"4px 0 0"}}>Try Genius or AZLyrics</p>
+                  </div>
                 </div>
               )}
             </div>
