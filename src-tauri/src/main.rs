@@ -337,7 +337,10 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
                 "--no-warnings",
                 "--ignore-errors",
                 "--socket-timeout", "10",
-                "--print", "%(title)s====%(uploader)s====%(duration_string)s====%(id)s",
+                // id first (always reliable for flat-playlist), then title,
+                // uploader/channel (with fallback chain), duration, and a direct
+                // thumbnail URL when yt-dlp provides one.
+                "--print", "%(id)s====%(title)s====%(uploader,channel,uploader_id|Unknown)s====%(duration_string,duration|)s====%(thumbnails.-1.url,thumbnail|)s",
                 "--",
                 url.as_str(),
             ])

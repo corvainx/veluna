@@ -719,7 +719,7 @@ function YtImportModal({
 }) {
   const [phase, setPhase] = useState<'input' | 'loading' | 'saving' | 'done'>('input');
   const [url, setUrl] = useState('');
-  const [results, setResults] = useState<{ title: string; artist: string; id: string; cover: string }[]>([]);
+  const [results, setResults] = useState<{ title: string; artist: string; id: string; duration: string; cover: string }[]>([]);
   const [statusMsg, setStatusMsg] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -738,12 +738,20 @@ function YtImportModal({
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
-        const [title, artist, id] = l.split('====');
+        // Backend prints: id====title====uploader====duration====thumbnail
+        const [id, title, artist, duration, thumb] = l.split('====');
+        const idTrim = id?.trim() || '';
+        const thumbTrim = thumb?.trim() || '';
+        const cover = (thumbTrim && thumbTrim.startsWith('http'))
+          ? thumbTrim
+          : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
+        const artistTrim = artist?.trim() || '';
         return {
           title: title?.trim() || 'Unknown',
-          artist: artist?.trim() || '',
-          id: id?.trim() || '',
-          cover: id?.trim() ? `https://i.ytimg.com/vi/${id.trim()}/mqdefault.jpg` : '',
+          artist: (artistTrim && artistTrim.toLowerCase() !== 'na') ? artistTrim : 'Unknown',
+          id: idTrim,
+          duration: duration?.trim() || '0:00',
+          cover,
         };
       }).filter(t => t.id);
 
@@ -805,14 +813,16 @@ function YtImportModal({
         {phase === 'saving' && (
           <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}} className="custom-scrollbar">
             <p style={{fontSize:"11px",color:"#5c5755",marginBottom:"10px"}}>{results.length} videos found. Enter a name and save.</p>
-            <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+            <div style={{display:"flex",flexDirection:"column",gap:"8px",maxHeight:"260px",overflowY:"auto"}} className="custom-scrollbar">
               {results.slice(0, 50).map((r, i) => (
                 <div key={i} style={{display:"flex",alignItems:"center",gap:"10px"}}>
-                  <img src={r.cover} style={{width:"48px",height:"27px",borderRadius:"5px",objectFit:"cover",flexShrink:0,background:"#1c1a1a"}} alt="" />
+                  <img src={r.cover} style={{width:"48px",height:"27px",borderRadius:"5px",objectFit:"cover",flexShrink:0,background:"#1c1a1a"}} alt=""
+                    onError={e=>{(e.currentTarget as HTMLImageElement).style.opacity='0';}} />
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
                     <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.artist}</div>
                   </div>
+                  <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{r.duration}</span>
                 </div>
               ))}
               {results.length > 50 && <p style={{fontSize:"11px",color:"#363230",paddingTop:"4px"}}>+ {results.length - 50} more...</p>}
@@ -827,7 +837,7 @@ function YtImportModal({
         failedCount={0}
         onSave={(name, desc) => {
           const tracks: Track[] = results.map((r, i) => ({
-            id: i, title: r.title, artist: r.artist, duration: '0:00',
+            id: i, title: r.title, artist: r.artist, duration: r.duration || '0:00',
             url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
           }));
           onSavePlaylist(name, desc, tracks);
