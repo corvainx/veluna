@@ -3148,6 +3148,10 @@ export default function Veluna() {
         .v-stat-card__sub{font-size:11px;color:#363230;margin-top:4px;}
 
         .v-badge{background:rgba(226,221,217,0.1);color:#9e9894;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;font-variant-numeric:tabular-nums;}
+        .v-queue-item{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;border-radius:0;transition:background .12s;}
+        .v-queue-item:hover{background:rgba(255,255,255,0.03);}
+        .v-queue-item:hover button{opacity:1!important;}
+        .v-queue-item--active{background:rgba(226,221,217,0.04);}
 
         ::-webkit-scrollbar{width:3px;height:3px;}
         ::-webkit-scrollbar-track{background:transparent;}
@@ -4129,19 +4133,19 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flexShrink:0,background:'#111010',borderLeft:'1px solid #1c1a1a',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'260px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
+        <div style={{flexShrink:0,background:'#111010',borderLeft:'1px solid #1c1a1a',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'280px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
           {isQueueOpen && (
             <>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
                 <div style={{display:'flex',alignItems:'center',gap:'9px'}}>
-                  <ListOrdered size={16} style={{color:'#9e9894'}} />
-                  <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px'}}>Queue</span>
+                  <ListOrdered size={15} style={{color:'#9e9894'}} />
+                  <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px',letterSpacing:'.01em'}}>Queue</span>
                   {queue.length > 0 && <span className="v-badge">{queue.length}</span>}
                 </div>
-                {queue.length > 0 && <button onClick={() => { setQueue([]); showToast('Queue cleared'); }} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'#363230',transition:'color .12s'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#363230')}>Clear</button>}
+                {queue.length > 0 && <button onClick={() => { setQueue([]); showToast('Queue cleared'); }} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}>Clear</button>}
               </div>
               {currentTrack && (
-                <div style={{padding:'10px 14px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
+                <div style={{padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
                   <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',marginBottom:'8px'}}>Now Playing</div>
                   <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px',borderRadius:'8px',background:'rgba(226,221,217,0.04)',border:'1px solid rgba(226,221,217,0.08)'}}>
                     <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'#1c1a1a',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -4163,7 +4167,7 @@ export default function Veluna() {
                 {queue.length === 0
                   ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"8px"}}><ListOrdered size={26} strokeWidth={1} /><p style={{fontSize:"13px"}}>Queue is empty</p></div>
                   : <>
-                      <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',padding:'12px 14px 6px'}}>Up Next</div>
+                      <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',padding:'14px 16px 8px'}}>Up Next</div>
                       {queue.map((track, i) => (
                         <div key={`${track.url}-${i}`}
                           className={`v-queue-item${currentTrack?.url===track.url?' v-queue-item--active':''}`} style={{position:'relative'}}
@@ -4209,7 +4213,7 @@ export default function Veluna() {
                             <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
                             <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{track.artist}</div>
                           </div>
-                          <button onClick={e=>{e.stopPropagation();removeFromQueue(track.url());}} style={{opacity:0,padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#363230",flexShrink:0,borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                          <button onClick={e=>{e.stopPropagation();removeFromQueue(track.url);}} style={{opacity:0,padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#363230",flexShrink:0,borderRadius:"4px",display:"flex",transition:"color .12s"}}
                             onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.color="#b05555";}} onMouseLeave={e=>{e.currentTarget.style.opacity="0";e.currentTarget.style.color="#363230";}}><X size={12}/></button>
                         </div>
                       ))}
@@ -4964,8 +4968,8 @@ export default function Veluna() {
                 opacity: 0.85,
               }} />
             )}
-            {/* Subtle top sheen for depth, no heavy darkening */}
-            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(180deg, rgba(12,11,11,0.25) 0%, rgba(12,11,11,0.05) 30%, rgba(12,11,11,0.35) 100%)"}}/>
+            {/* Gentle overall darkening for text legibility — smooth, no banding */}
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(8,7,7,0.3)"}}/>
 
             {/* Left panel */}
             <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"18px"}}>
@@ -5043,8 +5047,6 @@ export default function Veluna() {
                 </div>
               ) : lines.length > 0 ? (
                 <div style={{position:"relative",height:"100%"}}>
-                  <div style={{position:"absolute",top:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to bottom,#0c0b0b 0%,rgba(12,11,11,0) 100%)",opacity:0.35}}/>
-                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:"100px",zIndex:10,pointerEvents:"none",background:"linear-gradient(to top,#0c0b0b 0%,rgba(12,11,11,0) 100%)",opacity:0.35}}/>
                   <div style={{height:"100%",overflowY:"auto",padding:"140px 48px",scrollbarWidth:"none"}}
                     ref={el => {
                       if (!el) return;
