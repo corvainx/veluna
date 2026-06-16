@@ -733,7 +733,7 @@ function YtImportModal({
       return;
     }
     setPhase('loading');
-    setStatusMsg('Fetching playlist from YouTube...');
+    setStatusMsg('Fetching metadata for each track — this may take ~30s…');
     try {
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       const lines = raw.trim().split('\n').filter(Boolean);
@@ -788,24 +788,33 @@ function YtImportModal({
         </div>
 
         {}
-        {(phase === 'input' || phase === 'loading') && (
+        {phase === 'input' && (
           <div style={{flex:1,display:"flex",flexDirection:"column",padding:"18px 20px",gap:"14px"}}>
-            <p style={{fontSize:"13px",color:"#9e9894"}}>Paste a public YouTube playlist URL below. All videos will be imported instantly, no matching needed.</p>
+            <p style={{fontSize:"13px",color:"#9e9894"}}>Paste a public YouTube playlist URL below. Veluna fetches real artist names, durations and thumbnails for each track — may take ~30s for large playlists.</p>
             <div style={{display:"flex",gap:"8px"}}>
               <div style={{flex:1,display:"flex",alignItems:"center",gap:"8px",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"9px",padding:"0 12px",height:"38px"}}>
                 <svg width="14" height="11" viewBox="0 0 18 14" fill="#5c5755" style={{flexShrink:0}}><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
                 <input ref={inputRef} value={url} onChange={e => setUrl(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && phase === 'input' && isYtUrl) handleImport(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' && isYtUrl) handleImport(); }}
                   placeholder="https://youtube.com/playlist?list=..."
-                  disabled={phase === 'loading'}
                   style={{flex:1,background:"transparent",fontSize:"13px",color:"#e2ddd9",outline:"none",border:"none"}} />
               </div>
-              <button onClick={handleImport} disabled={phase === 'loading' || !isYtUrl}
-                style={{padding:"0 16px",height:"38px",borderRadius:"9px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,fontSize:"13px",cursor:"pointer",display:"flex",alignItems:"center",gap:"7px",flexShrink:0,opacity:phase==="loading"||!isYtUrl?0.4:1,transition:"opacity .12s"}}>
-                {phase === 'loading' ? <Loader2 size={15} style={{animation:"spin 0.8s linear infinite"}}/> : <><svg width="13" height="10" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>Import</>}
+              <button onClick={handleImport} disabled={!isYtUrl}
+                style={{padding:"0 16px",height:"38px",borderRadius:"9px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,fontSize:"13px",cursor:"pointer",display:"flex",alignItems:"center",gap:"7px",flexShrink:0,opacity:!isYtUrl?0.4:1,transition:"opacity .12s"}}>
+                <svg width="13" height="10" viewBox="0 0 18 14" fill="#0c0b0b"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
+                Import
               </button>
             </div>
-            {statusMsg && <p style={{fontSize:"11px",color:"#5c5755",fontFamily:"monospace"}}>{statusMsg}</p>}
+          </div>
+        )}
+        {phase === 'loading' && (
+          <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"18px",padding:"24px 20px"}}>
+            <div style={{width:"40px",height:"40px",border:"3px solid #252222",borderTopColor:"rgba(220,38,38,0.7)",borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
+            <div style={{textAlign:"center",display:"flex",flexDirection:"column",gap:"6px"}}>
+              <p style={{fontSize:"14px",fontWeight:600,color:"#e2ddd9",margin:0}}>Fetching playlist…</p>
+              <p style={{fontSize:"12px",color:"#5c5755",margin:0}}>Getting real artist names, durations &amp; thumbnails</p>
+              <p style={{fontSize:"11px",color:"#363230",margin:"4px 0 0"}}>This may take ~30s for large playlists</p>
+            </div>
           </div>
         )}
 
