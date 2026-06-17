@@ -2101,12 +2101,33 @@ export default function Veluna() {
   const lastPrefetchUrl = useRef<string | null>(null);
   useEffect(() => {
     const nextUrl = queue[0]?.url;
-    
     if (nextUrl && !nextUrl.startsWith('local://') && nextUrl !== lastPrefetchUrl.current) {
       lastPrefetchUrl.current = nextUrl;
       invoke('prefetch_track', { url: nextUrl }).catch(() => {});
     }
   }, [queue]);
+
+  // Also prefetch the next track in the current playlist context when the
+  // current track changes — so the NEXT song is always warm in the cache.
+  useEffect(() => {
+    if (!currentTrack || !playlistContextRef.current) return;
+    const tracks = playlistContextRef.current;
+    const idx = tracks.findIndex(t => t.url === currentTrack.url);
+    if (idx === -1 || idx >= tracks.length - 1) return;
+    const nextUrl = tracks[idx + 1]?.url;
+    if (nextUrl && !nextUrl.startsWith('local://') && nextUrl !== lastPrefetchUrl.current) {
+      lastPrefetchUrl.current = nextUrl;
+      invoke('prefetch_track', { url: nextUrl }).catch(() => {});
+    }
+  }, [currentTrack]);
+
+  // Hover prefetch — call this on track row mouseEnter
+  const hoverPrefetchRef = useRef<string | null>(null);
+  const prefetchOnHover = useCallback((url: string) => {
+    if (!url || url.startsWith('local://') || url === hoverPrefetchRef.current) return;
+    hoverPrefetchRef.current = url;
+    invoke('prefetch_track', { url }).catch(() => {});
+  }, []);
 
   
   useEffect(() => {
@@ -3506,7 +3527,7 @@ export default function Veluna() {
                             const isActive = currentTrack?.url === track.url;
                             return (
                               <div key={track.url}
-                                onClick={() => handlePlayInContext(track, quickPicks.slice(0, 8))}
+                                onClick={() => handlePlayInContext(track, quickPicks.slice(0, 8))} onMouseEnter={() => prefetchOnHover(track.url)}
                                 onContextMenu={e => openCtx(e, { type: 'quickpick', track })}
                                 style={{
                                   display:'flex',alignItems:'center',gap:'10px',
@@ -3553,7 +3574,7 @@ export default function Veluna() {
                                 const isActive = currentTrack?.url === track.url;
                                 return (
                                   <div key={track.url}
-                                    onClick={() => handlePlayInContext(track, genreTracks)}
+                                    onClick={() => handlePlayInContext(track, genreTracks)} onMouseEnter={() => prefetchOnHover(track.url)}
                                     onContextMenu={e => openCtx(e, { type: 'track', track })}
                                     className={`v-card${isActive?' v-card--active':''}`}
                                     style={{ animationDelay:`${tIdx*25+gIdx*60}ms` }}>
@@ -3589,7 +3610,7 @@ export default function Veluna() {
                               const maxCount = playCounts[topTracks[0].url] || 1;
                               return (
                                 <div key={track.url}
-                                  onClick={() => handlePlayInContext(track, topTracks)}
+                                  onClick={() => handlePlayInContext(track, topTracks)} onMouseEnter={() => prefetchOnHover(track.url)}
                                   onContextMenu={e => openCtx(e, { type: 'track', track })}
                                   className={`v-track${isActive?' v-track--active':''}`}
                                   style={{animationDelay:`${i*40}ms`}}>
@@ -3675,7 +3696,7 @@ export default function Veluna() {
                         isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
                         isLiked={isTrackLiked(track.url)} isDownloading={(downloadingTracks[track.url] ?? 0)}
                         onPlay={() => handlePlayInContext(track, tracks)}
-                        onHoverEnter={() => setHoveredTrackUrl(track.url)}
+                        onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
                         onHoverLeave={() => setHoveredTrackUrl(null)}
                         onLike={() => toggleLikeTrack(track)}
                         onDownload={() => handleDownload(track)}
@@ -3819,7 +3840,7 @@ export default function Veluna() {
                                         isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
                                         isLiked={isTrackLiked(t.url)} isDownloading={(downloadingTracks[t.url] ?? 0)}
                                         onPlay={() => handlePlayInContext(t, openPlaylist.tracks)}
-                                        onHoverEnter={() => setHoveredTrackUrl(t.url)} onHoverLeave={() => setHoveredTrackUrl(null)}
+                                        onHoverEnter={() => { setHoveredTrackUrl(t.url); prefetchOnHover(t.url); }} onHoverLeave={() => setHoveredTrackUrl(null)}
                                         onLike={() => toggleLikeTrack(t)} onDownload={() => handleDownload(t)}
                                         onCtx={e => openCtx(e, { type: 'track', track: t })} />
                                     </div>

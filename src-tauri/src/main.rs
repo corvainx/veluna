@@ -453,8 +453,8 @@ async fn prefetch_track(url: String) -> Result<(), String> {
         if let Ok(Some(stream_url)) = result {
             let mut c = cache.lock().unwrap();
             let now = std::time::Instant::now();
-            c.retain(|_, v| now.duration_since(v.ts) < std::time::Duration::from_secs(3600));
-            if c.len() >= 50 { c.clear(); }
+            c.retain(|_, v| now.duration_since(v.ts) < std::time::Duration::from_secs(4 * 3600));
+            if c.len() >= 200 { c.retain(|_, v| std::time::Instant::now().duration_since(v.ts) < std::time::Duration::from_secs(3600)); }
             c.insert(url, CacheEntry { url: stream_url, ts: now });
         }
     });
@@ -523,13 +523,15 @@ fn ensure_mpv_running() -> bool {
         "--idle=yes".into(),
         "--keep-open=yes".into(),
         "--cache=yes".into(),
-        "--cache-secs=10".into(),
-        "--demuxer-max-bytes=10MiB".into(),
-        "--demuxer-max-back-bytes=2MiB".into(),
-        "--demuxer-readahead-secs=2".into(),
+        "--cache-secs=30".into(),
+        "--demuxer-max-bytes=50MiB".into(),
+        "--demuxer-max-back-bytes=5MiB".into(),
+        "--demuxer-readahead-secs=5".into(),
         "--cache-pause=no".into(),
-        "--network-timeout=15".into(),
-        "--audio-buffer=0.2".into(),
+        "--network-timeout=10".into(),
+        "--audio-buffer=0.1".into(),
+        "--demuxer-seekable-cache=yes".into(),
+        "--cache-on-disk=no".into(),
         "--audio-pitch-correction=yes".into(),
         "--force-window=no".into(),
         format!("--input-ipc-server={}", SOCKET_PATH),
@@ -556,8 +558,6 @@ fn switch_track_ipc(url: &str) -> Result<(), String> {
     // Clear playlist
     send_ipc_command_with_retry(r#"{"command": ["playlist-clear"]}"#, 3)
         .map_err(|e| format!("playlist-clear failed: {}", e))?;
-    // Small buffer to let mpv settle
-    std::thread::sleep(std::time::Duration::from_millis(50));
     // loadfile replace: atomically replaces current entry and starts playing
     let cmd = serde_json::json!({"command": ["loadfile", url, "replace"]}).to_string();
     send_ipc_command_with_retry(&cmd, 3)
@@ -579,9 +579,10 @@ fn extract_stream_url(youtube_url: &str) -> Option<String> {
         let mut cmd = Command::new(bin_ytdlp());
         cmd.args([
             "--no-warnings", "--no-playlist", "--no-check-certificates",
-            "--socket-timeout", "8", "--retries", "0",
+            "--socket-timeout", "5", "--retries", "0",
+            "--no-call-home",
             "-g",
-            "--extractor-args", &format!("youtube:player_client={}", client),
+            "--extractor-args", &format!("youtube:player_client={},skip=webpage", client),
         ]);
         if let Some(b) = browser { cmd.args(["--cookies-from-browser", b]); }
         cmd.args(["--", youtube_url]);
@@ -595,17 +596,18 @@ fn extract_stream_url(youtube_url: &str) -> Option<String> {
             .map(|s| s.trim().to_string())
     };
 
-    // Ordered by reliability: web first (most compatible), then ios, then with cookies.
-    // Each attempt is (browser_cookies, player_client).
+    // Ordered by SPEED first: ios skips YouTube JS player parsing (~0.3s faster),
+    // mweb is even lighter, web is most compatible. All run in parallel anyway,
+    // so the first to succeed cancels the rest.
     let attempts: &[(Option<&str>, &str)] = &[
-        (None,              "web"),      // standard, usually works
-        (None,              "ios"),      // fast CDN URLs, sometimes bot-flagged
-        (None,              "android"),  // another fallback
-        (Some("chrome"),    "web"),
-        (Some("firefox"),   "web"),
-        (Some("brave"),     "ios"),
-        (Some("chromium"),  "ios"),
-        (Some("edge"),      "web"),
+        (None,              "ios"),         // fastest: no JS parsing, direct CDN
+        (None,              "mweb"),        // mobile web: also fast
+        (None,              "web"),         // most compatible fallback
+        (None,              "android"),     // another fast client
+        (Some("chrome"),    "ios"),         // with cookies: bot-proof
+        (Some("firefox"),   "ios"),
+        (Some("brave"),     "web"),
+        (Some("chromium"),  "web"),
     ];
 
     std::thread::scope(|s| {
@@ -649,7 +651,9 @@ async fn play_audio(url: String) -> Result<(), String> {
             let mut cache = PREFETCH_CACHE.lock().unwrap();
             cache.remove(&safe_url).and_then(|entry| {
                 let age = std::time::Instant::now().duration_since(entry.ts);
-                if age < std::time::Duration::from_secs(3600)
+                // Google CDN URLs expire in ~6 hours, but treat them as
+                // valid for 4h to avoid serving stale URLs near expiry.
+                if age < std::time::Duration::from_secs(4 * 3600)
                     && entry.url.starts_with("http")
                     && !entry.url.contains(".m3u8")
                     && !entry.url.contains("manifest.googlevideo.com")
@@ -685,7 +689,6 @@ async fn play_audio(url: String) -> Result<(), String> {
         // Switch track via IPC — no process restart.
         switch_track_ipc(&stream_url).map_err(|e| format!("IPC switch failed: {}", e))?;
         // Explicitly unpause — switch_track_ipc pauses first, ensure we resume
-        std::thread::sleep(std::time::Duration::from_millis(100));
         let _ = send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", false]}"#, 3);
         Ok(())
     })
