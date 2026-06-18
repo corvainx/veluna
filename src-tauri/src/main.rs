@@ -331,21 +331,16 @@ async fn open_url_in_browser(url: String) -> Result<(), String> {
 #[tauri::command]
 async fn import_youtube_playlist(url: String) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
-        // Two-phase: fast flat-playlist to get IDs + titles, then a second
-        // yt-dlp call with --skip-download on those IDs to get real channel/uploader.
-        // Simpler and more reliable: just drop --flat-playlist and use --skip-download
-        // directly on the playlist URL. yt-dlp fetches metadata for each video
-        // (no audio download) so channel/uploader/duration/thumbnail are all real.
+        // Use --flat-playlist for instant import (reads playlist index only, no per-video fetch).
+        // Fields: id, title, duration_string, thumbnail — channel/uploader are not available
+        // in flat-playlist mode; the frontend handles the empty artist gracefully.
         let mut child = Command::new(bin_ytdlp())
             .args([
-                "--yes-playlist",       // process as playlist
-                "--skip-download",      // fetch metadata only, no audio
+                "--flat-playlist",
                 "--no-warnings",
                 "--ignore-errors",
-                "--socket-timeout",  "15",
-                "--concurrent-fragments", "1",
-                "--extractor-args", "youtube:player_skip=webpage,configs",
-                "--print", "%(id)s====%(title)s====%(uploader,channel,artist,creator|Unknown)s====%(duration_string,duration|0:00)s====%(thumbnail)s",
+                "--socket-timeout", "10",
+                "--print", "%(id)s====%(title)s====%(duration_string|)s====%(thumbnails.-1.url,thumbnail|)s",
                 "--",
                 url.as_str(),
             ])
@@ -355,10 +350,7 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
             .spawn()
             .map_err(|e| format!("yt-dlp not found: {}", e))?;
 
-        // Stream output line-by-line so we don't block until the entire playlist
-        // is fetched — allows the frontend to show progress while yt-dlp runs.
-        // (We still collect all output here; streaming would need a tauri::emit.)
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(300);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
         loop {
             match child.try_wait() {
                 Ok(Some(_)) => break,
@@ -368,7 +360,7 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
                         let _ = child.wait();
                         return Err("Playlist import timed out — check the URL and your connection".to_string());
                     }
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(50));
                 }
                 Err(e) => return Err(e.to_string()),
             }

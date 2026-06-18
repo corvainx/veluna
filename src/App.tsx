@@ -166,7 +166,7 @@ const TrackRow = React.memo(({
     </div>
     <div className="v-track__info">
       <div className="v-track__title">{track.title}</div>
-      <div className="v-track__artist">{track.artist}</div>
+      {track.artist && <div className="v-track__artist">{track.artist}</div>}
     </div>
     <div className="v-track__actions">
       <button className="v-track__btn" onClick={e => { e.stopPropagation(); onLike(); }}>
@@ -733,24 +733,23 @@ function YtImportModal({
       return;
     }
     setPhase('loading');
-    setStatusMsg('Fetching metadata for each track — this may take ~30s…');
+    // status shown inline in button
     try {
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
-        // Backend prints: id====title====uploader====duration====thumbnail
-        const [id, title, artist, duration, thumb] = l.split('====');
+        // Backend prints: id====title====duration====thumbnail (4 fields, no artist)
+        const [id, title, duration, thumb] = l.split('====');
         const idTrim = id?.trim() || '';
         const thumbTrim = thumb?.trim() || '';
         const cover = (thumbTrim && thumbTrim.startsWith('http'))
           ? thumbTrim
           : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
-        const artistTrim = artist?.trim() || '';
         return {
           title: title?.trim() || 'Unknown',
-          artist: (artistTrim && artistTrim.toLowerCase() !== 'na') ? artistTrim : 'Unknown',
+          artist: '',          // flat-playlist has no artist — leave blank, not "Unknown"
           id: idTrim,
-          duration: duration?.trim() || '0:00',
+          duration: duration?.trim() || '',
           cover,
         };
       }).filter(t => t.id);
@@ -788,33 +787,27 @@ function YtImportModal({
         </div>
 
         {}
-        {phase === 'input' && (
+        {(phase === 'input' || phase === 'loading') && (
           <div style={{flex:1,display:"flex",flexDirection:"column",padding:"18px 20px",gap:"14px"}}>
-            <p style={{fontSize:"13px",color:"#9e9894"}}>Paste a public YouTube playlist URL below. Veluna fetches real artist names, durations and thumbnails for each track — may take ~30s for large playlists.</p>
+            <p style={{fontSize:"13px",color:"#9e9894"}}>Paste a public YouTube playlist URL below. All videos will be imported instantly.</p>
             <div style={{display:"flex",gap:"8px"}}>
               <div style={{flex:1,display:"flex",alignItems:"center",gap:"8px",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"9px",padding:"0 12px",height:"38px"}}>
                 <svg width="14" height="11" viewBox="0 0 18 14" fill="#5c5755" style={{flexShrink:0}}><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
                 <input ref={inputRef} value={url} onChange={e => setUrl(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && isYtUrl) handleImport(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' && phase === 'input' && isYtUrl) handleImport(); }}
                   placeholder="https://youtube.com/playlist?list=..."
+                  disabled={phase === 'loading'}
                   style={{flex:1,background:"transparent",fontSize:"13px",color:"#e2ddd9",outline:"none",border:"none"}} />
               </div>
-              <button onClick={handleImport} disabled={!isYtUrl}
-                style={{padding:"0 16px",height:"38px",borderRadius:"9px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,fontSize:"13px",cursor:"pointer",display:"flex",alignItems:"center",gap:"7px",flexShrink:0,opacity:!isYtUrl?0.4:1,transition:"opacity .12s"}}>
-                <svg width="13" height="10" viewBox="0 0 18 14" fill="#0c0b0b"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
-                Import
+              <button onClick={handleImport} disabled={phase === 'loading' || !isYtUrl}
+                style={{padding:"0 16px",height:"38px",borderRadius:"9px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,fontSize:"13px",cursor:"pointer",display:"flex",alignItems:"center",gap:"7px",flexShrink:0,opacity:phase==="loading"||!isYtUrl?0.4:1,transition:"opacity .12s"}}>
+                {phase === 'loading'
+                  ? <div style={{width:"14px",height:"14px",border:"2px solid #5c5755",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                  : <svg width="13" height="10" viewBox="0 0 18 14" fill="#0c0b0b"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>}
+                {phase !== 'loading' && 'Import'}
               </button>
             </div>
-          </div>
-        )}
-        {phase === 'loading' && (
-          <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"18px",padding:"24px 20px"}}>
-            <div style={{width:"40px",height:"40px",border:"3px solid #252222",borderTopColor:"rgba(220,38,38,0.7)",borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
-            <div style={{textAlign:"center",display:"flex",flexDirection:"column",gap:"6px"}}>
-              <p style={{fontSize:"14px",fontWeight:600,color:"#e2ddd9",margin:0}}>Fetching playlist…</p>
-              <p style={{fontSize:"12px",color:"#5c5755",margin:0}}>Getting real artist names, durations &amp; thumbnails</p>
-              <p style={{fontSize:"11px",color:"#363230",margin:"4px 0 0"}}>This may take ~30s for large playlists</p>
-            </div>
+            {phase === 'loading' && <p style={{fontSize:"11px",color:"#5c5755",fontFamily:"monospace"}}>Fetching playlist from YouTube…</p>}
           </div>
         )}
 
@@ -846,8 +839,8 @@ function YtImportModal({
         failedCount={0}
         onSave={(name, desc) => {
           const tracks: Track[] = results.map((r, i) => ({
-            id: i, title: r.title, artist: r.artist, duration: r.duration || '0:00',
-            url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
+            id: i, title: r.title, artist: r.artist || '',
+            duration: r.duration || '', url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
           }));
           onSavePlaylist(name, desc, tracks);
           setPhase('done');
@@ -2111,8 +2104,9 @@ export default function Veluna() {
   // current track changes — so the NEXT song is always warm in the cache.
   useEffect(() => {
     if (!currentTrack || !playlistContextRef.current) return;
-    const tracks = playlistContextRef.current;
-    const idx = tracks.findIndex(t => t.url === currentTrack.url);
+    const ctx = playlistContextRef.current;
+    const tracks = ctx.tracks;
+    const idx = tracks.findIndex((t: Track) => t.url === currentTrack.url);
     if (idx === -1 || idx >= tracks.length - 1) return;
     const nextUrl = tracks[idx + 1]?.url;
     if (nextUrl && !nextUrl.startsWith('local://') && nextUrl !== lastPrefetchUrl.current) {
@@ -3552,7 +3546,7 @@ export default function Veluna() {
                                 </div>
                                 <div style={{flex:1,minWidth:0}}>
                                   <div style={{fontSize:'12.5px',fontWeight:600,color:isActive?'#e2ddd9':'#c8c4c0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',lineHeight:1.3}}>{track.title}</div>
-                                  <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>
+                                  {track.artist && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>}
                                 </div>
                               </div>
                             );
@@ -3588,7 +3582,7 @@ export default function Veluna() {
                                       {isActive&&<div className="v-card__active-bar"/>}
                                     </div>
                                     <div className="v-card__title">{track.title}</div>
-                                    <div className="v-card__artist">{track.artist}</div>
+                                    {track.artist && <div className="v-card__artist">{track.artist}</div>}
                                   </div>
                                 );
                               })}
@@ -3650,7 +3644,7 @@ export default function Veluna() {
                                   <div className="v-track__art"><img src={track.cover} alt={track.title} loading="lazy"/></div>
                                   <div className="v-track__info">
                                     <div className="v-track__title">{track.title}</div>
-                                    <div className="v-track__artist">{track.artist}</div>
+                                    {track.artist && <div className="v-track__artist">{track.artist}</div>}
                                   </div>
                                   <div style={{opacity:isActive&&isPlaying?1:0,transition:'opacity .12s'}}>
                                     {isActive&&isPlaying&&<div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px'}}>{[100,65,80].map((h,j)=><div key={j} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>}
@@ -4135,7 +4129,7 @@ export default function Veluna() {
                           <div className="v-track__art"><img src={track.cover} alt="" loading="lazy"/></div>
                           <div className="v-track__info">
                               <div className="v-track__title">{track.title}</div>
-                            <div className="v-track__artist">{track.artist}</div>
+                            {track.artist && <div className="v-track__artist">{track.artist}</div>}
                           </div>
                           <Play size={12} style={{color:'#363230',flexShrink:0}}/>
                         </div>
@@ -4251,7 +4245,7 @@ export default function Veluna() {
                           </div>
                           <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
                             <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
-                            <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{track.artist}</div>
+                            {track.artist && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{track.artist}</div>}
                           </div>
                           <button onClick={e=>{e.stopPropagation();removeFromQueue(track.url);}} style={{opacity:0,padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#363230",flexShrink:0,borderRadius:"4px",display:"flex",transition:"color .12s"}}
                             onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.color="#b05555";}} onMouseLeave={e=>{e.currentTarget.style.opacity="0";e.currentTarget.style.color="#363230";}}><X size={12}/></button>
@@ -4307,7 +4301,7 @@ export default function Veluna() {
                       </div>
                       <span style={{fontSize:"10px",color:"rgba(226,221,217,0.5)"}}>Buffering</span>
                     </div>
-                  : <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist||"Unknown artist"}</div>}
+                  : <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist||""}</div>}
                 {audioInfo&&!isLoadingTrack&&(
                   <div style={{fontSize:"9.5px",color:"#363230",fontFamily:"monospace"}}>
                     {audioInfo.codec.toUpperCase()}{audioInfo.samplerate>0?` · ${Math.round(audioInfo.samplerate/1000)}kHz`:''}
@@ -4477,7 +4471,7 @@ export default function Veluna() {
                 <div className="v-ctx__art"><img src={track.cover} alt="" /></div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:'13px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{track.title}</div>
-                  <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>
+                  {track.artist && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>}
                 </div>
               </div>
               <button onClick={() => { handlePlayTrack(track); setCtxMenu(null); }} className="v-ctx__item"><Play size={14} /> Play Now</button>
@@ -4739,7 +4733,7 @@ export default function Veluna() {
                         <img src={t.cover} style={{width:"38px",height:"38px",borderRadius:"6px",objectFit:"cover",flexShrink:0}} alt=""/>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</div>
-                          <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.artist}</div>
+                          {t.artist && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.artist}</div>}
                         </div>
                         <button onClick={() => {
                           setPlaylists(prev => prev.map(p => p.id === showDuplicatesPlaylist.id
