@@ -1479,7 +1479,7 @@ function DownloadsPanel({
 
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"22px 28px",zIndex:10}}>
+    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
       {}
       <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"14px"}}>
         <div style={{width:"40px",height:"40px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(226,221,217,0.06)",border:"1px solid rgba(226,221,217,0.1)",flexShrink:0}}>
@@ -3024,7 +3024,7 @@ export default function Veluna() {
 
   
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#0c0b0b",color:"#e2ddd9",overflow:"hidden",fontSize:"15px"}}
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"#0c0b0b",color:"#e2ddd9",overflow:"hidden",fontSize:"16px"}}
       onContextMenu={e => e.preventDefault()}>
       <style>{`
         :root{
@@ -3091,54 +3091,54 @@ export default function Veluna() {
         [class*="hover:bg-red-500\\/20"]:hover{background:rgba(140,40,40,0.14)!important;}
 
         /* ── New component classes ── */
-        .v-track{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;border:1px solid transparent;transition:background .12s,border-color .12s;cursor:pointer;}
+        .v-track{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:10px;border:1px solid transparent;transition:background .12s,border-color .12s;cursor:pointer;}
         .v-track:hover{background:rgba(226,221,217,0.04);border-color:rgba(226,221,217,0.07);}
         .v-track--active{background:rgba(226,221,217,0.06);border-color:rgba(226,221,217,0.14);}
-        .v-track__num{width:26px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums;color:#363230;flex-shrink:0;}
+        .v-track__num{width:30px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:#363230;flex-shrink:0;}
         .v-track--active .v-track__num{color:#e2ddd9;}
-        .v-track__art{width:46px;height:46px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#1c1a1a;border:1px solid rgba(255,255,255,0.06);}
+        .v-track__art{width:50px;height:50px;border-radius:9px;overflow:hidden;flex-shrink:0;background:#1c1a1a;border:1px solid rgba(255,255,255,0.06);}
         .v-track__art img{width:100%;height:100%;object-fit:cover;}
         .v-track__info{flex:1;min-width:0;}
-        .v-track__title{font-size:14px;font-weight:600;color:#e2ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;}
+        .v-track__title{font-size:14.5px;font-weight:600;color:#e2ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;}
         .v-track--active .v-track__title{color:#fff;}
-        .v-track__artist{font-size:12.5px;color:#5c5755;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-track__artist{font-size:13px;color:#5c5755;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .v-track__dur{font-size:11px;color:#363230;font-variant-numeric:tabular-nums;flex-shrink:0;}
         .v-track__actions{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity .12s;flex-shrink:0;}
         .v-track:hover .v-track__actions,.v-track--active .v-track__actions{opacity:1;}
         .v-track__btn{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:#5c5755;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s,color .1s;}
         .v-track__btn:hover{background:rgba(226,221,217,0.08);color:#e2ddd9;}
 
-        .v-card{flex-shrink:0;width:164px;cursor:pointer;animation:fadeUpSm .2s cubic-bezier(0.2,0,0,1) both;}
-        .v-card__art{width:164px;height:164px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);position:relative;background:#1c1a1a;transition:transform .18s cubic-bezier(0.2,0,0,1);}
+        .v-card{flex-shrink:0;width:180px;cursor:pointer;animation:fadeUpSm .2s cubic-bezier(0.2,0,0,1) both;}
+        .v-card__art{width:180px;height:180px;border-radius:13px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);position:relative;background:#1c1a1a;transition:transform .18s cubic-bezier(0.2,0,0,1);}
         .v-card:hover .v-card__art{transform:scale(1.03);}
         .v-card__art img{width:100%;height:100%;object-fit:cover;display:block;}
         .v-card__overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;border-radius:12px;}
         .v-card:hover .v-card__overlay,.v-card--active .v-card__overlay{opacity:1;}
         .v-card__play{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.7);border:1px solid rgba(226,221,217,0.2);display:flex;align-items:center;justify-content:center;color:#e2ddd9;}
         .v-card__active-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,rgba(226,221,217,0.8),rgba(226,221,217,0.3));border-radius:0 0 12px 12px;}
-        .v-card__title{font-size:13px;font-weight:600;color:#e2ddd9;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-card__title{font-size:13.5px;font-weight:600;color:#e2ddd9;margin-top:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .v-card__artist{font-size:11px;color:#5c5755;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-        .v-section-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-        .v-section-head h2{font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#5c5755;flex:1;margin:0;}
+        .v-section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+        .v-section-head h2{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5c5755;flex:1;margin:0;}
         .v-section-head__action{font-size:11px;color:#363230;cursor:pointer;background:none;border:none;padding:0;transition:color .12s;}
         .v-section-head__action:hover{color:#9e9894;}
 
-        .v-nav-btn{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;border:none;background:transparent;color:#5c5755;cursor:pointer;width:100%;text-align:left;font-size:13.5px;font-weight:500;transition:background .12s,color .12s;position:relative;}
+        .v-nav-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;border:none;background:transparent;color:#5c5755;cursor:pointer;width:100%;text-align:left;font-size:14px;font-weight:500;transition:background .12s,color .12s;position:relative;}
         .v-nav-btn:hover{background:rgba(226,221,217,0.05);color:#9e9894;}
         .v-nav-btn--active{background:rgba(226,221,217,0.07);color:#e2ddd9;font-weight:600;}
         .v-nav-btn--active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:2px;background:#9e9894;border-radius:0 2px 2px 0;}
 
-        .v-pl-item{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:7px;border:none;background:transparent;color:#5c5755;cursor:pointer;width:100%;text-align:left;transition:background .1s,color .1s;}
+        .v-pl-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;border:none;background:transparent;color:#5c5755;cursor:pointer;width:100%;text-align:left;transition:background .1s,color .1s;}
         .v-pl-item:hover{background:rgba(226,221,217,0.04);color:#9e9894;}
         .v-pl-item--active{background:rgba(226,221,217,0.06);color:#e2ddd9;}
-        .v-pl-item__art{width:28px;height:28px;border-radius:5px;overflow:hidden;flex-shrink:0;background:#1c1a1a;border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;}
+        .v-pl-item__art{width:30px;height:30px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#1c1a1a;border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;}
 
         .v-topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;flex-shrink:0;border-bottom:1px solid #1c1a1a;z-index:20;}
-        .v-topbar__back{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;border:1px solid #252222;background:transparent;color:#5c5755;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .12s,color .12s;}
+        .v-topbar__back{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1px solid #252222;background:transparent;color:#5c5755;font-size:13.5px;font-weight:500;cursor:pointer;transition:border-color .12s,color .12s;}
         .v-topbar__back:hover{border-color:#2e2b2b;color:#9e9894;}
         .v-topbar__back:disabled{opacity:0.3;cursor:not-allowed;}
-        .v-topbar__crumb{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5c5755;}
+        .v-topbar__crumb{font-size:11.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#5c5755;}
 
         .v-player{height:72px;background:#111010;border-top:1px solid #1c1a1a;display:flex;align-items:center;padding:0 18px;position:relative;z-index:20;flex-shrink:0;gap:0;}
         .v-player__track{display:flex;align-items:center;gap:11px;width:230px;flex-shrink:0;}
@@ -3163,22 +3163,22 @@ export default function Veluna() {
         .v-ctx__header{padding:10px 14px;border-bottom:1px solid #1c1a1a;display:flex;align-items:center;gap:10px;}
         .v-ctx__art{width:38px;height:38px;border-radius:7px;overflow:hidden;flex-shrink:0;background:#1c1a1a;}
         .v-ctx__art img{width:100%;height:100%;object-fit:cover;}
-        .v-ctx__item{width:100%;display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13.5px;font-weight:500;color:#9e9894;background:none;border:none;cursor:pointer;text-align:left;transition:background .08s,color .08s;}
+        .v-ctx__item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 16px;font-size:14px;font-weight:500;color:#9e9894;background:none;border:none;cursor:pointer;text-align:left;transition:background .08s,color .08s;}
         .v-ctx__item:hover{background:rgba(226,221,217,0.05);color:#e2ddd9;}
         .v-ctx__item--danger:hover{background:rgba(160,40,40,0.1);color:#b05555;}
         .v-ctx__sep{height:1px;background:#1c1a1a;margin:3px 0;}
 
-        .v-pl-card{border-radius:10px;padding:12px;cursor:pointer;transition:background .12s;position:relative;}
+        .v-pl-card{border-radius:12px;padding:14px;cursor:pointer;transition:background .12s;position:relative;}
         .v-pl-card:hover{background:rgba(226,221,217,0.04);}
         .v-pl-card__art{width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#1c1a1a;border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;margin-bottom:8px;position:relative;}
         .v-pl-card__play-btn{position:absolute;bottom:6px;right:6px;width:32px;height:32px;border-radius:50%;background:#e2ddd9;color:#0c0b0b;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;box-shadow:0 4px 12px rgba(0,0,0,0.6);}
         .v-pl-card:hover .v-pl-card__play-btn{opacity:1;transform:translateY(0);}
-        .v-pl-card__name{font-size:13.5px;font-weight:600;color:#e2ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-pl-card__name{font-size:14px;font-weight:600;color:#e2ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .v-pl-card__count{font-size:11px;color:#363230;margin-top:2px;}
 
         .v-stat-card{background:#161414;border:1px solid #1c1a1a;border-radius:12px;padding:18px 20px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.025);}
         .v-stat-card__label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#363230;margin-bottom:8px;}
-        .v-stat-card__value{font-size:30px;font-weight:800;color:#e2ddd9;line-height:1;font-variant-numeric:tabular-nums;}
+        .v-stat-card__value{font-size:34px;font-weight:800;color:#e2ddd9;line-height:1;font-variant-numeric:tabular-nums;}
         .v-stat-card__sub{font-size:11px;color:#363230;margin-top:4px;}
 
         .v-badge{background:rgba(226,221,217,0.1);color:#9e9894;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;font-variant-numeric:tabular-nums;}
@@ -3238,7 +3238,7 @@ export default function Veluna() {
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
 
         {}
-        <div style={{width:"230px",flexShrink:0,display:"flex",flexDirection:"column",background:"#111010",borderRight:"1px solid #1c1a1a",padding:"16px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
+        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"#111010",borderRight:"1px solid #1c1a1a",padding:"18px 16px",zIndex:10,overflow:"visible",position:"relative"}}>
           {}
           <div style={{display:"flex",alignItems:"center",marginBottom:"22px",flexShrink:0,padding:"0 2px"}}>
             <div style={{display:"flex",alignItems:"center",gap:"9px",cursor:"pointer",flex:1}} onClick={() => navigateTo('home')}>
@@ -3342,7 +3342,7 @@ export default function Veluna() {
         <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"#0c0b0b",position:"relative",minHeight:0,overflow:"hidden"}}>
 
 
-          <div className="v-topbar" style={{background:"#0c0b0b",padding:"12px 20px"}}>
+          <div className="v-topbar" style={{background:"#0c0b0b",padding:"14px 22px"}}>
             <button
               className="v-topbar__back"
               onClick={() => {
@@ -3421,7 +3421,7 @@ export default function Veluna() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"22px 28px 28px",zIndex:10}} onClick={()=>setShowHistory(false)}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 30px",zIndex:10}} onClick={()=>setShowHistory(false)}>
                 {}
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:"280px",gap:"20px"}}>
@@ -3717,7 +3717,7 @@ export default function Veluna() {
           {}
           {activeNav === 'library' && (
             openPlaylist ? (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"22px 28px",zIndex:10}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
                 <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }} style={{display:"flex",alignItems:"center",gap:"7px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",marginBottom:"20px",padding:0,transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <ChevronLeft size={18} style={{flexShrink:0}}/>
                   <span style={{fontSize:"13px",fontWeight:500}}>Playlists</span>
@@ -3848,7 +3848,7 @@ export default function Veluna() {
                 }
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"22px 28px",zIndex:10}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
                   <h2 style={{fontSize:'20px',fontWeight:800,color:'#e2ddd9',margin:0}}>Playlists</h2>
                   <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
@@ -3994,7 +3994,7 @@ export default function Veluna() {
             }
 
             return (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"22px 28px"}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px"}}>
                 {/* Header with reset button */}
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"20px"}}>
                   <h1 style={{fontSize:"18px",fontWeight:800,color:"#e2ddd9",margin:0}}>Stats</h1>
@@ -4167,7 +4167,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flexShrink:0,background:'#111010',borderLeft:'1px solid #1c1a1a',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'280px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
+        <div style={{flexShrink:0,background:'#111010',borderLeft:'1px solid #1c1a1a',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'300px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
           {isQueueOpen && (
             <>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
@@ -4259,7 +4259,7 @@ export default function Veluna() {
       </div>
 
       {}
-      <div style={{height:"78px",background:"#111010",borderTop:"1px solid #1c1a1a",display:"flex",alignItems:"center",padding:"0 18px",position:"relative",zIndex:20,flexShrink:0,gap:0}}>
+      <div style={{height:"84px",background:"#111010",borderTop:"1px solid #1c1a1a",display:"flex",alignItems:"center",padding:"0 20px",position:"relative",zIndex:20,flexShrink:0,gap:0}}>
         {/* Loading bar */}
         {isLoadingTrack && (
           <div style={{position:"absolute",top:0,left:0,width:"100%",height:"1px",overflow:"hidden",background:"#1c1a1a"}}>
@@ -4273,7 +4273,7 @@ export default function Veluna() {
           {currentTrack ? (
             <>
               {/* Art */}
-              <div style={{position:"relative",width:"46px",height:"46px",borderRadius:"8px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}
+              <div style={{position:"relative",width:"52px",height:"52px",borderRadius:"9px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}
                 onClick={()=>{ if(!currentTrack.url.startsWith('local://')) setInfoModalTrack(currentTrack); }}
                 onContextMenu={e=>{ if(!currentTrack.url.startsWith('local://')) openCtx(e,{type:'track',track:currentTrack}); }}
                 onMouseEnter={e=>{ const ov=e.currentTarget.querySelector<HTMLElement>('.art-ov'); if(ov) ov.style.opacity='1'; }}
@@ -4293,7 +4293,7 @@ export default function Veluna() {
               </div>
               {/* Info */}
               <div key={currentTrack.url} style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:"1px",animation:"fadeIn 0.25s ease both"}}>
-                <div style={{fontWeight:600,color:"#e2ddd9",fontSize:"14px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:"1.3"}}>{currentTrack.title}</div>
+                <div style={{fontWeight:600,color:"#e2ddd9",fontSize:"15px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:"1.3"}}>{currentTrack.title}</div>
                 {isLoadingTrack
                   ? <div style={{display:"flex",alignItems:"center",gap:"5px"}}>
                       <div style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"10px"}}>
@@ -4352,7 +4352,7 @@ export default function Veluna() {
               <SkipBack size={16}/>
             </button>
             <button onClick={togglePlayPause} disabled={!currentTrack||isLoadingTrack}
-              style={{width:"40px",height:"40px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#e2ddd9",color:"#0c0b0b",border:"none",cursor:(!currentTrack||isLoadingTrack)?"not-allowed":"pointer",flexShrink:0,opacity:(!currentTrack||isLoadingTrack)?0.4:1,boxShadow:"0 2px 10px rgba(0,0,0,0.5)",transition:"transform .1s,box-shadow .12s"}}
+              style={{width:"44px",height:"44px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#e2ddd9",color:"#0c0b0b",border:"none",cursor:(!currentTrack||isLoadingTrack)?"not-allowed":"pointer",flexShrink:0,opacity:(!currentTrack||isLoadingTrack)?0.4:1,boxShadow:"0 2px 10px rgba(0,0,0,0.5)",transition:"transform .1s,box-shadow .12s"}}
               onMouseEnter={e=>{if(currentTrack&&!isLoadingTrack){e.currentTarget.style.transform="scale(1.07)";e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.6)";} }}
               onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 2px 10px rgba(0,0,0,0.5)";}}>
               {isLoadingTrack
@@ -4426,7 +4426,7 @@ export default function Veluna() {
         </div>
 
         {/* ── RIGHT: lyrics + crossfade + mute + volume ── */}
-        <div style={{width:"210px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"12px",flexShrink:0}}>
+        <div style={{width:"220px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"12px",flexShrink:0}}>
           {crossfadeSeconds>0&&(
             <span style={{fontSize:"9.5px",color:"#5c5755",fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}} title={`Crossfade: ${crossfadeSeconds}s`}>
               ×{crossfadeSeconds}s
