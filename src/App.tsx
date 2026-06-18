@@ -67,6 +67,14 @@ function parseDurationToSeconds(d: string): number {
   if (p.length === 2) return p[0] * 60 + p[1];
   return p[0] || 0;
 }
+// Clean artist — returns empty string for unknown/NA/blank values so they're never displayed
+const cleanArtist = (a?: string | null): string => {
+  if (!a) return '';
+  const t = a.trim();
+  const bad = ['unknown', 'na', 'n/a', 'none', '-', '--', 'unknown artist', 'various artists', 'various', '?'];
+  return bad.includes(t.toLowerCase()) ? '' : t;
+};
+
 function formatTime(s: number): string {
   const m = Math.floor(s / 60); const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, '0')}`;
@@ -166,7 +174,7 @@ const TrackRow = React.memo(({
     </div>
     <div className="v-track__info">
       <div className="v-track__title">{track.title}</div>
-      {track.artist && <div className="v-track__artist">{track.artist}</div>}
+      {cleanArtist(track.artist) && <div className="v-track__artist">{cleanArtist(track.artist)}</div>}
     </div>
     <div className="v-track__actions">
       <button className="v-track__btn" onClick={e => { e.stopPropagation(); onLike(); }}>
@@ -479,7 +487,7 @@ function CsvImportModal({
 
     const initial = trackLines.map(l => {
       const [title, artist] = l.split('====');
-      return { title: title?.trim() || 'Unknown', artist: artist?.trim() || '', status: 'pending' as const };
+      return { title: title?.trim() || '', artist: cleanArtist(artist), status: 'pending' as const };
     });
 
     setResults(initial);
@@ -676,7 +684,7 @@ function CsvImportModal({
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
-                    <div style={{fontSize:"11px",color:"#363230",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.artist}</div>
+                    {cleanArtist(r.artist) && <div style={{fontSize:"11px",color:"#363230",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cleanArtist(r.artist)}</div>}
                   </div>
                   <div style={{flexShrink:0,display:"flex",alignItems:"center",gap:"5px",width:"80px",justifyContent:"flex-end"}}>
                     {r.status==='pending'&&<span style={{fontSize:"11px",color:"#2a2727"}}>·</span>}
@@ -822,7 +830,7 @@ function YtImportModal({
                     onError={e=>{(e.currentTarget as HTMLImageElement).style.opacity='0';}} />
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
-                    <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.artist}</div>
+                    {cleanArtist(r.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cleanArtist(r.artist)}</div>}
                   </div>
                   <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{r.duration}</span>
                 </div>
@@ -1458,7 +1466,7 @@ function DownloadsPanel({
       for (const t of raw) {
         try {
           const m: { title: string; artist: string; duration: string } = await invoke('get_audio_metadata', { path: t.path });
-          const enriched = { ...t, title: m.title || t.title, artist: m.artist || undefined, duration: m.duration !== '0:00' ? m.duration : undefined };
+          const enriched = { ...t, title: m.title || t.title, artist: cleanArtist(m.artist) || t.artist || undefined, duration: m.duration !== '0:00' ? m.duration : undefined };
           setTracks(prev => prev.map(p => p.path === t.path ? enriched : p));
         } catch { /* keep original */ }
       }
@@ -2868,7 +2876,7 @@ export default function Veluna() {
       const parsed = res.trim().split('\n').filter(Boolean).map((line, i) => {
         const [title, artist, duration, id] = line.split('====');
         const cleanId = id?.trim();
-        return { id: i, title: title?.trim() || 'Unknown', artist: artist?.trim() || 'Unknown', duration: duration?.trim() || '0:00', url: `https://youtube.com/watch?v=${cleanId}`, cover: `https://i.ytimg.com/vi/${cleanId}/mqdefault.jpg` };
+        return { id: i, title: title?.trim() || '', artist: cleanArtist(artist), duration: duration?.trim() || '0:00', url: `https://youtube.com/watch?v=${cleanId}`, cover: `https://i.ytimg.com/vi/${cleanId}/mqdefault.jpg` };
       });
       setTracks(parsed);
     } catch { setTracks([]); }
@@ -3546,7 +3554,7 @@ export default function Veluna() {
                                 </div>
                                 <div style={{flex:1,minWidth:0}}>
                                   <div style={{fontSize:'12.5px',fontWeight:600,color:isActive?'#e2ddd9':'#c8c4c0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',lineHeight:1.3}}>{track.title}</div>
-                                  {track.artist && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>}
+                                  {cleanArtist(track.artist) && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{cleanArtist(track.artist)}</div>}
                                 </div>
                               </div>
                             );
@@ -3582,7 +3590,7 @@ export default function Veluna() {
                                       {isActive&&<div className="v-card__active-bar"/>}
                                     </div>
                                     <div className="v-card__title">{track.title}</div>
-                                    {track.artist && <div className="v-card__artist">{track.artist}</div>}
+                                    {cleanArtist(track.artist) && <div className="v-card__artist">{cleanArtist(track.artist)}</div>}
                                   </div>
                                 );
                               })}
@@ -3644,7 +3652,7 @@ export default function Veluna() {
                                   <div className="v-track__art"><img src={track.cover} alt={track.title} loading="lazy"/></div>
                                   <div className="v-track__info">
                                     <div className="v-track__title">{track.title}</div>
-                                    {track.artist && <div className="v-track__artist">{track.artist}</div>}
+                                    {cleanArtist(track.artist) && <div className="v-track__artist">{cleanArtist(track.artist)}</div>}
                                   </div>
                                   <div style={{opacity:isActive&&isPlaying?1:0,transition:'opacity .12s'}}>
                                     {isActive&&isPlaying&&<div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px'}}>{[100,65,80].map((h,j)=><div key={j} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>}
@@ -4129,7 +4137,7 @@ export default function Veluna() {
                           <div className="v-track__art"><img src={track.cover} alt="" loading="lazy"/></div>
                           <div className="v-track__info">
                               <div className="v-track__title">{track.title}</div>
-                            {track.artist && <div className="v-track__artist">{track.artist}</div>}
+                            {cleanArtist(track.artist) && <div className="v-track__artist">{cleanArtist(track.artist)}</div>}
                           </div>
                           <Play size={12} style={{color:'#363230',flexShrink:0}}/>
                         </div>
@@ -4192,7 +4200,7 @@ export default function Veluna() {
                     </div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:'12px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentTrack.title}</div>
-                      <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{currentTrack.artist}</div>
+                      {cleanArtist(currentTrack.artist) && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{cleanArtist(currentTrack.artist)}</div>}
                     </div>
                   </div>
                 </div>
@@ -4245,7 +4253,7 @@ export default function Veluna() {
                           </div>
                           <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
                             <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
-                            {track.artist && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{track.artist}</div>}
+                            {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
                           </div>
                           <button onClick={e=>{e.stopPropagation();removeFromQueue(track.url);}} style={{opacity:0,padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#363230",flexShrink:0,borderRadius:"4px",display:"flex",transition:"color .12s"}}
                             onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.color="#b05555";}} onMouseLeave={e=>{e.currentTarget.style.opacity="0";e.currentTarget.style.color="#363230";}}><X size={12}/></button>
@@ -4471,7 +4479,7 @@ export default function Veluna() {
                 <div className="v-ctx__art"><img src={track.cover} alt="" /></div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:'13px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{track.title}</div>
-                  {track.artist && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{track.artist}</div>}
+                  {cleanArtist(track.artist) && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{cleanArtist(track.artist)}</div>}
                 </div>
               </div>
               <button onClick={() => { handlePlayTrack(track); setCtxMenu(null); }} className="v-ctx__item"><Play size={14} /> Play Now</button>
