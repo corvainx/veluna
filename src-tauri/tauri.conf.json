@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "veluna",
+  "productName": "Veluna",
   "version": "0.1.0",
   "identifier": "com.veluna.player",
   "build": {
@@ -40,7 +40,12 @@
           "mpv",
           "yt-dlp | python3-yt-dlp",
           "ffmpeg"
-        ]
+        ],
+        "files": {},
+        "preInstallScript": null,
+        "postInstallScript": "packaging/postinst.sh",
+        "preRemoveScript": null,
+        "postRemoveScript": null
       }
     },
     "windows": {
