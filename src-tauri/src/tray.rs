@@ -13,8 +13,6 @@ pub fn init() -> TrayFlag {
     Mutex::new(false)
 }
 
-/// Decode the bundled icon PNG to raw RGBA8.
-/// Handles RGB, RGBA, greyscale, and indexed PNG types.
 fn load_icon() -> Result<tauri::image::Image<'static>, String> {
     decode_png_to_rgba()
 }
@@ -22,7 +20,7 @@ fn load_icon() -> Result<tauri::image::Image<'static>, String> {
 fn decode_png_to_rgba() -> Result<tauri::image::Image<'static>, String> {
     let png_bytes = include_bytes!("../icons/icon.png");
     let mut decoder = png::Decoder::new(std::io::Cursor::new(png_bytes as &[u8]));
-    // EXPAND converts indexed/greyscale to RGB(A); ALPHA adds alpha channel if missing
+    
     decoder.set_transformations(
         png::Transformations::EXPAND | png::Transformations::ALPHA
     );
@@ -35,13 +33,13 @@ fn decode_png_to_rgba() -> Result<tauri::image::Image<'static>, String> {
     let expected_rgba = (w * h * 4) as usize;
 
     if raw.len() == expected_rgba {
-        // Already RGBA8 — perfect
+        
         return Ok(tauri::image::Image::new_owned(raw, w, h));
     }
 
     let expected_rgb = (w * h * 3) as usize;
     if raw.len() == expected_rgb {
-        // RGB without alpha — pad each pixel with 0xFF
+        
         let mut rgba = Vec::with_capacity(expected_rgba);
         for chunk in raw.chunks_exact(3) {
             rgba.extend_from_slice(chunk);
@@ -73,12 +71,10 @@ fn build_tray(app: &AppHandle) -> Result<(), String> {
 
     let icon = load_icon()?;
 
-    // Wrap .build() in catch_unwind — on Linux without libayatana it panics.
-    // On Windows .build() never panics; this is a no-op there.
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         TrayIconBuilder::with_id(TRAY_ID)
             .icon(icon)
-            .icon_as_template(false) // macOS: don't treat as template icon
+            .icon_as_template(false) 
             .tooltip("Veluna")
             .menu(&menu)
             .show_menu_on_left_click(false)
@@ -112,7 +108,6 @@ fn build_tray(app: &AppHandle) -> Result<(), String> {
     }
 }
 
-/// Show + unminimize + focus the main window.
 fn show_window(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -121,9 +116,6 @@ fn show_window(app: &AppHandle) {
     }
 }
 
-/// Toggle: if visible AND not minimized → hide; otherwise → show.
-/// On Windows is_visible() returns true even when minimized to taskbar,
-/// so we must check is_minimized() separately.
 fn toggle_window(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let visible   = w.is_visible().unwrap_or(false);
@@ -138,8 +130,6 @@ fn toggle_window(app: &AppHandle) {
     }
 }
 
-/// Create the tray exactly once — never destroy/recreate.
-/// Destroying + recreating causes D-Bus path collision on Linux.
 fn ensure_created(app: &AppHandle) -> Result<(), String> {
     if app.tray_by_id(TRAY_ID).is_some() { return Ok(()); }
     build_tray(app)
@@ -157,18 +147,16 @@ pub fn tray_set(
             let _ = tray.set_visible(true);
         }
     } else {
-        // Hide only — never remove (avoids D-Bus re-registration collision on Linux)
+        
         if let Some(tray) = app.tray_by_id(TRAY_ID) {
             let _ = tray.set_visible(false);
         }
     }
-    // Use unwrap_or to survive a poisoned mutex
+    
     if let Ok(mut guard) = flag.lock() { *guard = enabled; }
     Ok(enabled)
 }
 
-/// Call from main.rs RunEvent::WindowEvent { CloseRequested }.
-/// Returns true if tray is active → caller must call api.prevent_close().
 pub fn handle_close_requested(app: &AppHandle, flag: &TrayFlag) -> bool {
     let active = flag.lock().map(|g| *g).unwrap_or(false);
     if !active { return false; }

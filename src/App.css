@@ -1,13 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════
-   VELUNA — Ash Monochrome
-   CSS variables MUST come before @tailwind base so Tailwind's
-   preflight doesn't wipe them. The entire app JSX references
-   var(--v-bg0), var(--v-fg) etc. via inline styles — so if
-   these vars are undefined, the browser renders its defaults
-   (white bg, black text). This file fixes that.
-═══════════════════════════════════════════════════════════════ */
 
-/* ── 1. VARIABLES FIRST — before any Tailwind reset ─────────── */
 :root {
   --v-bg0:  #0c0b0b;
   --v-bg1:  #111010;
@@ -23,7 +14,6 @@
   --v-bdr2: #222020;
   --v-bdr3: #2e2b2b;
 
-  /* Tailwind neutral remap */
   --tw-color-neutral-50:  #dedad7;
   --tw-color-neutral-100: #dedad7;
   --tw-color-neutral-200: #dedad7;
@@ -39,14 +29,10 @@
   color-scheme: dark;
 }
 
-/* ── 2. TAILWIND ─────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── 3. EVERYTHING BELOW OVERRIDES TAILWIND ──────────────────── */
-
-/* ── Base reset ─────────────────────────────────────────────── */
 html, body, #root {
   background: var(--v-bg0) !important;
   color: var(--v-fg) !important;
@@ -57,7 +43,6 @@ html, body, #root {
   color-scheme: dark !important;
 }
 
-/* ── Grain texture ───────────────────────────────────────────── */
 body::after {
   content: '';
   position: fixed;
@@ -69,8 +54,6 @@ body::after {
   background-size: 200px 200px;
 }
 
-/* ══ BACKGROUND COLORS ══════════════════════════════════════════ */
-
 [class*="bg-neutral-950"] { background-color: var(--v-bg0) !important; }
 [class*="bg-neutral-900"] { background-color: var(--v-bg2) !important; }
 [class*="bg-neutral-800"] { background-color: var(--v-bg3) !important; }
@@ -78,7 +61,6 @@ body::after {
 [class*="bg-neutral-600"] { background-color: var(--v-bg5) !important; }
 [class~="bg-white"]       { background-color: var(--v-fg)  !important; }
 
-/* Arbitrary dark hex values */
 .bg-\[\#050505\], .bg-\[\#080808\], .bg-\[\#0a0a0a\],
 .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-\[\#0e0e0e\],
 .bg-\[\#0f0f0f\], .bg-\[\#111\],    .bg-\[\#111111\],
@@ -86,13 +68,11 @@ body::after {
   background-color: var(--v-bg2) !important;
 }
 
-/* Gradients → flat */
 [class*="bg-gradient-to-b"] {
   background-image: none !important;
   background-color: var(--v-bg0) !important;
 }
 
-/* White/alpha overlays */
 .hover\:bg-white\/5:hover,
 [class*="hover:bg-white\/5"]:hover     { background-color: rgba(255,255,255,0.03) !important; }
 [class*="hover:bg-white\/10"]:hover    { background-color: rgba(255,255,255,0.04) !important; }
@@ -104,14 +84,11 @@ body::after {
 [class*="hover:bg-white\/\[0.03\]"]:hover { background-color: rgba(255,255,255,0.02)  !important; }
 [class*="hover:bg-white\/\[0.02\]"]:hover { background-color: rgba(255,255,255,0.015) !important; }
 
-/* Hover bg */
 [class*="hover:bg-neutral-900"]:hover  { background-color: var(--v-bg2) !important; }
 [class*="hover:bg-neutral-800"]:hover  { background-color: var(--v-bg3) !important; }
 [class*="hover:bg-white"]:hover        { background-color: var(--v-bg3) !important; }
 [class*="hover:bg-neutral-900\/50"]:hover,
 [class*="hover:bg-neutral-900\/60"]:hover { background-color: var(--v-bg3) !important; }
-
-/* ══ TEXT COLORS ════════════════════════════════════════════════ */
 
 [class~="text-white"]                    { color: var(--v-fg)  !important; }
 [class~="text-black"]                    { color: var(--v-bg0) !important; }
@@ -127,7 +104,6 @@ body::after {
 [class*="hover:text-neutral-300"]:hover  { color: var(--v-fg2) !important; }
 [class*="hover:text-neutral-400"]:hover  { color: var(--v-fg3) !important; }
 
-/* ── Rogue colors → ash ─────────────────────────────────────── */
 [class*="text-amber-400"],
 [class*="text-cyan-400"],
 [class*="text-emerald-400"],
@@ -160,7 +136,6 @@ body::after {
 [class*="bg-amber-500\/10"]    { background-color: rgba(222,218,215,0.05) !important; }
 [class*="border-amber-500\/20"]:not([data-keep]) { border-color: rgba(222,218,215,0.1) !important; }
 
-/* ── [#d4cfcf] accent ────────────────────────────────────────── */
 .text-\[\#d4cfcf\],
 [class*="text-\[#d4cfcf\]"]          { color: var(--v-fg) !important; }
 [class*="bg-\[#d4cfcf\]\/10"]        { background-color: rgba(222,218,215,0.07)  !important; }
@@ -174,15 +149,11 @@ body::after {
 [class*="hover:bg-\[#d4cfcf\]\/20"]:hover     { background-color: rgba(222,218,215,0.12) !important; }
 [class*="ring-\[#d4cfcf\]"]          { --tw-ring-color: rgba(222,218,215,0.18) !important; }
 
-/* ══ BORDERS ════════════════════════════════════════════════════ */
-
 [class*="border-neutral-800"]  { border-color: var(--v-bdr)  !important; }
 [class*="border-neutral-700"]  { border-color: var(--v-bdr2) !important; }
 [class*="border-neutral-600"]  { border-color: var(--v-bdr3) !important; }
 [class*="divide-neutral-800"] > * + * { border-color: var(--v-bdr) !important; }
 [class*="hover:border-neutral-700"]:hover { border-color: var(--v-bdr2) !important; }
-
-/* ══ INPUTS ═════════════════════════════════════════════════════ */
 
 input, textarea, select {
   background-color: var(--v-bg3) !important;
@@ -196,9 +167,17 @@ input:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(222,218,215,0.07) !important;
 }
 
-/* ══ BUTTONS ════════════════════════════════════════════════════ */
+button {
+  border-style: none;
+  border-width: 0;
+  border-color: transparent;
+  outline-style: none;
+  outline-width: 0;
+  outline-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
 
-/* Primary round play button */
 button.rounded-full.bg-white,
 button.rounded-full[class*="bg-white"] {
   background: var(--v-fg) !important;
@@ -207,8 +186,6 @@ button.rounded-full[class*="bg-white"] {
 }
 button.rounded-full.bg-white:hover { transform: scale(1.05) !important; }
 button.rounded-full.bg-white:active { transform: scale(0.95) !important; }
-
-/* ══ SHADOWS ════════════════════════════════════════════════════ */
 
 [class*="shadow-\[0_0_"],
 [class*="drop-shadow-\[0_0_"] {
@@ -220,13 +197,9 @@ button.rounded-full.bg-white:active { transform: scale(0.95) !important; }
               0 0 0 1px rgba(255,255,255,0.04) !important;
 }
 
-/* ══ MODALS ═════════════════════════════════════════════════════ */
-
 [class*="bg-black\/85"] { background-color: rgba(5,4,4,0.9)  !important; }
 [class*="bg-black\/80"] { background-color: rgba(5,4,4,0.85) !important; }
 [class*="bg-black\/70"] { background-color: rgba(5,4,4,0.78) !important; }
-
-/* ══ MISC COMPONENTS ════════════════════════════════════════════ */
 
 [class*="shadow-\[inset_2px_0_0_#d4cfcf\]"] {
   box-shadow: inset 2px 0 0 var(--v-fg2) !important;
@@ -236,7 +209,6 @@ button.rounded-full.bg-white:active { transform: scale(0.95) !important; }
   background-color: var(--v-bg4) !important;
 }
 
-/* Confirm danger */
 [class*="bg-red-500\/10"][class*="border-red-500\/30"] {
   background: rgba(160,40,40,0.07) !important;
   border-color: rgba(160,40,40,0.22) !important;
@@ -244,7 +216,6 @@ button.rounded-full.bg-white:active { transform: scale(0.95) !important; }
 }
 [class*="hover:bg-red-500\/20"]:hover { background: rgba(160,40,40,0.14) !important; }
 
-/* Kbd */
 kbd {
   background: var(--v-bg3) !important;
   border-color: var(--v-bdr3) !important;
@@ -252,14 +223,11 @@ kbd {
   box-shadow: 0 1px 0 var(--v-bg5) !important;
 }
 
-/* Separator lines */
 .h-px,
 [class~="h-px"] { background-color: var(--v-bdr) !important; }
 
-/* Toggle switch active */
 [class*="bg-\[#d4cfcf\]\/80"] { background-color: rgba(222,218,215,0.7) !important; }
 
-/* Pulse skeleton */
 @keyframes velunaPulse {
   0%, 100% { opacity: 0.45; }
   50%       { opacity: 0.18; }
@@ -269,21 +237,16 @@ kbd {
   background-color: var(--v-bg3) !important;
 }
 
-/* ══ SCROLLBARS ═════════════════════════════════════════════════ */
-
 ::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--v-bg5); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--v-bdr3); }
-
-/* ══ SELECTION ══════════════════════════════════════════════════ */
 
 ::selection {
   background: rgba(222,218,215,0.18) !important;
   color: var(--v-fg) !important;
 }
 
-/* YouTube playlist import modal animations and helper classes */
 @keyframes ytModalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -302,7 +265,6 @@ kbd {
   animation: ytModalScaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* Global input focus ring reset */
 input:focus, input:focus-visible, input:active {
   outline: none !important;
   box-shadow: none !important;
@@ -312,5 +274,107 @@ input:focus, input:focus-visible, input:active {
   background: rgba(29, 185, 84, 0.15) !important;
   border-color: rgba(29, 185, 84, 0.4) !important;
   color: #1ed760 !important;
+  transform: translateY(-1px);
+}
+
+.yt-import-input,
+input.yt-import-input,
+input.yt-import-input:focus,
+input.yt-import-input:focus-visible,
+input.yt-import-input:active {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  border-style: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline-style: none !important;
+  outline-width: 0 !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+.yt-import-input-wrapper,
+.yt-import-input-wrapper:focus,
+.yt-import-input-wrapper:focus-within,
+.yt-import-input-wrapper:active {
+  outline-style: none !important;
+  outline-width: 0 !important;
+  outline-color: transparent !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+@keyframes ytPulse {
+  0% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 10px rgba(255, 30, 39, 0.4)); }
+  50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 24px rgba(255, 30, 39, 0.85)); }
+  100% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 10px rgba(255, 30, 39, 0.4)); }
+}
+
+@keyframes ytRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes ytRotateCCW {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes ytSkeletonPulse {
+  0% { opacity: 0.35; }
+  50% { opacity: 0.75; }
+  100% { opacity: 0.35; }
+}
+
+.yt-pulse-logo {
+  animation: ytPulse 3s infinite ease-in-out;
+}
+
+.yt-rotate-outer {
+  animation: ytRotate 15s linear infinite;
+  transform-origin: center;
+}
+
+.yt-rotate-inner {
+  animation: ytRotateCCW 10s linear infinite;
+  transform-origin: center;
+}
+
+.yt-skeleton-card {
+  animation: ytSkeletonPulse 1.5s infinite ease-in-out;
+}
+
+.yt-import-results-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.yt-import-results-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.yt-import-results-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+.yt-import-results-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.yt-track-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.yt-track-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 30, 39, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 30, 39, 0.04);
   transform: translateY(-1px);
 }

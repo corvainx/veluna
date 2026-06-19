@@ -9,9 +9,6 @@ use serde_json::Value;
 use tauri::Emitter;
 use tauri::Manager;
 
-// On Windows, every spawned process gets a visible CMD flash unless we set
-// CREATE_NO_WINDOW. This trait applies it automatically on Windows and is a
-// no-op on Linux/macOS, so all call sites stay identical.
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
@@ -150,7 +147,6 @@ fn init_bin_paths() {
         }
     }
 
-    
     if let Ok(env_path) = std::env::var("PATH") {
         #[cfg(target_os = "windows")]
         let sep = ';';
@@ -162,7 +158,6 @@ fn init_bin_paths() {
         }
     }
 
-    
     #[cfg(target_os = "windows")]
     let sep = ";";
     #[cfg(not(target_os = "windows"))]
@@ -184,8 +179,6 @@ fn init_bin_paths() {
     eprintln!("[veluna] ffprobe -> {}", ffprobe);
     eprintln!("[veluna] ffmpeg  -> {}", ffmpeg);
 
-    
-    
     fn set_or_update(lock: &std::sync::OnceLock<String>, val: String) {
         if lock.get().is_none() {
             let _ = lock.set(val);
@@ -224,9 +217,6 @@ fn mpv_process() -> &'static Mutex<Option<std::process::Child>> {
     MPV_PROCESS.get_or_init(|| Mutex::new(None))
 }
 
-// Monotonic play request counter — incremented on every play_audio call.
-// Each spawned extraction task captures its counter value; if it no longer
-// matches the global when done, the result is stale and discarded.
 static PLAY_COUNTER: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
@@ -266,7 +256,6 @@ fn sanitize_file_path(path: &str) -> Result<std::path::PathBuf, String> {
     }
 }
 
-
 fn safe_f64(v: f64) -> f64 {
     if v.is_finite() { v } else { 0.0 }
 }
@@ -289,9 +278,6 @@ async fn search_youtube(query: String) -> Result<String, String> {
             .spawn()
             .map_err(|e| format!("yt-dlp not found: {}", e))?;
 
-        
-        
-        
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
         loop {
             match child.try_wait() {
@@ -341,9 +327,7 @@ async fn open_url_in_browser(url: String) -> Result<(), String> {
 #[tauri::command]
 async fn import_youtube_playlist(url: String) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
-        // Use --flat-playlist for instant import (reads playlist index only, no per-video fetch).
-        // Fields: id, title, duration_string, thumbnail — channel/uploader are not available
-        // in flat-playlist mode; the frontend handles the empty artist gracefully.
+        
         let mut child = Command::new(bin_ytdlp())
             .args([
                 "--flat-playlist",
@@ -472,8 +456,7 @@ fn get_loudnorm_enabled() -> bool {
 #[tauri::command]
 fn set_skip_silence(enabled: bool) -> Result<(), String> {
     *SKIP_SILENCE.lock().unwrap() = enabled;
-    // Apply to the running mpv instance immediately via IPC.
-    // silenceremove=1:0:-50dB removes leading silence and gaps between sections.
+    
     let af_cmd = if enabled {
         r#"{"command": ["set_property", "af", "silenceremove=1:0:-50dB"]}"#.to_string()
     } else {
@@ -482,8 +465,6 @@ fn set_skip_silence(enabled: bool) -> Result<(), String> {
     let _ = send_ipc_command(&af_cmd);
     Ok(())
 }
-
-
 
 fn mpv_af_flag() -> Option<String> {
     let loudnorm = *LOUDNORM_ENABLED.lock().unwrap();
@@ -496,20 +477,14 @@ fn mpv_af_flag() -> Option<String> {
     }
 }
 
-// ── Persistent mpv management ────────────────────────────────────────────────
-
-/// Spawn mpv in idle mode if not already running, or if the stored process died.
-/// Returns true if mpv is ready (socket connectable).
 fn ensure_mpv_running() -> bool {
     let mut guard = mpv_process().lock().unwrap();
 
-    // Check if existing process is still alive
     let alive = guard.as_mut().map(|c| c.try_wait().ok() == Some(None)).unwrap_or(false);
     if alive && wait_for_socket(200) { return true; }
 
-    // Either dead or never started — (re)spawn
     *guard = None;
-    let _ = std::fs::remove_file(SOCKET_PATH); // clean stale socket
+    let _ = std::fs::remove_file(SOCKET_PATH); 
 
     let mut args: Vec<String> = vec![
         "--no-video".into(),
@@ -536,32 +511,23 @@ fn ensure_mpv_running() -> bool {
         Ok(child) => { *guard = Some(child); }
         Err(_) => return false,
     }
-    drop(guard); // release lock before waiting
+    drop(guard); 
     wait_for_socket(4000)
 }
 
-/// Switch to a new URL using IPC — NO process restart.
-/// Sequence: set pause=yes → playlist-clear → loadfile replace
-/// We do NOT send "stop" — stop makes mpv close the IPC socket briefly,
-/// causing "broken pipe" on the next command. Instead we pause first,
-/// clear the playlist, then loadfile replace which atomically replaces
-/// whatever is playing. mpv handles this cleanly without socket disruption.
 fn switch_track_ipc(url: &str) -> Result<(), String> {
-    // Pause current playback first to avoid audio glitch
+    
     let _ = send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", true]}"#, 2);
-    // Clear playlist
+    
     send_ipc_command_with_retry(r#"{"command": ["playlist-clear"]}"#, 3)
         .map_err(|e| format!("playlist-clear failed: {}", e))?;
-    // loadfile replace: atomically replaces current entry and starts playing
+    
     let cmd = serde_json::json!({"command": ["loadfile", url, "replace"]}).to_string();
     send_ipc_command_with_retry(&cmd, 3)
         .map_err(|e| format!("loadfile failed: {}", e))?;
     Ok(())
 }
 
-/// Fast URL extraction using yt-dlp -g (URL-only, no metadata parsing).
-/// Tries multiple YouTube player clients and browser cookie sources in parallel.
-/// First valid https CDN URL wins; remaining threads abort via cancel flag.
 fn log_debug(msg: &str) {
     if let Ok(mut file) = std::fs::OpenOptions::new()
         .create(true)
@@ -587,10 +553,13 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
         use std::process::{Command, Stdio};
         use std::io::Read;
 
-        let attempts: &[(Option<&str>, &str)] = &[
-            (None,                          "default"),
-            (None,                          "android"),
-            (None,                          "ios"),
+        let group1: &[(Option<&str>, &str)] = &[
+            (None, "android"),
+            (None, "ios"),
+            (None, "default"),
+        ];
+
+        let group2: &[(Option<&str>, &str)] = &[
             (Some("chrome+basictext"),      "web"),
             (Some("firefox"),               "web"),
             (Some("brave+basictext"),       "web"),
@@ -598,8 +567,9 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
         ];
 
         let mut children = Vec::new();
+        let mut spawned_fallback = false;
 
-        for &(browser, client) in attempts {
+        for &(browser, client) in group1 {
             if let Some(id) = my_id {
                 if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
                     log_debug("extract_stream_url superseded during spawning");
@@ -646,7 +616,55 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
         let timeout = std::time::Duration::from_millis(9500);
         let mut resolved_url = None;
 
-        while start_time.elapsed() < timeout && resolved_url.is_none() && !children.is_empty() {
+        while start_time.elapsed() < timeout && resolved_url.is_none() && (!children.is_empty() || !spawned_fallback) {
+            
+            if !spawned_fallback && (start_time.elapsed() >= std::time::Duration::from_millis(1500) || children.is_empty()) {
+                log_debug("Spawning fallback browser cookie clients...");
+                for &(browser, client) in group2 {
+                    if let Some(id) = my_id {
+                        if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
+                            log_debug("extract_stream_url superseded during spawning");
+                            break;
+                        }
+                    }
+
+                    let mut cmd = Command::new(bin_ytdlp());
+                    cmd.no_window();
+                    cmd.args([
+                        "--no-warnings", "--no-playlist", "--no-check-certificates",
+                        "--socket-timeout", "6", "--retries", "0",
+                        "--no-call-home",
+                        "--js-runtimes", "node",
+                        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                        "-g",
+                    ]);
+                    if client != "default" {
+                        cmd.args(["--extractor-args", &format!("youtube:player_client={},skip=webpage", client)]);
+                    }
+                    cmd.args(["-f", "140/251/18/bestaudio"]);
+
+                    if let Some(ref b) = browser {
+                        cmd.args(["--cookies-from-browser", b]);
+                    }
+                    cmd.args(["--", &youtube_url]);
+
+                    cmd.stdout(Stdio::piped());
+                    cmd.stderr(Stdio::piped());
+                    cmd.stdin(Stdio::null());
+
+                    log_debug(&format!("Spawning std::process for client: {}, browser: {:?}", client, browser));
+                    match cmd.spawn() {
+                        Ok(child) => {
+                            children.push((child, browser, client));
+                        }
+                        Err(e) => {
+                            log_debug(&format!("Failed to spawn std::process for client: {}, browser: {:?}: {}", client, browser, e));
+                        }
+                    }
+                }
+                spawned_fallback = true;
+            }
+
             let mut finished_indices = Vec::new();
 
             for (idx, (child, browser, client)) in children.iter_mut().enumerate() {
@@ -686,7 +704,7 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
                         }
                     }
                     Ok(None) => {
-                        // Still running
+                        
                     }
                     Err(e) => {
                         finished_indices.push(idx);
@@ -719,7 +737,6 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
             }
         }
 
-        // Clean up remaining processes
         for (mut child, browser, client) in children {
             log_debug(&format!("Killing remaining child process for client: {}, browser: {:?}", client, browser));
             let _ = child.kill();
@@ -744,18 +761,14 @@ async fn play_audio(url: String) -> Result<(), String> {
     }
     let safe_url = sanitize_stream_url(&url)?;
 
-    // Increment counter — this is our play request ID.
-    // Any extraction task that started before this call is now stale.
     let my_id = PLAY_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
     log_debug(&format!("Assigned my_id: {} for {}", my_id, safe_url));
 
-    // ── Step 1: Cache lookup ─────────────────────────────────────────────
     let cached = {
         let mut cache = PREFETCH_CACHE.lock().unwrap();
         cache.remove(&safe_url).and_then(|entry| {
             let age = std::time::Instant::now().duration_since(entry.ts);
-            // Google CDN URLs expire in ~6 hours, but treat them as
-            // valid for 4h to avoid serving stale URLs near expiry.
+            
             if age < std::time::Duration::from_secs(4 * 3600)
                 && entry.url.starts_with("http")
                 && !entry.url.contains(".m3u8")
@@ -768,13 +781,11 @@ async fn play_audio(url: String) -> Result<(), String> {
         log_debug("Found URL in prefetch cache!");
     }
 
-    // ── Step 2: Race check ───────────────────────────────────────────────
     if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
         log_debug(&format!("Superseded during cache check. current PLAY_COUNTER: {}", PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst)));
         return Err("Superseded by newer play request".to_string());
     }
 
-    // ── Step 3: Extract URL ──────────────────────────────────────────────
     let stream_url = if let Some(c) = cached {
         c
     } else {
@@ -785,7 +796,6 @@ async fn play_audio(url: String) -> Result<(), String> {
                 "Could not extract stream URL. Update yt-dlp: yt-dlp -U".to_string()
             })?;
 
-        // Race check again after extraction
         if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
             log_debug(&format!("Superseded after extraction. current PLAY_COUNTER: {}", PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst)));
             return Err("Superseded by newer play request".to_string());
@@ -795,7 +805,6 @@ async fn play_audio(url: String) -> Result<(), String> {
 
     log_debug(&format!("Streaming URL resolved: {}", &stream_url[..stream_url.len().min(80)]));
 
-    // ── Step 4: Ensure mpv is running and play ───────────────────────────
     tokio::task::spawn_blocking(move || {
         if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
             log_debug("Superseded in spawn_blocking task startup");
@@ -808,14 +817,14 @@ async fn play_audio(url: String) -> Result<(), String> {
         }
 
         log_debug("Sending switch track command to mpv...");
-        // Switch track via IPC — no process restart.
+        
         if let Err(e) = switch_track_ipc(&stream_url) {
             log_debug(&format!("switch_track_ipc failed: {}", e));
             return Err(format!("IPC switch failed: {}", e));
         }
         
         log_debug("Resuming playback...");
-        // Explicitly unpause — switch_track_ipc pauses first, ensure we resume
+        
         let _ = send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", false]}"#, 3);
         log_debug("Play request successfully handled!");
         Ok(())
@@ -836,7 +845,7 @@ async fn play_local_file(path: String) -> Result<(), String> {
             return Err("mpv failed to start".to_string());
         }
         switch_track_ipc(&safe_path).map_err(|e| format!("IPC switch failed: {}", e))?;
-        // Explicitly unpause so local files never start in paused state
+        
         std::thread::sleep(std::time::Duration::from_millis(80));
         let _ = send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", false]}"#, 3);
         Ok(())
@@ -1002,11 +1011,6 @@ struct AudioInfo {
 #[tauri::command]
 async fn get_audio_info() -> Result<AudioInfo, String> {
     
-    
-    
-    
-    
-    
     tokio::task::spawn_blocking(|| {
         let queries: &[&str] = &[
             r#"{"command": ["get_property", "audio-codec-name"]}"#,
@@ -1019,7 +1023,6 @@ async fn get_audio_info() -> Result<AudioInfo, String> {
         
         let responses = send_ipc_batch(queries);
 
-        
         let raw = |i: usize| -> String {
             responses.get(i).and_then(|r| r.as_ref().ok()).cloned().unwrap_or_default()
         };
@@ -1063,9 +1066,6 @@ async fn set_equalizer(bass: f64, mid: f64, treble: f64) -> Result<(), String> {
         let skip_sil    = *SKIP_SILENCE.lock().unwrap();
         let eq_active   = !(b == 0.0 && m == 0.0 && t == 0.0);
 
-        // Build af chain. mpv's built-in `equalizer` filter uses the correct
-        // parametric syntax: f=frequency:width_type=o:width=2:g=gain
-        // Bass:   60 Hz shelf, Mid: 1000 Hz peak, Treble: 10000 Hz shelf
         let eq_chain = if eq_active {
             format!(
                 "lavfi=[equalizer=f=60:width_type=o:width=2:g={b},equalizer=f=1000:width_type=o:width=2:g={m},equalizer=f=10000:width_type=o:width=2:g={t}]",
@@ -1084,7 +1084,7 @@ async fn set_equalizer(bass: f64, mid: f64, treble: f64) -> Result<(), String> {
         if eq_active   { ln_owned = eq_chain.clone(); parts.push(&ln_owned); }
 
         if parts.is_empty() {
-            // All filters off — clear af entirely
+            
             let cmd = r#"{"command": ["set_property", "af", ""]}"#;
             return send_ipc_command_with_retry(cmd, 2).map(|_| ());
         }
@@ -1349,7 +1349,7 @@ async fn get_audio_cover(path: String) -> Result<Option<String>, String> {
                     } else if bytes.starts_with(b"RIFF") && bytes.get(8..12) == Some(b"WEBP") {
                         "image/webp"
                     } else {
-                        "image/jpeg" // fallback
+                        "image/jpeg" 
                     };
 
                     let b64 = base64_encode(&bytes);
@@ -1360,6 +1360,39 @@ async fn get_audio_cover(path: String) -> Result<Option<String>, String> {
             }
             Err(e) => Err(e.to_string()),
         }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn write_audio_metadata(path: String, title: String, artist: String, album: String) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || {
+        let temp_path = format!("{}.tmp.edit", path);
+        
+        let status = Command::new(bin_ffmpeg())
+            .args([
+                "-y",
+                "-i", &path,
+                "-metadata", &format!("title={}", title),
+                "-metadata", &format!("artist={}", artist),
+                "-metadata", &format!("album={}", album),
+                "-codec", "copy",
+                &temp_path
+            ])
+            .no_window()
+            .status()
+            .map_err(|e| format!("ffmpeg execution failed: {}", e))?;
+            
+        if !status.success() {
+            let _ = std::fs::remove_file(&temp_path);
+            return Err("ffmpeg failed to write metadata".to_string());
+        }
+        
+        std::fs::rename(&temp_path, &path)
+            .map_err(|e| format!("Failed to replace audio file: {}", e))?;
+            
+        Ok(())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -1557,7 +1590,6 @@ fn wait_for_socket(timeout_ms: u64) -> bool {
     #[cfg(windows)]
     {
         
-        
         while std::time::Instant::now() < deadline {
             if OpenOptions::new().read(true).write(true).open(SOCKET_PATH).is_ok() {
                 return true;
@@ -1580,10 +1612,6 @@ fn send_ipc_batch(cmds: &[&str]) -> Vec<Result<String, String>> {
         stream.set_read_timeout(Some(std::time::Duration::from_millis(800))).ok();
         stream.set_write_timeout(Some(std::time::Duration::from_millis(400))).ok();
 
-        
-        
-        
-        
         if let Ok(mut w) = stream.try_clone() {
             for cmd in cmds {
                 let _ = w.write_all(cmd.as_bytes());
@@ -1613,8 +1641,6 @@ fn send_ipc_batch(cmds: &[&str]) -> Vec<Result<String, String>> {
 
     #[cfg(not(unix))]
     {
-        
-        
         
         let file = match OpenOptions::new().read(true).write(true).open(SOCKET_PATH) {
             Ok(f) => f,
@@ -1680,7 +1706,6 @@ fn send_ipc_command(cmd: &str) -> Result<String, String> {
     #[cfg(unix)]
     {
         
-        
         let mut stream = UnixStream::connect(SOCKET_PATH)
             .map_err(|e| format!("IPC connect failed: {}", e))?;
         stream.set_read_timeout(Some(std::time::Duration::from_millis(500))).map_err(|e| e.to_string())?;
@@ -1698,8 +1723,6 @@ fn send_ipc_command(cmd: &str) -> Result<String, String> {
 
     #[cfg(windows)]
     {
-        
-        
         
         let file = OpenOptions::new().read(true).write(true)
             .open(SOCKET_PATH)
@@ -1727,8 +1750,6 @@ fn parse_f64_from_response(response: &str) -> Result<f64, String> {
     json["data"].as_f64().ok_or_else(|| format!("Unexpected data type: {}", response))
 }
 
-/// Fetch timed lyrics from lrclib.net — returns JSON array of {time, text} objects.
-/// Falls back to synced lyrics if timed unavailable. No API key needed.
 #[tauri::command]
 async fn fetch_lyrics(title: String, artist: String, duration: f64) -> Result<String, String> {
     let client = reqwest::Client::builder()
@@ -1749,9 +1770,8 @@ async fn fetch_lyrics(title: String, artist: String, duration: f64) -> Result<St
     }
     let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
 
-    // Try synced lyrics first (has timestamps), fall back to plain lyrics
     if let Some(synced) = json["syncedLyrics"].as_str().filter(|s| !s.is_empty()) {
-        // Parse LRC format: [mm:ss.xx] line
+        
         let mut lines: Vec<serde_json::Value> = Vec::new();
         for line in synced.lines() {
             let line = line.trim();
@@ -1760,7 +1780,7 @@ async fn fetch_lyrics(title: String, artist: String, duration: f64) -> Result<St
                 if let Some(end) = rest.find(']') {
                     let ts = &rest[..end];
                     let text = rest[end+1..].trim();
-                    // Parse mm:ss.xx
+                    
                     let secs: f64 = if let Some(colon) = ts.find(':') {
                         let mins: f64 = ts[..colon].parse().unwrap_or(0.0);
                         let s: f64 = ts[colon+1..].parse().unwrap_or(0.0);
@@ -1775,7 +1795,6 @@ async fn fetch_lyrics(title: String, artist: String, duration: f64) -> Result<St
         }
     }
 
-    // Plain lyrics — split into lines with estimated times
     if let Some(plain) = json["plainLyrics"].as_str().filter(|s| !s.is_empty()) {
         let lines: Vec<&str> = plain.lines().filter(|l| !l.trim().is_empty()).collect();
         let total = duration.max(1.0);
@@ -1789,12 +1808,10 @@ async fn fetch_lyrics(title: String, artist: String, duration: f64) -> Result<St
     Err("No lyrics found".to_string())
 }
 
-/// Search YouTube Music for artists/albums — returns JSON with thumbnails.
-/// Uses yt-dlp --flat-playlist on ytsearchX: to get channel/album results.
 #[tauri::command]
 async fn search_yt_music(query: String, search_type: String) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
-        // Append type hint to query for better results
+        
         let full_query = match search_type.as_str() {
             "artist" => format!("{} artist", query),
             "album"  => format!("{} full album", query),
@@ -1834,7 +1851,6 @@ async fn search_yt_music(query: String, search_type: String) -> Result<String, S
         let stdout = String::from_utf8_lossy(&out.stdout).to_string();
         if stdout.trim().is_empty() { return Err("No results".to_string()); }
 
-        // Build JSON array of results
         let items: Vec<serde_json::Value> = stdout.trim().lines().take(10).filter_map(|line| {
             let parts: Vec<&str> = line.splitn(5, "====").collect();
             if parts.len() < 3 { return None; }
@@ -1842,7 +1858,7 @@ async fn search_yt_music(query: String, search_type: String) -> Result<String, S
             let uploader  = parts[1].trim();
             let id        = parts[2].trim();
             let thumb     = if parts.len() > 3 { parts[3].trim() } else {
-                // Fallback to standard YouTube thumbnail
+                
                 &format!("https://i.ytimg.com/vi/{}/mqdefault.jpg", id)
             };
             let thumb = if thumb.starts_with("http") { thumb.to_string() }
@@ -1935,7 +1951,6 @@ fn start_mpris_server(app_handle: tauri::AppHandle) {
         });
     });
 }
-
 
 #[cfg(target_os = "linux")]
 async fn run_mpris_server(
@@ -2082,8 +2097,6 @@ async fn run_mpris_server(
     }
 }
 
-/// Write arbitrary text content to an absolute file path.
-/// Used by the frontend backup feature to save JSON directly to the chosen folder.
 #[tauri::command]
 fn write_text_file(path: String, content: String) -> Result<(), String> {
     let p = std::path::Path::new(&path);
@@ -2094,8 +2107,6 @@ fn write_text_file(path: String, content: String) -> Result<(), String> {
 }
 
 fn main() {
-    
-    
     
     init_bin_paths();
 
@@ -2113,11 +2124,8 @@ fn main() {
             #[cfg(target_os = "linux")]
             start_mpris_server(handle.clone());
 
-            // Pre-warm mpv in background so first play is instant
             std::thread::spawn(|| { ensure_mpv_running(); });
 
-
-            // Set window icon explicitly — required on Linux for taskbar icon
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_icon(tauri::include_image!("icons/128x128.png"));
             }
@@ -2139,8 +2147,6 @@ fn main() {
                     });
                 }
             }
-
-
 
             Ok(())
         })
@@ -2182,6 +2188,7 @@ fn main() {
             rename_local_file,
             open_in_file_manager,
             get_audio_metadata,
+            write_audio_metadata,
             get_audio_cover,
             get_waveform_thumbnail,
             get_disk_usage,
@@ -2200,7 +2207,7 @@ fn main() {
         .expect("error while building tauri application")
         .run(|app_handle, event| {
             match event {
-                // Intercept window close — hide to tray instead of quitting when tray is active
+                
                 tauri::RunEvent::WindowEvent {
                     label,
                     event: tauri::WindowEvent::CloseRequested { api, .. },

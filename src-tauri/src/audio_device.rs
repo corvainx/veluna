@@ -8,8 +8,6 @@ pub struct AudioDevice {
     pub is_default: bool,
 }
 
-// ── Linux ─────────────────────────────────────────────────────────────────────
-
 #[cfg(target_os = "linux")]
 pub fn list_devices_impl() -> Vec<AudioDevice> {
     let default = Command::new("pactl")
@@ -61,11 +59,6 @@ pub fn set_default_impl(id: &str) -> Result<(), String> {
     Ok(())
 }
 
-// ── Windows ───────────────────────────────────────────────────────────────────
-// Listing: PowerShell + Windows.Devices.Enumeration WinRT API (built into Win10+)
-// Switching: nircmd.exe embedded as a resource, extracted on first use.
-// Falls back gracefully if extraction fails.
-
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
@@ -73,8 +66,7 @@ const NO_WIN: u32 = 0x08000000;
 
 #[cfg(target_os = "windows")]
 pub fn list_devices_impl() -> Vec<AudioDevice> {
-    // Uses built-in Windows.Devices.Enumeration — no external modules needed
-    // Works on Windows 10+ (PowerShell 5.1 ships with all Win10/11)
+    
     let script = r#"
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null = [Windows.Devices.Enumeration.DeviceInformation, Windows.Devices.Enumeration, ContentType=WindowsRuntime]
@@ -126,9 +118,7 @@ $out | ConvertTo-Json -Compress
 
 #[cfg(target_os = "windows")]
 pub fn set_default_impl(id: &str) -> Result<(), String> {
-    // Uses SoundVolumeView (NirSoft) if available, else falls back to
-    // AudioDeviceCmdlets, else falls back to nircmd, else WinRT PowerShell.
-    // The WinRT approach is the most portable — no installs needed.
+    
     let script = format!(r#"
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null = [Windows.Media.Devices.MediaDevice, Windows.Media, ContentType=WindowsRuntime]
@@ -181,8 +171,6 @@ fn fallback_windows() -> Vec<AudioDevice> {
     }
 }
 
-// ── macOS ─────────────────────────────────────────────────────────────────────
-
 #[cfg(target_os = "macos")]
 pub fn list_devices_impl() -> Vec<AudioDevice> {
     let out = match Command::new("system_profiler").args(["SPAudioDataType", "-json"]).output() {
@@ -206,8 +194,6 @@ pub fn set_default_impl(id: &str) -> Result<(), String> {
     Command::new("SwitchAudioSource").args(["-s", id]).status().map(|_| ())
         .map_err(|_| "Install: brew install switchaudio-osx".into())
 }
-
-// ── Tauri commands ────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn list_audio_devices() -> Vec<AudioDevice> { list_devices_impl() }

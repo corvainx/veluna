@@ -38,7 +38,6 @@
       "deb": {
         "depends": [
           "mpv",
-          "yt-dlp | python3-yt-dlp",
           "ffmpeg"
         ],
         "files": {},
