@@ -765,15 +765,15 @@ async fn play_audio(url: String) -> Result<(), String> {
     log_debug(&format!("Assigned my_id: {} for {}", my_id, safe_url));
 
     let cached = {
-        let mut cache = PREFETCH_CACHE.lock().unwrap();
-        cache.remove(&safe_url).and_then(|entry| {
+        let cache = PREFETCH_CACHE.lock().unwrap();
+        cache.get(&safe_url).and_then(|entry| {
             let age = std::time::Instant::now().duration_since(entry.ts);
             
             if age < std::time::Duration::from_secs(4 * 3600)
                 && entry.url.starts_with("http")
                 && !entry.url.contains(".m3u8")
                 && !entry.url.contains("manifest.googlevideo.com")
-            { Some(entry.url) } else { None }
+            { Some(entry.url.clone()) } else { None }
         })
     };
 
@@ -800,6 +800,13 @@ async fn play_audio(url: String) -> Result<(), String> {
             log_debug(&format!("Superseded after extraction. current PLAY_COUNTER: {}", PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst)));
             return Err("Superseded by newer play request".to_string());
         }
+
+        {
+            let mut cache = PREFETCH_CACHE.lock().unwrap();
+            let now = std::time::Instant::now();
+            cache.insert(safe_url.clone(), CacheEntry { url: url.clone(), ts: now });
+        }
+
         url
     };
 
@@ -1263,7 +1270,17 @@ async fn rename_local_file(old_path: String, new_title: String) -> Result<String
         let safe_title: String = new_title.chars()
             .map(|c| if "/\\:*?\"<>|".contains(c) { '_' } else { c })
             .collect();
-        let new_path = parent.join(format!("{}.{}", safe_title, ext));
+        let mut new_path = parent.join(format!("{}.{}", safe_title, ext));
+        let mut counter = 1;
+        while new_path.exists() {
+            if let (Ok(new_canon), Ok(old_canon)) = (new_path.canonicalize(), old.canonicalize()) {
+                if new_canon == old_canon {
+                    break;
+                }
+            }
+            new_path = parent.join(format!("{} ({}).{}", safe_title, counter, ext));
+            counter += 1;
+        }
         std::fs::rename(&old_path, &new_path).map_err(|e| format!("Rename failed: {}", e))?;
         Ok(new_path.to_string_lossy().to_string())
     })

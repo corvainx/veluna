@@ -41,6 +41,12 @@ type LocalTrack = {
   cover?: string;
 };
 
+type ListeningEvent = {
+  url: string;
+  playedAt: string;
+  secs: number;
+};
+
 type Playlist = {
   id: string;
   name: string;
@@ -75,6 +81,17 @@ const cleanArtist = (a?: string | null): string => {
   const t = a.trim();
   const bad = ['unknown', 'na', 'n/a', 'none', '-', '--', 'unknown artist', 'various artists', 'various', '?'];
   return bad.includes(t.toLowerCase()) ? '' : t;
+};
+
+const getTrackGradient = (title?: string | null, artist?: string | null): string => {
+  const str = `${title || ''}${artist || ''}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash % 360);
+  const h2 = (h1 + 60) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 45%, 28%) 0%, hsl(${h2}, 30%, 12%) 100%)`;
 };
 
 function formatTime(s: number): string {
@@ -200,8 +217,15 @@ const TrackRow = React.memo(({
           : isHovered ? <Play size={13} style={{fill:'#e2ddd9',color:'#e2ddd9',margin:'0 auto'}} />
           : index + 1}
     </div>
-    <div className="v-track__art">
-      <img src={track.cover} alt={track.title} loading="lazy" />
+    <div className="v-track__art" style={{
+      position: 'relative',
+      background: getTrackGradient(track.title, track.artist),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <Music size={16} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+      <img src={track.cover} alt={track.title} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy" />
     </div>
     <div className="v-track__info">
       <div className="v-track__title">{track.title}</div>
@@ -592,12 +616,14 @@ function CsvImportModal({
   showToast,
   onProgress,
   onMatchingDone,
+  visible = true,
 }: {
   onClose: () => void;
   onSavePlaylist: (name: string, desc: string, tracks: Track[]) => void;
   showToast: (m: string) => void;
   onProgress?: (matched: number, total: number, label: string) => void;
   onMatchingDone?: (tracks: Track[], matched: number, failed: number) => void;
+  visible?: boolean;
 }) {
   const [phase, setPhase] = useState<'instructions' | 'matching' | 'saving' | 'done'>('instructions');
   const [results, setResults] = useState<{ title: string; artist: string; status: 'pending' | 'fetching' | 'matched' | 'failed'; url?: string; cover?: string }[]>([]);
@@ -610,6 +636,12 @@ function CsvImportModal({
   const [isUploadHovered, setIsUploadHovered] = useState(false);
   const [isCloseHovered, setIsCloseHovered] = useState(false);
   const [isMinHovered, setIsMinHovered] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current = true;
+    };
+  }, []);
 
   const handleFile = async (file: File) => {
     if (!file.name.endsWith('.csv')) { showToast('Please upload a .csv file from Exportify'); return; }
@@ -708,7 +740,13 @@ function CsvImportModal({
       completed++;
       setStatusMsg(`Matching ${completed} / ${total}...`);
       onProgress?.(matched.length, total, `${completed}/${total} matched`);
-      if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+      if (listRef.current) {
+        const el = listRef.current;
+        const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+        if (isNearBottom) {
+          el.scrollTop = el.scrollHeight;
+        }
+      }
     };
 
     const semaphore = {
@@ -742,7 +780,7 @@ function CsvImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='matching'?undefined:onClose}>
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='matching'?undefined:onClose}>
       <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
         onClick={e => e.stopPropagation()}>
 
@@ -1339,6 +1377,46 @@ function validateSettingsChange(
   return null; 
 }
 
+const SettingsSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onChange}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: "relative",
+        width: "42px",
+        height: "24px",
+        borderRadius: "12px",
+        flexShrink: 0,
+        background: checked ? "rgba(226,221,217,0.75)" : "#232020",
+        border: "1px solid",
+        borderColor: checked ? "rgba(226,221,217,0.25)" : hovered ? "#3a3735" : "#2e2b2b",
+        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        cursor: "pointer",
+        outline: "none",
+        boxShadow: checked ? "0 0 8px rgba(226,221,217,0.15)" : "none"
+      }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          top: "2px",
+          width: "18px",
+          height: "18px",
+          borderRadius: "50%",
+          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+          background: checked ? "#0c0b0b" : "#5c5755",
+          left: checked ? "20px" : "2px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+          transform: hovered ? "scale(1.05)" : "scale(1)"
+        }}
+      />
+    </button>
+  );
+};
+
 function SettingsPanel({
   downloadQuality, setDownloadQuality, downloadPath, handleSelectDirectory,
   downloadFormat, setDownloadFormat,
@@ -1380,6 +1458,12 @@ function SettingsPanel({
   const [activeTab, setActiveTab] = useState<SettingsTab>('updates');
   const [diskInfo, setDiskInfo] = useState<DiskInfo | null>(null);
   const [switchingDevice, setSwitchingDevice] = useState(false);
+  const [startupNav, setStartupNav] = useState(() => loadLS('vg_startupNav', 'home'));
+  const [hoveredSlider, setHoveredSlider] = useState<string | null>(null);
+  const handleStartupNavChange = (v: string) => {
+    setStartupNav(v);
+    saveLS('vg_startupNav', v);
+  };
 
   useEffect(() => {
     invoke<DiskInfo>('get_disk_usage', { path: downloadPath }).then(setDiskInfo).catch(() => {});
@@ -1395,25 +1479,27 @@ function SettingsPanel({
 
   return (
     <div style={{flex:1,display:"flex",overflow:"hidden"}}>
-      <div style={{width:"172px",flexShrink:0,borderRight:"1px solid #1c1a1a",display:"flex",flexDirection:"column",padding:"14px 10px",gap:"2px"}}>
-        <div style={{fontSize:"9px",fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",color:"#363230",padding:"0 8px 10px"}}>Settings</div>
+      <div style={{width:"180px",flexShrink:0,borderRight:"1px solid #1c1a1a",display:"flex",flexDirection:"column",padding:"14px 10px",gap:"3px"}}>
+        <div style={{fontSize:"9px",fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",color:"#5c5755",padding:"0 8px 12px"}}>Settings</div>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             style={{
               display:"flex",alignItems:"center",gap:"9px",
-              padding:"8px 10px",borderRadius:"8px",
+              padding:"8px 10px 8px 12px",borderRadius:"8px",
               border:"none",cursor:"pointer",
               textAlign:"left",width:"100%",
               fontSize:"12.5px",fontWeight:500,
-              background:activeTab===tab.id?"rgba(226,221,217,0.07)":"transparent",
-              color:activeTab===tab.id?"#e2ddd9":"#5c5755",
+              background:activeTab===tab.id?"rgba(226,221,217,0.04)":"transparent",
+              color:activeTab===tab.id?"#e2ddd9":"#8c8682",
               position:"relative",
               transition:"background .12s,color .12s",
-              boxShadow:activeTab===tab.id?"inset 2px 0 0 #9e9894":"none",
             }}
-            onMouseEnter={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="rgba(226,221,217,0.04)";e.currentTarget.style.color="#9e9894";}}}
-            onMouseLeave={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#5c5755";}}}>
-            <span style={{color:activeTab===tab.id?"#9e9894":"#363230",display:"flex",flexShrink:0}}>{tab.icon}</span>
+            onMouseEnter={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="rgba(255,255,255,0.015)";e.currentTarget.style.color="#e2ddd9";}}}
+            onMouseLeave={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#8c8682";}}}>
+            {activeTab === tab.id && (
+              <span style={{position:"absolute",left:"0",top:"10px",bottom:"10px",width:"3px",borderRadius:"1.5px",background:"#9e9894"}} />
+            )}
+            <span style={{color:activeTab===tab.id?"#9e9894":"#3a3735",display:"flex",flexShrink:0}}>{tab.icon}</span>
             <span style={{flex:1}}>{tab.label}</span>
             {tab.id === 'updates' && updateAvailable && (
               <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"#9e9894",flexShrink:0}} />
@@ -1432,7 +1518,19 @@ function SettingsPanel({
               <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Check for new releases of Veluna.</p>
             </div>
 
-            <div style={{borderRadius:"10px",border:`1px solid ${updateAvailable?"rgba(226,221,217,0.12)":"#1c1a1a"}`,padding:"14px",display:"flex",alignItems:"flex-start",gap:"12px",background:updateAvailable?"rgba(226,221,217,0.04)":"#161414"}}>
+            <div style={{
+              borderRadius:"12px",
+              border:updateAvailable?"1px solid rgba(158, 152, 148, 0.3)":"1px solid #1c1a1a",
+              padding:"14px",
+              display:"flex",
+              alignItems:"flex-start",
+              gap:"12px",
+              background:updateAvailable?"rgba(158, 152, 148, 0.03)":"#151313",
+              transition:"border-color 0.2s"
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(158, 152, 148, 0.45)' : '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(158, 152, 148, 0.3)' : '#1c1a1a'; }}
+            >
               <div style={{marginTop:"1px",flexShrink:0,color:updateAvailable?"#9e9894":"#363230"}}>
                 {updateAvailable ? <ArrowUpCircle size={20}/> : <CheckCircle size={20}/>}
               </div>
@@ -1466,8 +1564,10 @@ function SettingsPanel({
             </div>
 
             {}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Quality</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Quality of downloaded MP3 files.</p>
               </div>
@@ -1491,14 +1591,18 @@ function SettingsPanel({
             </div>
 
             {}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Download Folder</h3>
               </div>
-              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={handleSelectDirectory}>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.015)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={handleSelectDirectory}>
                 <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:"12px",fontFamily:"monospace",color:"#c8c4c0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{downloadPath}</p>
-                  {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} audio files</p>}
+                  <div style={{display:"inline-block",padding:"5px 9px",background:"#1c1a1a",border:"1px solid #282525",borderRadius:"6px",fontSize:"11.5px",fontFamily:"monospace",color:"#c8c4c0",maxWidth:"90%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {downloadPath}
+                  </div>
+                  {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"6px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} audio files</p>}
                 </div>
                 <button style={{padding:"6px",marginLeft:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",flexShrink:0,borderRadius:"7px",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <FolderOpen size={17} />
@@ -1507,8 +1611,10 @@ function SettingsPanel({
             </div>
 
             {}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Format</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Container format for downloaded files.</p>
               </div>
@@ -1533,29 +1639,25 @@ function SettingsPanel({
             </div>
 
             {}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Image size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> File Options</h3>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Image size={14} style={{color:"#5c5755"}} /> File Options</h3>
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",borderBottom:"1px solid #1c1a1a"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Embed Thumbnail</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{embedThumbnail ? 'Cover art written into file tags' : 'No cover art in downloaded files'}</p>
                 </div>
-                <button onClick={() => setEmbedThumbnail(!embedThumbnail)}
-                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:embedThumbnail?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:embedThumbnail?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
-                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:embedThumbnail?"#0c0b0b":"#5c5755",left:embedThumbnail?"20px":"2px"}} />
-                </button>
+                <SettingsSwitch checked={embedThumbnail} onChange={() => setEmbedThumbnail(!embedThumbnail)} />
               </div>
               <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Duplicate Detection</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{duplicateDetect ? 'Skips tracks already in your download folder' : 'Always download regardless of duplicates'}</p>
                 </div>
-                <button onClick={() => setDuplicateDetect(!duplicateDetect)}
-                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:duplicateDetect?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:duplicateDetect?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
-                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:duplicateDetect?"#0c0b0b":"#5c5755",left:duplicateDetect?"20px":"2px"}} />
-                </button>
+                <SettingsSwitch checked={duplicateDetect} onChange={() => setDuplicateDetect(!duplicateDetect)} />
               </div>
             </div>
           </div>
@@ -1569,9 +1671,11 @@ function SettingsPanel({
             </div>
 
             {/* Loudnorm */}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Zap size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Audio Normalization</h3>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Zap size={14} style={{color:"#5c5755"}} /> Audio Normalization</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Equalizes loudness across all tracks so nothing is too loud or too quiet.</p>
               </div>
               <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -1579,55 +1683,50 @@ function SettingsPanel({
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Loudnorm (EBU R128)</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{loudnormEnabled ? 'Active — consistent volume across tracks' : 'Disabled — faster start, raw volume'}</p>
                 </div>
-                <button onClick={() => {
+                <SettingsSwitch checked={loudnormEnabled} onChange={() => {
                   const next = !loudnormEnabled;
                   const warn = validateSettingsChange('loudnormEnabled', next, { loudnormEnabled, skipSilence, eq });
                   if (warn) { showToast(`⚠ ${warn}`); }
                   setLoudnormEnabled(next);
-                }}
-                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:loudnormEnabled?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:loudnormEnabled?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
-                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:loudnormEnabled?"#0c0b0b":"#5c5755",left:loudnormEnabled?"20px":"2px"}} />
-                </button>
+                }} />
               </div>
             </div>
 
             {/* Skip Silence */}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><SkipForward size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Smart Playback</h3>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><SkipForward size={14} style={{color:"#5c5755"}} /> Smart Playback</h3>
               </div>
               <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Skip Silence</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{skipSilence ? 'Auto-skips silent parts between tracks' : 'Play all audio including silence'}</p>
                 </div>
-                <button onClick={() => {
+                <SettingsSwitch checked={skipSilence} onChange={() => {
                   const next = !skipSilence;
                   const warn = validateSettingsChange('skipSilence', next, { loudnormEnabled, skipSilence, eq });
                   if (warn) { showToast(`⚠ ${warn}`); }
                   setSkipSilence(next);
-                }}
-                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:skipSilence?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:skipSilence?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
-                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:skipSilence?"#0c0b0b":"#5c5755",left:skipSilence?"20px":"2px"}} />
-                </button>
+                }} />
               </div>
               <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderTop:"1px solid #1c1a1a"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Autoplay Recommendations</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{autoplayEnabled ? 'Queue similar tracks automatically when music ends' : 'Stop playback when music ends'}</p>
                 </div>
-                <button onClick={() => setAutoplayEnabled(!autoplayEnabled)}
-                  style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:autoplayEnabled?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:autoplayEnabled?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s",cursor:"pointer"}}>
-                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:autoplayEnabled?"#0c0b0b":"#5c5755",left:autoplayEnabled?"20px":"2px"}} />
-                </button>
+                <SettingsSwitch checked={autoplayEnabled} onChange={() => setAutoplayEnabled(!autoplayEnabled)} />
               </div>
             </div>
 
             {/* Audio Output */}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Volume2 size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Audio Output</h3>
+                  <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Volume2 size={14} style={{color:"#5c5755"}} /> Audio Output</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Select output device. Switches instantly without restarting playback.</p>
                 </div>
                 <button onClick={() => invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices').then(setAudioDevices).catch(() => {})}
@@ -1652,10 +1751,10 @@ function SettingsPanel({
                         } catch (e) { showToast(`Switch failed: ${e}`); }
                         finally { setSwitchingDevice(false); }
                       }}
-                      style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 14px",textAlign:"left",cursor:isDefault?"default":"pointer",width:"100%",background:isDefault?"rgba(255,255,255,0.025)":"transparent",border:"none",transition:"background .1s",opacity:switchingDevice&&!isDefault?0.4:1}}
-                      onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.035)";}}
+                      style={{display:"flex",alignItems:"center",gap:"10px",padding:"9px 14px",textAlign:"left",cursor:isDefault?"default":"pointer",width:"100%",background:isDefault?"rgba(226,221,217,0.03)":"transparent",border:"none",transition:"background .1s",opacity:switchingDevice&&!isDefault?0.4:1}}
+                      onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.015)";}}
                       onMouseLeave={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                      <div style={{width:"26px",height:"26px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"rgba(226,221,217,0.2)":"rgba(255,255,255,0.05)"}`,background:isDefault?"rgba(226,221,217,0.06)":"#1c1a1a"}}>
+                      <div style={{width:"26px",height:"26px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"rgba(226,221,217,0.15)":"rgba(255,255,255,0.03)"}`,background:isDefault?"rgba(226,221,217,0.05)":"#1c1a1a"}}>
                         {dev.form === 'headphones'
                           ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? '#9e9894' : '#3a3a3a'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
                           : <Volume2 size={13} style={{color:isDefault?"#9e9894":"#363230"}}/>}
@@ -1664,7 +1763,7 @@ function SettingsPanel({
                         <p style={{fontSize:"12.5px",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isDefault?"#e2ddd9":"#5c5755"}}>{dev.name}</p>
                         {dev.form&&<p style={{fontSize:"10px",color:"#363230",textTransform:"capitalize",marginTop:"1px"}}>{dev.form}</p>}
                       </div>
-                      {isDefault&&<span style={{fontSize:"9.5px",fontWeight:700,color:"#9e9894",flexShrink:0,letterSpacing:".05em"}}>ACTIVE</span>}
+                      {isDefault&&<span style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"9.5px",fontWeight:700,color:"#9e9894",flexShrink:0,letterSpacing:".05em"}}><span style={{width:"5px",height:"5px",borderRadius:"50%",background:"#9e9894",boxShadow:"0 0 4px #9e9894"}}/>ACTIVE</span>}
                     </button>
                   );
                 })}
@@ -1672,9 +1771,11 @@ function SettingsPanel({
             </div>
 
             {/* Lyrics Source */}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Mic2 size={14} className="text-[#d4cfcf]" /> Lyrics Source</h3>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
+                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Mic2 size={14} style={{color:"#5c5755"}} /> Lyrics Source</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Primary source for synced lyrics. Falls back to lrclib → lyrics.ovh automatically.</p>
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px"}}>
@@ -1695,10 +1796,12 @@ function SettingsPanel({
             </div>
 
             {/* Equalizer */}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"10px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><BarChart2 size={14} className="text-[#d4cfcf]" /> Equalizer</h3>
+                  <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><BarChart2 size={14} style={{color:"#5c5755"}} /> Equalizer</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Adjust bass, mid, and treble. Applied in real-time via mpv.</p>
                 </div>
                 <button onClick={() => { setEq({ bass: 0, mid: 0, treble: 0 }); invoke('set_equalizer', { bass: 0, mid: 0, treble: 0 }).catch(() => {}); }}
@@ -1722,8 +1825,9 @@ function SettingsPanel({
                         {eq[key] > 0 ? `+${eq[key]}` : eq[key]}dB
                       </span>
                     </div>
-                    <div style={{position:"relative",height:"4px",background:"#232020",borderRadius:"2px"}}>
-                      {/* center tick */}
+                    <div style={{position:"relative",height:"4px",background:"#1e1b1b",borderRadius:"2px"}}
+                      onMouseEnter={() => setHoveredSlider(key)}
+                      onMouseLeave={() => setHoveredSlider(null)}>
                       <div style={{position:"absolute",top:0,left:"50%",width:"1px",height:"100%",background:"#2e2b2b",borderRadius:"1px",pointerEvents:"none"}}/>
                       <input type="range" min="-12" max="12" step="1" value={eq[key]}
                         onChange={e => {
@@ -1734,18 +1838,16 @@ function SettingsPanel({
                         }}
                         style={{position:"absolute",inset:0,width:"100%",opacity:0,cursor:"pointer",height:"100%"}}
                       />
-                      {/* filled track */}
                       <div style={{
                           position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s",
                           left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
                           width: `${(Math.abs(eq[key]) / 24) * 100}%`,
                           background: eq[key] >= 0 ? '#9e9894' : '#3a3a3a',
                         }} />
-                      {/* thumb */}
                       <div style={{
                           position: "absolute",
                           top: "50%",
-                          transform: "translateY(-50%)",
+                          transform: hoveredSlider === key ? "translateY(-50%) scale(1.2)" : "translateY(-50%) scale(1)",
                           width: "12px",
                           height: "12px",
                           borderRadius: "50%",
@@ -1755,20 +1857,17 @@ function SettingsPanel({
                           background: "#0c0b0b",
                           boxShadow: "0 2px 6px rgba(0,0,0,0.6)",
                           pointerEvents: "none",
-                          transition: "left 0.15s ease-out",
+                          transition: "left 0.15s ease-out, transform 0.15s ease",
                           left: `calc(${((eq[key] + 12) / 24) * 100}% - 6px)`
                         }} />
-
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
           </div>
         )}
 
-        {}
         {activeTab === 'storage' && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
@@ -1776,21 +1875,24 @@ function SettingsPanel({
               <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Backup and restore your playlists, queue, settings, and history.</p>
             </div>
 
-            {}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Backup Location</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Choose where backup files are saved.</p>
               </div>
-              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={async () => {
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.015)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={async () => {
                 try {
                   const sel = await (await import('@tauri-apps/plugin-dialog')).open({ directory: true, multiple: false, defaultPath: backupPath });
                   if (sel) setBackupPath(sel as string);
                 } catch {}
               }}>
                 <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:"12px",fontFamily:"monospace",color:"#c8c4c0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{backupPath || downloadPath}</p>
-                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Backup file: veluna_backup.json</p>
+                  <div style={{display:"inline-block",padding:"5px 9px",background:"#1c1a1a",border:"1px solid #282525",borderRadius:"6px",fontSize:"11.5px",fontFamily:"monospace",color:"#c8c4c0",maxWidth:"90%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {backupPath || downloadPath}
+                  </div>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"6px"}}>Backup file: veluna_backup.json</p>
                 </div>
                 <button style={{padding:"6px",marginLeft:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",flexShrink:0,borderRadius:"7px",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
                   <FolderOpen size={17} />
@@ -1798,9 +1900,10 @@ function SettingsPanel({
               </div>
             </div>
 
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              {}
-              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={onBackup}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s",borderBottom:"1px solid #1c1a1a"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.015)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={onBackup}>
                 <div>
                   <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Create Backup</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Save all playlists, queue, history and settings to a JSON file.</p>
@@ -1810,8 +1913,7 @@ function SettingsPanel({
                 </button>
               </div>
 
-              {}
-              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.025)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={onRestore}>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.015)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={onRestore}>
                 <div>
                   <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Restore Backup</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Restore your data and settings from a backup file.</p>
@@ -1820,15 +1922,18 @@ function SettingsPanel({
                   <ArchiveRestore size={17} />
                 </button>
               </div>
+            </div>
 
-              {}
-              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(180,40,40,0.05)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
-                onClick={onReset}>
+            <div style={{borderRadius:"12px",border:"1px solid #361a1a",background:"#151313",overflow:"hidden",transition:"all 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#5c2222'; e.currentTarget.style.background = 'rgba(180,40,40,0.02)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#361a1a'; e.currentTarget.style.background = '#151313'; }}
+              onClick={onReset}>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
                 <div>
-                  <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Reset Veluna App</h3>
-                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Clear all data and reset the app to its default state.</p>
+                  <h3 style={{fontSize:"13px",fontWeight:600,color:"#d06060",margin:0}}>Reset Veluna App</h3>
+                  <p style={{fontSize:"11px",color:"#7c5c5c",marginTop:"3px"}}>Clear all local database content and preferences. This cannot be undone.</p>
                 </div>
-                <button style={{padding:"6px",color:"#a05050",background:"none",border:"none",cursor:"pointer",display:"flex",flexShrink:0,marginLeft:"10px"}}>
+                <button style={{padding:"6px",color:"#d06060",background:"none",border:"none",cursor:"pointer",display:"flex",flexShrink:0,marginLeft:"10px"}}>
                   <Trash2 size={16}/>
                 </button>
               </div>
@@ -1842,8 +1947,10 @@ function SettingsPanel({
               <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Appearance</h2>
               <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>Tray icon and window behaviour.</p>
             </div>
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>System Tray</h3>
                 <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Left-click icon toggles window. Tray menu: play/pause, next, prev, quit.</p>
               </div>
@@ -1852,13 +1959,37 @@ function SettingsPanel({
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Enable Tray Icon</p>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{trayEnabled ? 'Active — close button hides to tray' : 'Disabled — close exits app'}</p>
                 </div>
-                <button onClick={async () => {
+                <SettingsSwitch checked={trayEnabled} onChange={async () => {
                   const next = !trayEnabled;
                   try { await invoke('tray_set', { enabled: next }); setTrayEnabled(next); }
                   catch (e) { showToast(`Tray unavailable: ${e}`); }
-                }} style={{position:"relative",width:"40px",height:"22px",borderRadius:"11px",flexShrink:0,background:trayEnabled?"rgba(226,221,217,0.65)":"#232020",border:"1px solid",borderColor:trayEnabled?"rgba(226,221,217,0.2)":"#2e2b2b",transition:"background .2s,border-color .2s",cursor:"pointer"}}>
-                  <span style={{position:"absolute",top:"2px",width:"16px",height:"16px",borderRadius:"50%",transition:"left .2s",background:trayEnabled?"#0c0b0b":"#5c5755",left:trayEnabled?"20px":"2px"}}/>
-                </button>
+                }} />
+              </div>
+            </div>
+
+            <div style={{borderRadius:"12px",border:"1px solid #1c1a1a",background:"#151313",overflow:"hidden",transition:"border-color 0.2s"}}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#282525'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1c1a1a'; }}>
+              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.005)"}}>
+                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Default Startup Page</h3>
+                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Choose which view is shown when Veluna is launched.</p>
+              </div>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Startup View</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Currently opens on {startupNav === 'home' ? 'Home' : startupNav === 'downloads' ? 'Offline' : startupNav === 'stats' ? 'Stats' : startupNav === 'library' ? 'Playlists' : 'Settings'}</p>
+                </div>
+                <ThemedSelect
+                  value={startupNav}
+                  onChange={handleStartupNavChange}
+                  options={[
+                    { value: 'home', label: 'Home', desc: 'Main discovery dashboard' },
+                    { value: 'downloads', label: 'Offline', desc: 'Your downloaded local tracks' },
+                    { value: 'library', label: 'Playlists', desc: 'Your playlists and Liked Songs' },
+                    { value: 'stats', label: 'Stats', desc: 'Your personal listening insights' },
+                    { value: 'settings', label: 'Settings', desc: 'Preferences and configurations' },
+                  ]}
+                />
               </div>
             </div>
           </div>
@@ -2374,7 +2505,7 @@ export default function Veluna() {
   const setIsPlayingSync = useCallback((v: boolean) => { isPlayingRef.current = v; setIsPlaying(v); }, []);
 
   const [isLoadingTrack, setIsLoadingTrack] = useState(false);
-  const [activeNav, setActiveNav] = useState('home');
+  const [activeNav, setActiveNav] = useState(() => loadLS('vg_startupNav', 'home'));
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState(__APP_VERSION__);
   useEffect(() => {
@@ -2420,6 +2551,9 @@ export default function Veluna() {
   const [listenSecs, setListenSecs] = useState<Record<string, number>>(() => loadLS('vg_listenSecs', {}));
   const [firstSeen, setFirstSeen] = useState<Record<string, string>>(() => loadLS('vg_firstSeen', {}));
   const [dailyPlays, setDailyPlays] = useState<Record<string, number>>(() => loadLS('vg_dailyPlays', {}));
+  const [listeningHistory, setListeningHistory] = useState<ListeningEvent[]>(() => loadLS('vg_listeningHistory', []));
+  useEffect(() => { saveLS('vg_listeningHistory', listeningHistory); }, [listeningHistory]);
+  const [statsTimeRange, setStatsTimeRange] = useState<'7days' | '30days' | 'all'>('all');
   const listenSecsRef = useRef(listenSecs);
   useEffect(() => { listenSecsRef.current = listenSecs; }, [listenSecs]);
   const [shuffle, setShuffle] = useState<boolean>(() => loadLS('vg_shuffle', false));
@@ -2697,6 +2831,12 @@ export default function Veluna() {
         listenSecsRef.current = next;
         return next;
       });
+      setListeningHistory(prev => {
+        if (prev.length === 0) return prev;
+        const next = [...prev];
+        next[0] = { ...next[0], secs: next[0].secs + 5 };
+        return next;
+      });
     }, 5000);
     return () => clearInterval(id);
   }, [isPlaying, currentTrack?.url, isLoadingTrack]);
@@ -2769,7 +2909,7 @@ export default function Veluna() {
       const data = {
         version: 1,
         exportedAt: new Date().toISOString(),
-        playlists, queue, playHistory, playCounts, listenSecs, dailyPlays, firstSeen,
+        playlists, queue, playHistory, playCounts, listenSecs, dailyPlays, firstSeen, listeningHistory,
         shuffle, repeatMode, volume, playbackSpeed, eq,
         downloadQuality, downloadFormat, downloadPath, backupPath,
         embedThumbnail, duplicateDetect,
@@ -2792,7 +2932,7 @@ export default function Veluna() {
         showToast('Backup saved — set a Backup Location in Storage settings to choose a folder');
       }
     } catch (e) { showToast(`Backup failed: ${e}`); }
-  }, [playlists, queue, playHistory, playCounts, listenSecs, dailyPlays, firstSeen,
+  }, [playlists, queue, playHistory, playCounts, listenSecs, dailyPlays, firstSeen, listeningHistory,
       shuffle, repeatMode, volume, playbackSpeed, eq,
       downloadQuality, downloadFormat, downloadPath, backupPath,
       embedThumbnail, duplicateDetect, loudnormEnabled, skipSilence,
@@ -2822,6 +2962,7 @@ export default function Veluna() {
         if (data.listenSecs)      setListenSecs(ls('vg_listenSecs', data.listenSecs));
         if (data.dailyPlays)      setDailyPlays(ls('vg_dailyPlays', data.dailyPlays));
         if (data.firstSeen)       setFirstSeen(ls('vg_firstSeen', data.firstSeen));
+        if (data.listeningHistory) setListeningHistory(ls('vg_listeningHistory', data.listeningHistory));
         if (data.shuffle !== undefined) setShuffle(ls('vg_shuffle', data.shuffle));
         if (data.repeatMode)      setRepeatMode(ls('vg_repeat', data.repeatMode));
         if (data.volume !== undefined)  { setVolume(ls('vg_volume', data.volume)); invoke('set_volume', { volume: data.volume }).catch(() => {}); }
@@ -2905,6 +3046,7 @@ export default function Veluna() {
     const today = new Date().toISOString().slice(0, 10);
     setDailyPlays(prev => { const n = { ...prev, [today]: (prev[today] || 0) + 1 }; saveLS('vg_dailyPlays', n); return n; });
     setFirstSeen(prev => { if (prev[track.url]) return prev; const n = { ...prev, [track.url]: new Date().toISOString() }; saveLS('vg_firstSeen', n); return n; });
+    setListeningHistory(prev => [{ url: track.url, playedAt: new Date().toISOString(), secs: 0 }, ...prev].slice(0, 300));
 
     if (!fromQueue) {
       setPlayHistory(prev => [track, ...prev].slice(0, 50));
@@ -4247,8 +4389,15 @@ export default function Veluna() {
                                   }
                                 }}
                               >
-                                <div style={{width:'42px',height:'42px',borderRadius:'7px',overflow:'hidden',flexShrink:0,position:'relative',background:'#1c1a1a'}}>
-                                  <img src={track.cover} alt={track.title} style={{width:'100%',height:'100%',objectFit:'cover'}} loading="lazy" />
+                                <div style={{
+                                  width:'42px',height:'42px',borderRadius:'7px',overflow:'hidden',flexShrink:0,position:'relative',
+                                  background: getTrackGradient(track.title, track.artist),
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  <Music size={14} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                  <img src={track.cover} alt={track.title} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy" />
                                   {(isActive&&isPlaying) && (
                                     <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                                       <div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'10px'}}>
@@ -4285,8 +4434,14 @@ export default function Veluna() {
                                     onContextMenu={e => openCtx(e, { type: 'track', track })}
                                     className={`v-card${isActive?' v-card--active':''}`}
                                     style={{ animationDelay:`${tIdx*25+gIdx*60}ms` }}>
-                                    <div className="v-card__art">
-                                      <img src={track.cover} alt={track.title} loading="lazy" />
+                                    <div className="v-card__art" style={{
+                                      background: getTrackGradient(track.title, track.artist),
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <Music size={42} style={{position: 'absolute', color: 'rgba(255,255,255,0.18)'}} />
+                                      <img src={track.cover} alt={track.title} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy" />
                                       <div className="v-card__overlay">
                                         {isActive&&isPlaying
                                           ? <div style={{display:'flex',gap:'3px',alignItems:'flex-end',height:'18px'}}>{[100,65,80].map((h,j)=><div key={j} style={{width:'3px',background:'#e2ddd9',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>
@@ -4322,7 +4477,16 @@ export default function Veluna() {
                                   className={`v-track${isActive?' v-track--active':''}`}
                                   style={{animationDelay:`${i*40}ms`}}>
                                   <div className="v-track__num">{isActive&&isPlaying?<div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px',justifyContent:'center'}}>{[100,65,80].map((h,j)=><div key={j} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>:i+1}</div>
-                                  <div className="v-track__art"><img src={track.cover} alt={track.title} loading="lazy"/></div>
+                                  <div className="v-track__art" style={{
+                                     position: 'relative',
+                                     background: getTrackGradient(track.title, track.artist),
+                                     display: 'flex',
+                                     alignItems: 'center',
+                                     justifyContent: 'center'
+                                   }}>
+                                     <Music size={16} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                     <img src={track.cover} alt={track.title} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy"/>
+                                   </div>
                                   <div className="v-track__info">
                                     <div className="v-track__title">{track.title}</div>
                                     <div style={{display:'flex',alignItems:'center',gap:'8px',marginTop:'3px'}}>
@@ -4354,7 +4518,16 @@ export default function Veluna() {
                                   onContextMenu={e => openCtx(e, { type: 'track', track })}
                                   className={`v-track${isActive?' v-track--active':''}`}
                                   style={{animationDelay:`${i*40}ms`}}>
-                                  <div className="v-track__art"><img src={track.cover} alt={track.title} loading="lazy"/></div>
+                                  <div className="v-track__art" style={{
+                                    position: 'relative',
+                                    background: getTrackGradient(track.title, track.artist),
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}>
+                                    <Music size={16} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                    <img src={track.cover} alt="" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy"/>
+                                  </div>
                                   <div className="v-track__info">
                                     <div className="v-track__title">{track.title}</div>
                                     {cleanArtist(track.artist) && <div className="v-track__artist">{cleanArtist(track.artist)}</div>}
@@ -4449,12 +4622,15 @@ export default function Veluna() {
                   <span style={{fontSize:"13px",fontWeight:500}}>Playlists</span>
                 </button>
                 <div style={{display:"flex",alignItems:"flex-end",gap:"18px",marginBottom:"18px"}}>
-                  <div style={{width:"100px",height:"100px",borderRadius:"12px",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",overflow:"hidden",cursor:openPlaylist.id!=="p1"?"pointer":"default"}}
+                  <div style={{width:"100px",height:"100px",borderRadius:"12px",background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(140,30,30,0.3) 0%,#1c1a1a 100%)":"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",overflow:"hidden",cursor:openPlaylist.id!=="p1"?"pointer":"default"}}
                     onClick={()=>openPlaylist.id!=='p1'&&handleCoverUpload(openPlaylist.id)} onMouseEnter={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='1';}} onMouseLeave={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='0';}}>
-                    {getPlaylistCover(openPlaylist)
-                      ? <img src={getPlaylistCover(openPlaylist)!} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
-                      : openPlaylist.id === 'p1' ? <Heart size={48} style={{color:'#9e9894',fill:'rgba(226,221,217,0.12)'}} /> : <ListMusic size={48} style={{color:'#5c5755'}} />}
-                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s"}}><ImagePlus size={20} style={{color:"#e2ddd9"}}/></div>}
+                    <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                      {openPlaylist.id === 'p1' ? <Heart size={48} style={{color:'#e05555',fill:'rgba(220,60,60,0.2)'}} /> : <ListMusic size={48} style={{color:'#5c5755'}} />}
+                    </div>
+                    {getPlaylistCover(openPlaylist) && (
+                      <img src={getPlaylistCover(openPlaylist)!} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
+                    )}
+                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}><ImagePlus size={20} style={{color:"#e2ddd9"}}/></div>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <p style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#5c5755",marginBottom:"4px"}}>Playlist</p>
@@ -4619,12 +4795,15 @@ export default function Veluna() {
                             };
                             window.addEventListener('mouseup', onUp);
                           }}>
-                          {cover
-                            ? <img src={cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
-                            : pl.id==='p1'
+                          <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            {pl.id==='p1'
                               ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(140,30,30,0.5) 0%,#1c1a1a 100%)"}}><Heart size={22} style={{color:"#e05555",fill:"rgba(220,60,60,0.35)"}}/></div>
                               : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.03)"}}><ListMusic size={24} style={{color:"#363230"}}/></div>}
-                          <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s"}}>
+                          </div>
+                          {cover && (
+                            <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
+                          )}
+                          <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}>
                             <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
                               style={{width:"36px",height:"36px",background:"#e2ddd9",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 14px rgba(0,0,0,0.6)",transition:"transform .1s"}}
                               onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.08)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
@@ -4652,32 +4831,57 @@ export default function Veluna() {
             )
           )}
 
-          {}
           {activeNav === 'stats' && (() => {
             const totalSecs = Object.values(listenSecs).reduce((s: number, n) => s + (n as number), 0);
             const totalPlays = Object.values(playCounts).reduce((s: number, n) => s + (n as number), 0);
-            const hrs = Math.floor(totalSecs / 3600);
-            const mins = Math.floor((totalSecs % 3600) / 60);
 
-            // Build a comprehensive track lookup from all known sources
-            const allKnownTracks: Track[] = [...new Map(
-              [...quickPicks, ...playHistory].map((t: Track) => [t.url, t])
-            ).values()];
+            const allKnownTracksMap = new Map<string, Track>();
+            [...quickPicks, ...playHistory, ...playlists.flatMap(p => p.tracks)].forEach(t => {
+              if (t && t.url) allKnownTracksMap.set(t.url, t);
+            });
 
-            // Top 5 tracks — only include entries where we have track metadata
-            const topTracks: { track: Track; count: number }[] = Object.entries(playCounts)
+            let currentPlayCounts = playCounts;
+            let currentTotalSecs = totalSecs;
+            let currentTotalPlays = totalPlays;
+
+            if (statsTimeRange !== 'all') {
+              const limitDate = new Date();
+              limitDate.setDate(limitDate.getDate() - (statsTimeRange === '7days' ? 7 : 30));
+              const limitMs = limitDate.getTime();
+
+              const rangeCounts: Record<string, number> = {};
+              let rangeTotalSecs = 0;
+              let rangeTotalPlays = 0;
+
+              listeningHistory.forEach(ev => {
+                const evTime = new Date(ev.playedAt).getTime();
+                if (evTime >= limitMs) {
+                  rangeCounts[ev.url] = (rangeCounts[ev.url] || 0) + 1;
+                  rangeTotalSecs += ev.secs;
+                  rangeTotalPlays += 1;
+                }
+              });
+
+              currentPlayCounts = rangeCounts;
+              currentTotalSecs = rangeTotalSecs;
+              currentTotalPlays = rangeTotalPlays;
+            }
+
+            const hrs = Math.floor(currentTotalSecs / 3600);
+            const mins = Math.floor((currentTotalSecs % 3600) / 60);
+
+            const topTracks: { track: Track; count: number }[] = Object.entries(currentPlayCounts)
               .sort((a, b) => (b[1] as number) - (a[1] as number))
               .slice(0, 5)
               .reduce((acc: { track: Track; count: number }[], [url, count]) => {
-                const track = allKnownTracks.find(t => t.url === url);
+                const track = allKnownTracksMap.get(url);
                 if (track) acc.push({ track, count: count as number });
                 return acc;
               }, []);
 
-            // Top 5 artists
             const artistCounts: Record<string, number> = {};
-            Object.entries(playCounts).forEach(([url, count]) => {
-              const artist = allKnownTracks.find(t => t.url === url)?.artist;
+            Object.entries(currentPlayCounts).forEach(([url, count]) => {
+              const artist = allKnownTracksMap.get(url)?.artist;
               if (artist && artist.trim()) {
                 artistCounts[artist] = (artistCounts[artist] || 0) + (count as number);
               }
@@ -4685,12 +4889,11 @@ export default function Veluna() {
             const topArtists: [string, number][] = Object.entries(artistCounts)
               .sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-            // Top genres
             const genreCounts: Record<string, number> = {};
             GENRES.forEach(g => { genreCounts[g.id] = 0; });
-            allKnownTracks.forEach(track => {
+            allKnownTracksMap.forEach(track => {
               const text = (track.title + ' ' + track.artist).toLowerCase();
-              const playCount = playCounts[track.url] || 0;
+              const playCount = currentPlayCounts[track.url] || 0;
               if (playCount > 0) {
                 GENRES.forEach(g => {
                   if (g.keywords.some(kw => text.includes(kw))) {
@@ -4705,7 +4908,6 @@ export default function Veluna() {
               .sort((a, b) => b.score - a.score)
               .slice(0, 5);
 
-            // Last 7 days bar chart
             const today = new Date();
             const days = Array.from({ length: 7 }, (_, i) => {
               const d = new Date(today);
@@ -4724,10 +4926,30 @@ export default function Veluna() {
                   setDailyPlays({}); saveLS('vg_dailyPlays', {});
                   setFirstSeen({}); saveLS('vg_firstSeen', {});
                   setPlayHistory([]); saveLS('vg_playHistory', []);
+                  setListeningHistory([]); saveLS('vg_listeningHistory', []);
                   showToast('Stats reset');
                 }
               });
             };
+
+            const hourCounts = Array(24).fill(0);
+            const targetHistory = statsTimeRange === 'all' ? listeningHistory : listeningHistory.filter(ev => {
+              const limitDate = new Date();
+              limitDate.setDate(limitDate.getDate() - (statsTimeRange === '7days' ? 7 : 30));
+              return new Date(ev.playedAt).getTime() >= limitDate.getTime();
+            });
+            targetHistory.forEach(ev => {
+              const hr = new Date(ev.playedAt).getHours();
+              hourCounts[hr]++;
+            });
+            const maxHour = hourCounts.reduce((maxIdx, val, idx, arr) => val > arr[maxIdx] ? idx : maxIdx, 0);
+            let timeOfDay = 'Night';
+            if (maxHour >= 5 && maxHour < 12) timeOfDay = 'Morning';
+            else if (maxHour >= 12 && maxHour < 17) timeOfDay = 'Afternoon';
+            else if (maxHour >= 17 && maxHour < 22) timeOfDay = 'Evening';
+
+            const uniqueArtists = new Set(targetHistory.map(ev => allKnownTracksMap.get(ev.url)?.artist).filter(Boolean));
+            const loyaltyIndex = targetHistory.length > 0 ? (targetHistory.length / new Set(targetHistory.map(ev => ev.url)).size).toFixed(1) : '0';
 
             const hasAnyStats = totalPlays > 0 || totalSecs > 0 || Object.keys(dailyPlays).some(k => (dailyPlays[k] as number) > 0);
             if (!hasAnyStats) {
@@ -4739,10 +4961,15 @@ export default function Veluna() {
               );
             }
 
+            const icons = {
+              'Time Listened': <Clock size={16} style={{color: 'rgba(255,255,255,0.2)'}} />,
+              'Tracks Played': <Play size={16} style={{color: 'rgba(255,255,255,0.2)'}} />,
+              'Unique Tracks': <ListMusic size={16} style={{color: 'rgba(255,255,255,0.2)'}} />
+            };
+
             return (
               <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px"}}>
-                {/* Header with reset button */}
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"20px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"18px"}}>
                   <h1 style={{fontSize:"18px",fontWeight:800,color:"#e2ddd9",margin:0}}>Stats</h1>
                   <button onClick={resetStats}
                     style={{fontSize:"11px",color:"#363230",cursor:"pointer",padding:"5px 10px",borderRadius:"7px",border:"1px solid #252222",background:"transparent",transition:"color .12s,border-color .12s"}}
@@ -4752,22 +4979,67 @@ export default function Veluna() {
                   </button>
                 </div>
 
-                {/* Summary cards */}
+                <div style={{display:"flex",gap:"8px",marginBottom:"20px"}}>
+                  {(['all', '30days', '7days'] as const).map(range => {
+                    const label = range === 'all' ? 'All Time' : range === '30days' ? 'Last 30 Days' : 'Last 7 Days';
+                    const active = statsTimeRange === range;
+                    return (
+                      <button key={range} onClick={() => setStatsTimeRange(range)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "7px",
+                          border: active ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
+                          background: active ? "rgba(255,255,255,0.06)" : "transparent",
+                          color: active ? "#e2ddd9" : "#5c5755",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all .12s"
+                        }}
+                        onMouseEnter={e => { if(!active) e.currentTarget.style.color = "#9e9894"; }}
+                        onMouseLeave={e => { if(!active) e.currentTarget.style.color = "#5c5755"; }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'12px',marginBottom:'28px'}}>
                   {([
                     { label: 'Time Listened', value: hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`, sub: 'total' },
-                    { label: 'Tracks Played', value: totalPlays.toLocaleString(), sub: 'all time' },
-                    { label: 'Unique Tracks', value: Object.keys(playCounts).length.toLocaleString(), sub: 'tracked' },
+                    { label: 'Tracks Played', value: currentTotalPlays.toLocaleString(), sub: 'in range' },
+                    { label: 'Unique Tracks', value: Object.keys(currentPlayCounts).length.toLocaleString(), sub: 'in range' },
                   ] as { label: string; value: string; sub: string }[]).map(({ label, value, sub }) => (
-                    <div key={label} className="v-stat-card">
-                      <div className="v-stat-card__label">{label}</div>
-                      <div className="v-stat-card__value">{value}</div>
+                    <div key={label} className="v-stat-card" style={{
+                      position: 'relative',
+                      overflow: 'hidden',
+                      background: 'rgba(22, 20, 20, 0.6)',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      transition: 'all 0.2s ease',
+                    }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                        <div className="v-stat-card__label">{label}</div>
+                        {icons[label as keyof typeof icons]}
+                      </div>
+                      <div className="v-stat-card__value" style={{marginTop: '4px'}}>{value}</div>
                       <div className="v-stat-card__sub">{sub}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Daily plays bar chart */}
                 <div style={{marginBottom:"20px"}}>
                   <div className="v-section-head">
                     <h2>Last 7 Days</h2>
@@ -4779,14 +5051,48 @@ export default function Veluna() {
                         const isToday = di === 6;
                         const barH = count === 0 ? 6 : Math.max(20, Math.round((count / maxDay) * 110));
                         return (
-                          <div key={label} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",gap:"4px",height:"100%"}}>
-                            {count > 0 && (
-                              <span className="text-[11px] font-bold tabular-nums" style={{color: isToday ? '#e2ddd9' : '#5c5755'}}>{count}</span>
-                            )}
-                            <div style={{
+                          <div key={label}
+                            style={{
+                              flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",gap:"4px",height:"100%",
+                              position: 'relative',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={e => {
+                              const tooltip = e.currentTarget.querySelector<HTMLElement>('.bar-tooltip');
+                              if (tooltip) { tooltip.style.opacity = '1'; tooltip.style.transform = 'translateY(-4px)'; }
+                              const bar = e.currentTarget.querySelector<HTMLElement>('.chart-bar');
+                              if (bar) bar.style.filter = 'brightness(1.2)';
+                            }}
+                            onMouseLeave={e => {
+                              const tooltip = e.currentTarget.querySelector<HTMLElement>('.bar-tooltip');
+                              if (tooltip) { tooltip.style.opacity = '0'; tooltip.style.transform = 'none'; }
+                              const bar = e.currentTarget.querySelector<HTMLElement>('.chart-bar');
+                              if (bar) bar.style.filter = 'none';
+                            }}
+                          >
+                            <span className="bar-tooltip" style={{
+                              position: 'absolute',
+                              bottom: `${barH + 24}px`,
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              background: '#1c1a1a',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              color: '#e2ddd9',
+                              opacity: 0,
+                              pointerEvents: 'none',
+                              transition: 'all 0.15s ease',
+                              whiteSpace: 'nowrap',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                              zIndex: 10
+                            }}>
+                              {count} play{count !== 1 ? 's' : ''}
+                            </span>
+                            <div className="chart-bar" style={{
                                 width:'100%',height:`${barH}px`,borderRadius:'6px 6px 0 0',
                                 background:count===0?'rgba(255,255,255,0.04)':isToday?'linear-gradient(180deg,rgba(226,221,217,0.9),rgba(226,221,217,0.4))':'rgba(226,221,217,0.22)',
-                                transition:'height .5s cubic-bezier(0.2,0,0,1)',
+                                transition:'height .5s cubic-bezier(0.2,0,0,1), filter .15s ease',
                               }} />
                             <span style={{fontSize:"10px",fontWeight:600,color:isToday?"#9e9894":"#363230"}}>{label}</span>
                             {isToday && <span style={{fontSize:'8px',color:'rgba(226,221,217,0.4)',fontWeight:700,marginTop:'-2px'}}>TODAY</span>}
@@ -4797,8 +5103,28 @@ export default function Veluna() {
                   </div>
                 </div>
 
+                <div style={{
+                  background:"#161414",border:"1px solid #1c1a1a",borderRadius:"12px",padding:"16px",
+                  display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px",marginBottom:"20px"
+                }}>
+                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                    <span style={{fontSize:"10px",color:"#363230",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase"}}>Favorite Time</span>
+                    <span style={{fontSize:"14px",fontWeight:800,color:"#e2ddd9"}}>{timeOfDay}</span>
+                    <span style={{fontSize:"11px",color:"#5c5755"}}>Peak listening hour: {maxHour}:00</span>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                    <span style={{fontSize:"10px",color:"#363230",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase"}}>Unique Artists</span>
+                    <span style={{fontSize:"14px",fontWeight:800,color:"#e2ddd9"}}>{uniqueArtists.size}</span>
+                    <span style={{fontSize:"11px",color:"#5c5755"}}>Explored in history</span>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                    <span style={{fontSize:"10px",color:"#363230",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase"}}>Loyalty Index</span>
+                    <span style={{fontSize:"14px",fontWeight:800,color:"#e2ddd9"}}>{loyaltyIndex}×</span>
+                    <span style={{fontSize:"11px",color:"#5c5755"}}>Avg plays per track</span>
+                  </div>
+                </div>
+
                 <div style={{display:"grid",gridTemplateColumns:topGenres.length > 0 ? "1fr 1fr 1fr" : "1fr 1fr",gap:"16px"}}>
-                  {/* Top tracks */}
                   {topTracks.length > 0 && (
                     <div>
                       <div className="v-section-head">
@@ -4810,7 +5136,16 @@ export default function Veluna() {
                             onClick={() => handlePlayInContext(track, topTracks.map(x => x.track))}
                             className="v-track">
                             <div className="v-track__num">{i+1}</div>
-                            <div className="v-track__art"><img src={track.cover} alt="" loading="lazy"/></div>
+                            <div className="v-track__art" style={{
+                              position: 'relative',
+                              background: getTrackGradient(track.title, track.artist),
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <Music size={16} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                              <img src={track.cover} alt="" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy"/>
+                            </div>
                             <div className="v-track__info">
                               <div className="v-track__title">{track.title}</div>
                               <div style={{display:'flex',alignItems:'center',gap:'8px',marginTop:'3px'}}>
@@ -4826,7 +5161,6 @@ export default function Veluna() {
                     </div>
                   )}
 
-                  {/* Top artists */}
                   {topArtists.length > 0 && (
                     <div>
                       <div className="v-section-head">
@@ -4836,29 +5170,28 @@ export default function Veluna() {
                         {topArtists.map(([artist, count], i) => {
                           const thumb = artistThumbs[artist];
                           return (
-                          <div key={artist} className="v-track"
-                            onClick={() => { setSearchQuery(artist); searchMusic(artist); setActiveNav('home'); }}>
-                            <div className="v-track__num">{i+1}</div>
-                            <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
-                              {thumb ? <img src={thumb} alt={artist} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:"11px",fontWeight:700,color:"#5c5755"}}>{artist.slice(0,2).toUpperCase()}</span>}
-                            </div>
-                            <div className="v-track__info">
-                              <div className="v-track__title">{artist}</div>
-                              <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"3px"}}>
-                                <div style={{flex:1,height:"2px",background:"#232020",borderRadius:"1px",overflow:"hidden"}}>
-                                  <div style={{height:"100%",background:"rgba(226,221,217,0.3)",borderRadius:"1px",width:`${(count/(topArtists[0]?.[1]||1))*100}%`}}/>
+                            <div key={artist} className="v-track"
+                              onClick={() => { setSearchQuery(artist); searchMusic(artist); setActiveNav('home'); }}>
+                              <div className="v-track__num">{i+1}</div>
+                              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+                                {thumb ? <img src={thumb} alt={artist} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:"11px",fontWeight:700,color:"#5c5755"}}>{artist.slice(0,2).toUpperCase()}</span>}
+                              </div>
+                              <div className="v-track__info">
+                                <div className="v-track__title">{artist}</div>
+                                <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"3px"}}>
+                                  <div style={{flex:1,height:"2px",background:"#232020",borderRadius:"1px",overflow:"hidden"}}>
+                                    <div style={{height:"100%",background:"rgba(226,221,217,0.3)",borderRadius:"1px",width:`${(count/(topArtists[0]?.[1]||1))*100}%`}}/>
+                                  </div>
+                                  <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{count}×</span>
                                 </div>
-                                <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{count}×</span>
                               </div>
                             </div>
-                          </div>
                           );
                         })}
                       </div>
                     </div>
                   )}
 
-                  {/* Top genres */}
                   {topGenres.length > 0 && (
                     <div>
                       <div className="v-section-head">
@@ -4866,7 +5199,8 @@ export default function Veluna() {
                       </div>
                       <div style={{display:"flex",flexDirection:"column",gap:"5px"}}>
                         {topGenres.map(({ label, score }, i) => (
-                          <div key={label} className="v-track" style={{cursor:"default"}}>
+                          <div key={label} className="v-track" style={{cursor:"pointer"}}
+                            onClick={() => { setSearchQuery(label); searchMusic(label); setActiveNav('home'); }}>
                             <div className="v-track__num">{i+1}</div>
                             <div className="v-track__info" style={{paddingLeft:"4px"}}>
                               <div className="v-track__title">{label}</div>
@@ -4884,7 +5218,6 @@ export default function Veluna() {
                   )}
                 </div>
 
-                {/* Recent history */}
                 {playHistory.length > 0 && (
                   <div style={{marginTop:"16px"}}>
                     <div className="v-section-head">
@@ -4897,9 +5230,18 @@ export default function Veluna() {
                         <div key={track.url + i}
                           onClick={() => handlePlayInContext(track, playHistory.slice(0, 8))}
                           className="v-track">
-                          <div className="v-track__art"><img src={track.cover} alt="" loading="lazy"/></div>
+                          <div className="v-track__art" style={{
+                            position: 'relative',
+                            background: getTrackGradient(track.title, track.artist),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <Music size={16} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                            <img src={track.cover} alt="" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.opacity = '0'; }} loading="lazy"/>
+                          </div>
                           <div className="v-track__info">
-                              <div className="v-track__title">{track.title}</div>
+                            <div className="v-track__title">{track.title}</div>
                             {cleanArtist(track.artist) && <div className="v-track__artist">{cleanArtist(track.artist)}</div>}
                           </div>
                           <Play size={12} style={{color:'#363230',flexShrink:0}}/>
@@ -5011,8 +5353,16 @@ export default function Veluna() {
                               <svg width="9" height="13" viewBox="0 0 10 14" fill="#5c5755" style={{display:"none"}}><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
                             </div>
                           </div>
-                          <div style={{width:"38px",height:"38px",borderRadius:"6px",overflow:"hidden",flexShrink:0,border:"1px solid rgba(255,255,255,0.05)",cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
-                            <img src={track.cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
+                          <div style={{
+                            width:"38px",height:"38px",borderRadius:"6px",overflow:"hidden",flexShrink:0,border:"1px solid rgba(255,255,255,0.05)",cursor:"pointer",
+                            position: "relative",
+                            background: getTrackGradient(track.title, track.artist),
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                            <Music size={13} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                            <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
                           </div>
                           <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
                             <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
@@ -5044,14 +5394,24 @@ export default function Veluna() {
           {currentTrack ? (
             <>
               {/* Art */}
-              <div style={{position:"relative",width:"52px",height:"52px",borderRadius:"9px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}
+              <div style={{
+                position:"relative",width:"52px",height:"52px",borderRadius:"9px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",
+                background: getTrackGradient(currentTrack.title, currentTrack.artist),
+                display:"flex",alignItems:"center",justifyContent:"center"
+              }}
                 onClick={()=>{ if(!currentTrack.url.startsWith('local://')) setInfoModalTrack(currentTrack); }}
                 onContextMenu={e=>{ if(!currentTrack.url.startsWith('local://')) openCtx(e,{type:'track',track:currentTrack}); }}
                 onMouseEnter={e=>{ const ov=e.currentTarget.querySelector<HTMLElement>('.art-ov'); if(ov) ov.style.opacity='1'; }}
                 onMouseLeave={e=>{ const ov=e.currentTarget.querySelector<HTMLElement>('.art-ov'); if(ov) ov.style.opacity='0'; }}>
-                {currentTrack.cover
-                  ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover",opacity:isLoadingTrack?0.4:1,transition:"opacity .2s"}}/>
-                  : <FileMusic size={18} style={{color:"#5c5755"}}/>}
+                <FileMusic size={18} style={{position: 'absolute', color:"rgba(255,255,255,0.25)"}}/>
+                {currentTrack.cover && (
+                  <img
+                    src={currentTrack.cover}
+                    alt={currentTrack.title}
+                    style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover",opacity:isLoadingTrack?0.4:1,transition:"opacity .2s"}}
+                    onError={e => { e.currentTarget.style.opacity = '0'; }}
+                  />
+                )}
                 {isLoadingTrack
                   ? <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                       <div style={{width:"16px",height:"16px",border:"2px solid #9e9894",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
@@ -5332,7 +5692,7 @@ export default function Veluna() {
                     disabled={alreadyIn}
                     className="v-ctx__item" style={{opacity:alreadyIn?0.4:1,cursor:alreadyIn?"not-allowed":"pointer"}}>
                     <div style={{width:"24px",height:"24px",borderRadius:"5px",overflow:"hidden",flexShrink:0,background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      {p.id === 'p1' ? <Heart size={12} style={{color:"#9e9894"}}/> : <ListMusic size={13} className="text-neutral-500" />}
+                      {p.id === 'p1' ? <Heart size={12} style={{color:"#e05555",fill:"rgba(220,60,60,0.2)"}}/> : <ListMusic size={13} className="text-neutral-500" />}
                     </div>
                     <span style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.name}</span>
                     {alreadyIn?<span style={{fontSize:"9.5px",color:"#9e9894",fontWeight:700,flexShrink:0}}>Added</span>
@@ -5364,11 +5724,19 @@ export default function Veluna() {
               onClick={e => e.stopPropagation()}>
 
               {}
-              <div style={{position:"relative",height:"130px",width:"100%",flexShrink:0,overflow:"hidden"}}>
-                <img src={infoModalTrack.cover} style={{width:"100%",height:"100%",objectFit:"cover",opacity:.25,filter:"blur(20px)",transform:"scale(1.1)"}} alt=""/>
+              <div style={{position:"relative",height:"130px",width:"100%",flexShrink:0,overflow:"hidden",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist),display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <div style={{position:"absolute",inset:0,opacity:.25,filter:"blur(20px)",transform:"scale(1.1)",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist)}}/>
+                {infoModalTrack.cover && (
+                  <img src={infoModalTrack.cover} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.25,filter:"blur(20px)",transform:"scale(1.1)"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
+                )}
                 <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent,#161414)"}}/>
                 <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <img src={infoModalTrack.cover} style={{width:"80px",height:"80px",borderRadius:"10px",objectFit:"cover",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 24px rgba(0,0,0,0.6)"}} alt=""/>
+                  <div style={{position:"relative",width:"80px",height:"80px",borderRadius:"10px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 24px rgba(0,0,0,0.6)",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist),display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <Music size={24} style={{position:"absolute",color:"rgba(255,255,255,0.25)"}}/>
+                    {infoModalTrack.cover && (
+                      <img src={infoModalTrack.cover} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
+                    )}
+                  </div>
                 </div>
                 <button onClick={()=>setInfoModalTrack(null)}
                   style={{position:"absolute",top:"10px",right:"10px",width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"rgba(0,0,0,0.6)",border:"none",cursor:"pointer",color:"#9e9894",transition:"color .12s"}}
@@ -5449,8 +5817,9 @@ export default function Veluna() {
           showToast={showToast}
         />
       )}
-      {showCsvImportModal && (
+      {(showCsvImportModal || bgImport) && (
         <CsvImportModal
+          visible={showCsvImportModal}
           onClose={() => setShowCsvImportModal(false)}
           onSavePlaylist={(name, desc, tracks) => {
             const id = `csv_${Date.now()}`;
@@ -5460,7 +5829,6 @@ export default function Veluna() {
             setPendingSpotifyImport(null);
           }}
           onMatchingDone={(tracks, matched, failed) => {
-            // Store in parent state so name popup shows even if modal was minimized
             setPendingSpotifyImport({ tracks, matchedCount: matched, failedCount: failed });
             setShowCsvImportModal(false);
           }}
@@ -5468,7 +5836,6 @@ export default function Veluna() {
           onProgress={(matched, total, label) => setBgImport(total > 0 ? { matched, total, label } : null)}
         />
       )}
-      {/* Name/desc popup for minimized Spotify imports */}
       {pendingSpotifyImport && !showCsvImportModal && (
         <ImportResultModal
           matchedCount={pendingSpotifyImport.matchedCount}
@@ -5480,7 +5847,10 @@ export default function Veluna() {
             setBgImport(null);
             setPendingSpotifyImport(null);
           }}
-          onClose={() => setPendingSpotifyImport(null)}
+          onClose={() => {
+            setPendingSpotifyImport(null);
+            setBgImport(null);
+          }}
         />
       )}
       {showDuplicatesPlaylist && (() => {
@@ -5512,7 +5882,17 @@ export default function Veluna() {
                     <p style={{fontSize:"12px",color:"#9e9894",marginBottom:"10px"}}>{dupes.length} duplicate{dupes.length > 1 ? 's' : ''} found</p>
                     {dupes.map((t, i) => (
                       <div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px",borderRadius:"8px",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.05)"}}>
-                        <img src={t.cover} style={{width:"38px",height:"38px",borderRadius:"6px",objectFit:"cover",flexShrink:0}} alt=""/>
+                        <div style={{
+                          width:"38px",height:"38px",borderRadius:"6px",overflow:"hidden",flexShrink:0,border:"1px solid rgba(255,255,255,0.05)",
+                          position: "relative",
+                          background: getTrackGradient(t.title, t.artist),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}>
+                          <Music size={13} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                          <img src={t.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
+                        </div>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</div>
                           {t.artist && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.artist}</div>}
@@ -5747,9 +6127,35 @@ export default function Veluna() {
         </div>
       )}
 
-      {/* Background import progress pill */}
-      {bgImport && !showCsvImportModal && (
-        <div style={{position:"fixed",bottom:"84px",right:"16px",zIndex:9998,display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderRadius:"10px",border:"1px solid #252222",background:"#1c1a1a",boxShadow:"0 8px 24px rgba(0,0,0,0.7)",animation:"fadeUp 0.2s ease both"}}>
+      {bgImport && !showCsvImportModal && !pendingSpotifyImport && (
+        <div
+          onClick={() => setShowCsvImportModal(true)}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = "#3a3532";
+            e.currentTarget.style.background = "#221f1f";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = "#252222";
+            e.currentTarget.style.background = "#1c1a1a";
+          }}
+          style={{
+            position: "fixed",
+            bottom: "84px",
+            right: "16px",
+            zIndex: 9998,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "10px 14px",
+            borderRadius: "10px",
+            border: "1px solid #252222",
+            background: "#1c1a1a",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
+            animation: "fadeUp 0.2s ease both",
+            cursor: "pointer",
+            transition: "all 0.15s ease"
+          }}
+        >
           <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#9e9894",animation:"velunaPulse 1.5s ease-in-out infinite",flexShrink:0}}/>
           <div style={{display:"flex",flexDirection:"column",gap:"4px",minWidth:"140px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
@@ -5760,7 +6166,17 @@ export default function Veluna() {
               <div style={{height:"100%",borderRadius:"1px",background:"#9e9894",width:`${(bgImport.matched/bgImport.total)*100}%`,transition:"width .3s"}}/>
             </div>
           </div>
-          <button onClick={()=>setBgImport(null)} style={{color:"#363230",background:"none",border:"none",cursor:"pointer",display:"flex",marginLeft:"4px",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#363230")}><X size={12}/></button>
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setBgImport(null);
+            }}
+            style={{color:"#363230",background:"none",border:"none",cursor:"pointer",display:"flex",marginLeft:"4px",transition:"color .12s"}}
+            onMouseEnter={e => { e.currentTarget.style.color = "#9e9894"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#363230"; }}
+          >
+            <X size={12}/>
+          </button>
         </div>
       )}
 
