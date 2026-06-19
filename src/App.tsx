@@ -37,6 +37,8 @@ type LocalTrack = {
   extension: string;
   artist?: string;
   duration?: string;
+  has_cover?: boolean;
+  cover?: string;
 };
 
 type Playlist = {
@@ -465,6 +467,9 @@ function CsvImportModal({
   const abortRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [isUploadHovered, setIsUploadHovered] = useState(false);
+  const [isCloseHovered, setIsCloseHovered] = useState(false);
+  const [isMinHovered, setIsMinHovered] = useState(false);
 
   const handleFile = async (file: File) => {
     if (!file.name.endsWith('.csv')) { showToast('Please upload a .csv file from Exportify'); return; }
@@ -605,92 +610,177 @@ function CsvImportModal({
 
   return (
     <>
-    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}} onClick={phase==='matching'?undefined:onClose}>
-      <div style={{width:"700px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"14px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.95)",background:"#161414",border:"1px solid #252222"}}
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='matching'?undefined:onClose}>
+      <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
         onClick={e => e.stopPropagation()}>
 
-        {}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-            <div style={{width:"32px",height:"32px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(226,221,217,0.08)"}}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#9e9894"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+            <div style={{width:"34px",height:"34px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg, #1db954 0%, #191414 100%)",boxShadow:"0 0 14px rgba(29,185,84,0.3)"}}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
             </div>
-            <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Import Spotify Playlist</h2>
+            <h2 style={{fontSize:"15px",fontWeight:800,color:"#e2ddd9",margin:0,letterSpacing:"-0.01em"}}>Import Spotify Playlist</h2>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
             {phase === 'matching' && (
               <button onClick={onClose} title="Minimize — import continues in background"
-                style={{width:"28px",height:"28px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"1px solid #252222",background:"transparent",color:"#5c5755",cursor:"pointer",fontSize:"12px",fontWeight:700,transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+                onMouseEnter={() => setIsMinHovered(true)}
+                onMouseLeave={() => setIsMinHovered(false)}
+                style={{
+                  width:"28px",
+                  height:"28px",
+                  display:"flex",
+                  alignItems:"center",
+                  justifyContent:"center",
+                  borderRadius:"50%",
+                  border:"none",
+                  background: isMinHovered ? "rgba(255,255,255,0.08)" : "transparent",
+                  color: isMinHovered ? "#fff" : "#5c5755",
+                  cursor:"pointer",
+                  transition:"all 0.2s ease"
+                }}>
                 —
               </button>
             )}
-            <button onClick={onClose} style={{width:"28px",height:"28px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"none",background:"transparent",color:"#5c5755",cursor:"pointer",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
-              <X size={14}/>
+            <button onClick={onClose}
+              onMouseEnter={() => setIsCloseHovered(true)}
+              onMouseLeave={() => setIsCloseHovered(false)}
+              style={{
+                width:"28px",
+                height:"28px",
+                display:"flex",
+                alignItems:"center",
+                justifyContent:"center",
+                borderRadius:"50%",
+                border:"none",
+                background: isCloseHovered ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                color: isCloseHovered ? "#fff" : "#5c5755",
+                cursor:"pointer",
+                transform: isCloseHovered ? "rotate(90deg)" : "none",
+                transition:"all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+              }}>
+              <X size={15} />
             </button>
           </div>
         </div>
 
-        {}
+        {/* Instructions Phase */}
         {phase === 'instructions' && (
-          <div style={{flex:1,display:"flex",flexDirection:"column",padding:"18px 20px",gap:"16px",overflowY:"auto"}} className="custom-scrollbar">
-            <p style={{fontSize:"13px",color:"#9e9894",lineHeight:1.6}}>
+          <div style={{flex:1,display:"flex",flexDirection:"column",padding:"20px",gap:"16px",overflowY:"auto"}} className="custom-scrollbar">
+            <p style={{fontSize:"13px",color:"#9e9894",lineHeight:1.6,margin:0}}>
               Veluna uses <span style={{color:"#e2ddd9",fontWeight:600}}>Exportify</span> to import Spotify playlists, no extra software needed.
             </p>
-            {[
-              { n: '1', title: 'Go to Exportify', desc: 'Open exportify.net in your browser', link: 'https://exportify.net', linkLabel: 'exportify.net →' },
-              { n: '2', title: 'Log in with Spotify', desc: 'Click "Log in with Spotify" and authorise Exportify to read your playlists.' },
-              { n: '3', title: 'Export your playlist', desc: 'Find the playlist and click the green Export button. A .csv file will download.' },
-              { n: '4', title: 'Upload the CSV here', desc: 'Click the button below and select the downloaded .csv file.' },
-            ].map(step => (
-              <div key={step.n} style={{display:"flex",gap:"12px",alignItems:"flex-start"}}>
-                <div style={{width:"26px",height:"26px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"12px",fontWeight:700,color:"#0c0b0b",marginTop:"2px",background:"#e2ddd9"}}>{step.n}</div>
-                <div>
-                  <p style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>{step.title}</p>
-                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px",lineHeight:1.5}}>{step.desc}</p>
-                  {step.link && <button onClick={() => openUrl(step.link!).catch(() => window.open(step.link!, '_blank'))}
-                    style={{fontSize:"12px",marginTop:"8px",display:"inline-flex",alignItems:"center",gap:"4px",fontWeight:700,cursor:"pointer",color:"#9e9894",background:"rgba(226,221,217,0.06)",border:"1px solid #252222",borderRadius:"7px",padding:"5px 10px",textDecoration:"none"}} onMouseEnter={e=>{e.currentTarget.style.color="#e2ddd9";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#252222";}}>{step.linkLabel}</button>}
+            <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
+              {[
+                { n: '1', title: 'Go to Exportify', desc: 'Open exportify.net in your browser', link: 'https://exportify.net', linkLabel: 'exportify.net →' },
+                { n: '2', title: 'Log in with Spotify', desc: 'Click "Log in with Spotify" and authorise Exportify to read your playlists.' },
+                { n: '3', title: 'Export your playlist', desc: 'Find the playlist and click the green Export button. A .csv file will download.' },
+                { n: '4', title: 'Upload the CSV here', desc: 'Click the button below and select the downloaded .csv file.' },
+              ].map(step => (
+                <div key={step.n} style={{display:"flex",gap:"14px",alignItems:"flex-start"}}>
+                  <div style={{
+                    width:"26px",
+                    height:"26px",
+                    borderRadius:"50%",
+                    display:"flex",
+                    alignItems:"center",
+                    justifyContent:"center",
+                    flexShrink:0,
+                    fontSize:"11px",
+                    fontWeight:700,
+                    marginTop:"2px",
+                    background:"rgba(29, 185, 84, 0.1)",
+                    border:"1px solid rgba(29, 185, 84, 0.3)",
+                    color:"#1db954"
+                  }}>{step.n}</div>
+                  <div style={{flex:1}}>
+                    <p style={{fontSize:"13px",fontWeight:700,color:"#e2ddd9",margin:0}}>{step.title}</p>
+                    <p style={{fontSize:"11.5px",color:"rgba(255,255,255,0.4)",marginTop:"4px",margin:0,lineHeight:1.5}}>{step.desc}</p>
+                    {step.link && (
+                      <button onClick={() => openUrl(step.link!).catch(() => window.open(step.link!, '_blank'))}
+                        className="exportify-btn"
+                        style={{
+                          fontSize:"12px",
+                          marginTop:"10px",
+                          display:"inline-flex",
+                          alignItems:"center",
+                          gap:"4px",
+                          fontWeight:700,
+                          cursor:"pointer",
+                          color:"#1db954",
+                          background:"rgba(29, 185, 84, 0.08)",
+                          border:"1px solid rgba(29, 185, 84, 0.2)",
+                          borderRadius:"8px",
+                          padding:"5px 12px",
+                          transition:"all 0.2s ease"
+                        }}>
+                        {step.linkLabel}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
             <input ref={fileInputRef} type="file" accept=".csv" style={{display:"none"}}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
             <button onClick={() => fileInputRef.current?.click()}
-              style={{marginTop:"6px",width:"100%",padding:"10px",borderRadius:"9px",fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",border:"none",background:"#e2ddd9",color:"#0c0b0b",cursor:"pointer"}}>
+              onMouseEnter={() => setIsUploadHovered(true)}
+              onMouseLeave={() => setIsUploadHovered(false)}
+              style={{
+                marginTop:"12px",
+                width:"100%",
+                padding:"11px",
+                borderRadius:"10px",
+                fontSize:"13px",
+                fontWeight:700,
+                display:"flex",
+                alignItems:"center",
+                justifyContent:"center",
+                gap:"8px",
+                border:"none",
+                background:"linear-gradient(135deg, #1ed760 0%, #1db954 100%)",
+                color:"#fff",
+                cursor:"pointer",
+                boxShadow: isUploadHovered ? "0 6px 20px rgba(29, 185, 84, 0.3)" : "none",
+                transform: isUploadHovered ? "translateY(-1px)" : "none",
+                transition:"all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+              }}>
               <Upload size={16} /> Upload Exportify CSV
             </button>
           </div>
         )}
 
-        {}
+        {/* Progress / Matching Phase */}
         {(phase === 'matching' || phase === 'saving' || phase === 'done') && (
           <>
-            <div style={{padding:"10px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"6px"}}>
-                <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: '#9e9894' }}>
+            <div style={{padding:"12px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}}>
+                <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   {isDone ? `Done · ${matched.length} matched` : `Matching · ${matched.length + failed.length} / ${results.length}`}
-                  {failed.length>0&&<span style={{color:"#363230",marginLeft:"6px"}}>· {failed.length} not found</span>}
+                  {failed.length>0&&<span style={{color:"#a05050",marginLeft:"6px"}}>· {failed.length} not found</span>}
                 </span>
-                {statusMsg&&<span style={{fontSize:"10px",color:"#363230",fontFamily:"monospace"}}>{statusMsg}</span>}
+                {statusMsg&&<span style={{fontSize:"11px",color:"#1db954",fontFamily:"monospace"}}>{statusMsg}</span>}
               </div>
-              <div style={{height:"3px",borderRadius:"2px",background:"#232020",overflow:"hidden"}}>
-                <div style={{height:"100%",borderRadius:"2px",transition:"width .3s",width:`${results.length>0?((matched.length+failed.length)/results.length)*100:0}%`,background:"#e2ddd9"}} />
+              <div style={{height:"4px",borderRadius:"2px",background:"rgba(255,255,255,0.05)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:"2px",transition:"width .3s",width:`${results.length>0?((matched.length+failed.length)/results.length)*100:0}%`,background:"linear-gradient(90deg, #1ed760 0%, #1db954 100%)"}} />
               </div>
             </div>
-            <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar">
+            <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"6px 0"}}>
               {results.map((r, i) => (
-                <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"8px 20px",borderBottom:"1px solid rgba(28,26,26,0.6)"}}>
-                  <div style={{width:"32px",height:"32px",borderRadius:"6px",flexShrink:0,overflow:"hidden",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    {r.cover?<img src={r.cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:<Music size={12} style={{color:"#363230"}}/>}
+                <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"8px 20px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                  <div style={{width:"32px",height:"32px",borderRadius:"6px",flexShrink:0,overflow:"hidden",background:"rgba(255,255,255,0.02)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}}>
+                    {r.cover?<img src={r.cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:<Music size={14} style={{color:"#5c5755"}}/>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
-                    {cleanArtist(r.artist) && <div style={{fontSize:"11px",color:"#363230",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cleanArtist(r.artist)}</div>}
+                    {cleanArtist(r.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(r.artist)}</div>}
                   </div>
                   <div style={{flexShrink:0,display:"flex",alignItems:"center",gap:"5px",width:"80px",justifyContent:"flex-end"}}>
-                    {r.status==='pending'&&<span style={{fontSize:"11px",color:"#2a2727"}}>·</span>}
-                    {r.status === 'fetching' && <Loader2 size={12} style={{animation:"spin 0.8s linear infinite",color:"#5c5755"}} />}
-                    {r.status === 'matched'  && <CheckCircle2 size={13} style={{ color: '#9e9894' }} />}
-                    {r.status === 'failed'   && <XCircle size={13} style={{color:"#a05050"}} />}
+                    {r.status==='pending'&&<span style={{fontSize:"11px",color:"rgba(255,255,255,0.1)"}}>·</span>}
+                    {r.status === 'fetching' && <Loader2 size={12} style={{animation:"spin 0.8s linear infinite",color:"#1db954"}} />}
+                    {r.status === 'matched'  && <CheckCircle2 size={14} style={{ color: '#1db954' }} />}
+                    {r.status === 'failed'   && <XCircle size={14} style={{color:"#a05050"}} />}
                   </div>
                 </div>
               ))}
@@ -729,6 +819,9 @@ function YtImportModal({
   const [url, setUrl] = useState('');
   const [results, setResults] = useState<{ title: string; artist: string; id: string; duration: string; cover: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isBtnHovered, setIsBtnHovered] = useState(false);
+  const [isCloseHovered, setIsCloseHovered] = useState(false);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -740,12 +833,10 @@ function YtImportModal({
       return;
     }
     setPhase('loading');
-    // status shown inline in button
     try {
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
-        // Backend prints: id====title====duration====thumbnail (4 fields, no artist)
         const [id, title, duration, thumb] = l.split('====');
         const idTrim = id?.trim() || '';
         const thumbTrim = thumb?.trim() || '';
@@ -754,7 +845,7 @@ function YtImportModal({
           : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
         return {
           title: title?.trim() || 'Unknown',
-          artist: '',          // flat-playlist has no artist — leave blank, not "Unknown"
+          artist: '',
           id: idTrim,
           duration: duration?.trim() || '',
           cover,
@@ -774,65 +865,117 @@ function YtImportModal({
 
   return (
     <>
-    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}} onClick={onClose}>
-      <div style={{width:"640px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"14px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.95)",background:"#161414",border:"1px solid #252222"}}
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
+      <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
         onClick={e => e.stopPropagation()}>
 
-        {}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 20px",borderBottom:"1px solid #1c1a1a",flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-            <div style={{width:"32px",height:"32px",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(180,40,40,0.7)"}}>
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+            <div style={{width:"34px",height:"34px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg, #ff0000 0%, #cc0000 100%)",boxShadow:"0 0 14px rgba(255,0,0,0.3)"}}>
               <svg width="18" height="14" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
             </div>
-            <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Import YouTube Playlist</h2>
+            <h2 style={{fontSize:"15px",fontWeight:800,color:"#e2ddd9",margin:0,letterSpacing:"-0.01em"}}>Import YouTube Playlist</h2>
           </div>
-          <button onClick={onClose} style={{width:"28px",height:"28px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"7px",border:"none",background:"transparent",color:"#5c5755",cursor:"pointer",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
-            <X size={16} />
+          <button onClick={onClose}
+            onMouseEnter={() => setIsCloseHovered(true)}
+            onMouseLeave={() => setIsCloseHovered(false)}
+            style={{
+              width:"28px",
+              height:"28px",
+              display:"flex",
+              alignItems:"center",
+              justifyContent:"center",
+              borderRadius:"50%",
+              border:"none",
+              background: isCloseHovered ? "rgba(255, 255, 255, 0.08)" : "transparent",
+              color: isCloseHovered ? "#fff" : "#5c5755",
+              cursor:"pointer",
+              transform: isCloseHovered ? "rotate(90deg)" : "none",
+              transition:"all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+            }}>
+            <X size={15} />
           </button>
         </div>
 
-        {}
+        {/* Input Phase */}
         {(phase === 'input' || phase === 'loading') && (
-          <div style={{flex:1,display:"flex",flexDirection:"column",padding:"18px 20px",gap:"14px"}}>
-            <p style={{fontSize:"13px",color:"#9e9894"}}>Paste a public YouTube playlist URL below. All videos will be imported instantly.</p>
-            <div style={{display:"flex",gap:"8px"}}>
-              <div style={{flex:1,display:"flex",alignItems:"center",gap:"8px",background:"#1c1a1a",border:"1px solid #252222",borderRadius:"9px",padding:"0 12px",height:"38px"}}>
-                <svg width="14" height="11" viewBox="0 0 18 14" fill="#5c5755" style={{flexShrink:0}}><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
+          <div style={{flex:1,display:"flex",flexDirection:"column",padding:"20px",gap:"16px"}}>
+            <p style={{fontSize:"13px",color:"#9e9894",lineHeight:1.5,margin:0}}>Paste a public YouTube playlist URL below. All videos will be imported instantly as a playlist.</p>
+            <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
+              <div style={{
+                flex:1,
+                display:"flex",
+                alignItems:"center",
+                gap:"10px",
+                background:"rgba(255, 255, 255, 0.03)",
+                border:"1px solid",
+                borderColor: isFocused ? "rgba(255, 51, 51, 0.4)" : "rgba(255, 255, 255, 0.06)",
+                borderRadius:"10px",
+                padding:"0 14px",
+                height:"42px",
+                boxShadow: isFocused ? "0 0 14px rgba(255, 51, 51, 0.12)" : "none",
+                transition:"all 0.2s ease"
+              }}>
+                <svg width="14" height="11" viewBox="0 0 18 14" fill={isFocused ? "#ff3333" : "rgba(255, 255, 255, 0.3)"} style={{flexShrink:0,transition:"fill 0.2s"}}><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
                 <input ref={inputRef} value={url} onChange={e => setUrl(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
                   onKeyDown={e => { if (e.key === 'Enter' && phase === 'input' && isYtUrl) handleImport(); }}
                   placeholder="https://youtube.com/playlist?list=..."
                   disabled={phase === 'loading'}
-                  style={{flex:1,background:"transparent",fontSize:"13px",color:"#e2ddd9",outline:"none",border:"none"}} />
+                  style={{flex:1,background:"transparent",fontSize:"13px",color:"#e2ddd9",outline:"none",border:"none",fontWeight:500}} />
               </div>
-              <button onClick={handleImport} disabled={phase === 'loading' || !isYtUrl}
-                style={{padding:"0 16px",height:"38px",borderRadius:"9px",border:"none",background:"#e2ddd9",color:"#0c0b0b",fontWeight:700,fontSize:"13px",cursor:"pointer",display:"flex",alignItems:"center",gap:"7px",flexShrink:0,opacity:phase==="loading"||!isYtUrl?0.4:1,transition:"opacity .12s"}}>
+              <button onClick={handleImport}
+                disabled={phase === 'loading' || !isYtUrl}
+                onMouseEnter={() => setIsBtnHovered(true)}
+                onMouseLeave={() => setIsBtnHovered(false)}
+                style={{
+                  padding:"0 20px",
+                  height:"42px",
+                  borderRadius:"10px",
+                  border: isYtUrl ? "none" : "1px solid rgba(255,255,255,0.05)",
+                  background: isYtUrl ? "linear-gradient(135deg, #ff1e27 0%, #d31017 100%)" : "rgba(255,255,255,0.03)",
+                  color: isYtUrl ? "#fff" : "rgba(255,255,255,0.25)",
+                  fontWeight:700,
+                  fontSize:"13px",
+                  cursor: (phase === 'loading' || !isYtUrl) ? "not-allowed" : "pointer",
+                  display:"flex",
+                  alignItems:"center",
+                  gap:"8px",
+                  flexShrink:0,
+                  boxShadow: (isYtUrl && isBtnHovered) ? "0 6px 20px rgba(255, 0, 0, 0.3)" : "none",
+                  transform: (isYtUrl && isBtnHovered && phase !== 'loading') ? "translateY(-1px)" : "none",
+                  opacity: phase === "loading" ? 0.6 : 1,
+                  transition:"all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}>
                 {phase === 'loading'
-                  ? <div style={{width:"14px",height:"14px",border:"2px solid #5c5755",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-                  : <svg width="13" height="10" viewBox="0 0 18 14" fill="#0c0b0b"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>}
+                  ? <div style={{width:"14px",height:"14px",border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                  : <svg width="13" height="10" viewBox="0 0 18 14" fill="currentColor"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>}
                 {phase !== 'loading' && 'Import'}
               </button>
             </div>
-            {phase === 'loading' && <p style={{fontSize:"11px",color:"#5c5755",fontFamily:"monospace"}}>Fetching playlist from YouTube…</p>}
+            {phase === 'loading' && <p style={{fontSize:"11px",color:"rgba(255,255,255,0.4)",fontFamily:"monospace",margin:0,display:"flex",alignItems:"center",gap:"6px"}}><div style={{width:"6px",height:"6px",background:"#ff3333",borderRadius:"50%",animation:"pulse 1s infinite"}}/>Fetching playlist from YouTube…</p>}
           </div>
         )}
 
-        {}
+        {/* Saving / Results Preview Phase */}
         {phase === 'saving' && (
-          <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}} className="custom-scrollbar">
-            <p style={{fontSize:"11px",color:"#5c5755",marginBottom:"10px"}}>{results.length} videos found. Enter a name and save.</p>
-            <div style={{display:"flex",flexDirection:"column",gap:"8px",maxHeight:"260px",overflowY:"auto"}} className="custom-scrollbar">
+          <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}} className="custom-scrollbar">
+            <p style={{fontSize:"12px",color:"rgba(255,255,255,0.5)",marginBottom:"12px",margin:0}}>{results.length} videos found. Enter a name and save.</p>
+            <div style={{display:"flex",flexDirection:"column",gap:"10px",maxHeight:"260px",overflowY:"auto"}} className="custom-scrollbar">
               {results.slice(0, 50).map((r, i) => (
-                <div key={i} style={{display:"flex",alignItems:"center",gap:"10px"}}>
-                  <img src={r.cover} style={{width:"48px",height:"27px",borderRadius:"5px",objectFit:"cover",flexShrink:0,background:"#1c1a1a"}} alt=""
+                <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"4px 0"}}>
+                  <img src={r.cover} style={{width:"48px",height:"27px",borderRadius:"6px",objectFit:"cover",flexShrink:0,background:"rgba(255,255,255,0.03)",boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}} alt=""
                     onError={e=>{(e.currentTarget as HTMLImageElement).style.opacity='0';}} />
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</div>
-                    {cleanArtist(r.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cleanArtist(r.artist)}</div>}
+                    <div style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:600}}>{r.title}</div>
+                    {cleanArtist(r.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(r.artist)}</div>}
                   </div>
-                  <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{r.duration}</span>
+                  <span style={{fontSize:"11px",color:"rgba(255,255,255,0.3)",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{r.duration}</span>
                 </div>
               ))}
-              {results.length > 50 && <p style={{fontSize:"11px",color:"#363230",paddingTop:"4px"}}>+ {results.length - 50} more...</p>}
+              {results.length > 50 && <p style={{fontSize:"11px",color:"rgba(255,255,255,0.25)",paddingTop:"8px",margin:0}}>+ {results.length - 50} more...</p>}
             </div>
           </div>
         )}
@@ -867,7 +1010,6 @@ function validateSettingsChange(
   current: {
     loudnormEnabled: boolean; skipSilence: boolean;
     eq: { bass: number; mid: number; treble: number };
-    streamQuality: string;
   }
 ): string | null {
   const { loudnormEnabled, skipSilence, eq } = current;
@@ -896,7 +1038,6 @@ function SettingsPanel({
   onBackup, onRestore, onReset,
   backupPath, setBackupPath,
   loudnormEnabled, setLoudnormEnabled,
-  streamQuality, setStreamQuality,
   skipSilence, setSkipSilence,
   eq, setEq,
   showToast,
@@ -914,7 +1055,6 @@ function SettingsPanel({
   onBackup: () => void; onRestore: () => void; onReset: () => void;
   backupPath: string; setBackupPath: (p: string) => void;
   loudnormEnabled: boolean; setLoudnormEnabled: (e: boolean) => void;
-  streamQuality: string; setStreamQuality: (v: string) => void;
   skipSilence: boolean; setSkipSilence: (v: boolean) => void;
   eq: { bass: number; mid: number; treble: number }; setEq: (v: { bass: number; mid: number; treble: number }) => void;
   showToast: (m: string) => void;
@@ -1130,7 +1270,7 @@ function SettingsPanel({
                 </div>
                 <button onClick={() => {
                   const next = !loudnormEnabled;
-                  const warn = validateSettingsChange('loudnormEnabled', next, { loudnormEnabled, skipSilence, eq, streamQuality });
+                  const warn = validateSettingsChange('loudnormEnabled', next, { loudnormEnabled, skipSilence, eq });
                   if (warn) { showToast(`⚠ ${warn}`); }
                   setLoudnormEnabled(next);
                 }}
@@ -1140,28 +1280,7 @@ function SettingsPanel({
               </div>
             </div>
 
-            {/* Playback Quality */}
-            <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
-              <div style={{padding:"11px 14px",borderBottom:"1px solid #1c1a1a",background:"rgba(255,255,255,0.015)"}}>
-                <h3 style={{fontSize:"12.5px",fontWeight:600,color:"#e2ddd9",display:"flex",alignItems:"center",gap:"7px",margin:0}}><Gauge size={14} style={{color:"#5c5755"}} className="text-[#d4cfcf]" /> Stream Quality</h3>
-                <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>Higher quality uses more bandwidth. Opus is native YouTube codec with best compression.</p>
-              </div>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px"}}>
-                <div>
-                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Streaming Format</p>
-                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>Preferred audio codec for streaming playback</p>
-                </div>
-                <ThemedSelect
-                  value={streamQuality}
-                  onChange={setStreamQuality}
-                  options={[
-                    { value: 'best', label: 'Best', desc: 'Highest quality available' },
-                    { value: 'opus', label: 'Opus', desc: 'Native YouTube, best compression' },
-                    { value: 'webm', label: 'WebM', desc: 'WebM container, efficient' },
-                  ]}
-                />
-              </div>
-            </div>
+
 
             {/* Skip Silence */}
             <div style={{borderRadius:"10px",border:"1px solid #1c1a1a",overflow:"hidden"}}>
@@ -1175,7 +1294,7 @@ function SettingsPanel({
                 </div>
                 <button onClick={() => {
                   const next = !skipSilence;
-                  const warn = validateSettingsChange('skipSilence', next, { loudnormEnabled, skipSilence, eq, streamQuality });
+                  const warn = validateSettingsChange('skipSilence', next, { loudnormEnabled, skipSilence, eq });
                   if (warn) { showToast(`⚠ ${warn}`); }
                   setSkipSilence(next);
                 }}
@@ -1417,18 +1536,64 @@ function SettingsPanel({
   );
 }
 
+const LocalTrackCover = React.memo(({ path, hasCover, cover, isActive }: { path: string; hasCover?: boolean; cover?: string; isActive: boolean }) => {
+  const [coverUrl, setCoverUrl] = useState<string | null>(cover || null);
+
+  useEffect(() => {
+    if (cover) {
+      setCoverUrl(cover);
+      return;
+    }
+    if (!hasCover) {
+      setCoverUrl(null);
+      return;
+    }
+    let active = true;
+    invoke<string | null>('get_audio_cover', { path })
+      .then(url => {
+        if (active) setCoverUrl(url);
+      })
+      .catch(() => {
+        if (active) setCoverUrl(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [path, hasCover, cover]);
+
+  if (hasCover && coverUrl) {
+    return (
+      <img
+        src={coverUrl}
+        alt=""
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+    );
+  }
+
+  return <FileMusic size={16} style={{ color: isActive ? "#9e9894" : "#363230" }} />;
+});
+
 function DownloadsPanel({
   downloadPath, onPlayLocalTrack, onDeleteLocalTrack,
   currentTrackPath, isPlaying, isLoadingTrack,
   onOpenInFileManager, onExportM3u, onChangeFolder,
+  activeNav,
 }: {
   downloadPath: string; onPlayLocalTrack: (t: LocalTrack, list?: LocalTrack[], idx?: number) => void;
   onDeleteLocalTrack: (t: LocalTrack) => void; currentTrackPath: string | null;
   isPlaying: boolean; isLoadingTrack: boolean;
   onOpenInFileManager: (p: string) => void; onExportM3u: (ts: LocalTrack[]) => void;
   onChangeFolder: () => void;
+  activeNav: string;
 }) {
   const [tracks, setTracks] = useState<LocalTrack[]>([]);
+  const tracksRef = useRef(tracks);
+  useEffect(() => { tracksRef.current = tracks; }, [tracks]);
   const [scanning, setScanning] = useState(false);
   const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1450,20 +1615,50 @@ function DownloadsPanel({
     : tracks;
 
   const scan = useCallback(async () => {
-    setScanning(true); setError(null);
+    const existingTracks = tracksRef.current;
+    if (existingTracks.length === 0) {
+      setScanning(true);
+    }
+    setError(null);
     try {
       const raw: LocalTrack[] = await invoke('scan_downloads', { path: downloadPath });
-      setTracks(raw);
+      const rawWithCovers = raw.map(newTrack => {
+        const existing = existingTracks.find(t => t.path === newTrack.path);
+        if (existing) {
+          return {
+            ...newTrack,
+            title: existing.title,
+            artist: existing.artist,
+            duration: existing.duration,
+            has_cover: existing.has_cover,
+            cover: existing.cover,
+          };
+        }
+        return newTrack;
+      });
+      setTracks(rawWithCovers);
       setScanning(false);
 
       const di = await invoke<DiskInfo>('get_disk_usage', { path: downloadPath }).catch(() => null);
       if (di) setDiskInfo(di);
 
       setEnriching(true);
-      for (const t of raw) {
+      for (const t of rawWithCovers) {
+        const existing = existingTracks.find(p => p.path === t.path);
+        if (existing && existing.duration !== undefined) {
+          continue;
+        }
+
         try {
-          const m: { title: string; artist: string; duration: string } = await invoke('get_audio_metadata', { path: t.path });
-          const enriched = { ...t, title: m.title || t.title, artist: cleanArtist(m.artist) || t.artist || undefined, duration: m.duration !== '0:00' ? m.duration : undefined };
+          const m: { title: string; artist: string; duration: string; has_cover: boolean } = await invoke('get_audio_metadata', { path: t.path });
+          let cover: string | undefined = undefined;
+          if (m.has_cover) {
+            try {
+              const coverB64 = await invoke<string | null>('get_audio_cover', { path: t.path });
+              if (coverB64) cover = coverB64;
+            } catch {}
+          }
+          const enriched = { ...t, title: m.title || t.title, artist: cleanArtist(m.artist) || t.artist || undefined, duration: m.duration !== '0:00' ? m.duration : undefined, has_cover: m.has_cover, cover };
           setTracks(prev => prev.map(p => p.path === t.path ? enriched : p));
         } catch { /* keep original */ }
       }
@@ -1471,7 +1666,11 @@ function DownloadsPanel({
     } catch (e) { setError(String(e)); setScanning(false); setEnriching(false); }
   }, [downloadPath]);
 
-  useEffect(() => { scan(); }, [scan]);
+  useEffect(() => {
+    if (activeNav === 'downloads') {
+      scan();
+    }
+  }, [activeNav, scan]);
 
   const confirmRename = async () => {
     if (!renaming || !renameVal.trim()) return;
@@ -1620,8 +1819,8 @@ function DownloadsPanel({
                         : isHov ? <Play size={12} style={{fill:"#e2ddd9",color:"#e2ddd9",margin:"0 auto"}}/>
                         : i+1}
                   </div>
-                  <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"#1c1a1a",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`}}>
-                    <FileMusic size={16} style={{color:isActive?"#9e9894":"#363230"}}/>
+                  <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"#1c1a1a",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`,overflow:"hidden"}}>
+                    <LocalTrackCover path={track.path} hasCover={track.has_cover} cover={track.cover} isActive={isActive} />
                   </div>
                   <div className="v-track__info">
                     <div className="v-track__title">{track.title}</div>
@@ -1878,7 +2077,6 @@ export default function Veluna() {
   const [playbackSpeed, setPlaybackSpeedState] = useState<number>(() => loadLS('vg_speed', 1));
   const [crossfadeSeconds] = useState<number>(() => loadLS('vg_crossfade', 0));
   const [loudnormEnabled, setLoudnormEnabledState] = useState<boolean>(() => loadLS('vg_loudnorm', true));
-  const [streamQuality, setStreamQualityState] = useState<string>(() => loadLS('vg_streamQuality', 'best'));
   const [skipSilence, setSkipSilenceState] = useState<boolean>(() => loadLS('vg_skipSilence', false));
   const [lyricsSource, setLyricsSource] = useState<string>(() => loadLS('vg_lyricsSource', 'lrclib'));
   const [trayEnabled, setTrayEnabled] = useState<boolean>(() => loadLS('vg_trayEnabled', false));
@@ -1961,7 +2159,6 @@ export default function Veluna() {
   useEffect(() => { saveLS('vg_quickPicks', quickPicks); }, [quickPicks]);
   useEffect(() => { saveLS('vg_speed', playbackSpeed); }, [playbackSpeed]);
   useEffect(() => { saveLS('vg_loudnorm', loudnormEnabled); invoke('set_loudnorm_enabled', { enabled: loudnormEnabled }).catch(() => {}); }, [loudnormEnabled]);
-  useEffect(() => { saveLS('vg_streamQuality', streamQuality); invoke('set_stream_quality', { quality: streamQuality }).catch(() => {}); }, [streamQuality]);
   useEffect(() => { saveLS('vg_skipSilence', skipSilence); invoke('set_skip_silence', { enabled: skipSilence }).catch(() => {}); }, [skipSilence]);
   useEffect(() => { saveLS('vg_eq', eq); }, [eq]);
   useEffect(() => { saveLS('vg_lyricsSource', lyricsSource); }, [lyricsSource]);
@@ -2163,7 +2360,7 @@ export default function Veluna() {
         shuffle, repeatMode, volume, playbackSpeed, eq,
         downloadQuality, downloadFormat, downloadPath, backupPath,
         embedThumbnail, duplicateDetect,
-        loudnormEnabled, streamQuality, skipSilence,
+        loudnormEnabled, skipSilence,
         searchHistory, quickPicks, currentTrack,
       };
       const json = JSON.stringify(data, null, 2);
@@ -2185,7 +2382,7 @@ export default function Veluna() {
   }, [playlists, queue, playHistory, playCounts, listenSecs, dailyPlays, firstSeen,
       shuffle, repeatMode, volume, playbackSpeed, eq,
       downloadQuality, downloadFormat, downloadPath, backupPath,
-      embedThumbnail, duplicateDetect, loudnormEnabled, streamQuality, skipSilence,
+      embedThumbnail, duplicateDetect, loudnormEnabled, skipSilence,
       searchHistory, quickPicks, currentTrack, showToast]);
 
   // Must be synchronous so the file picker works in Tauri (async breaks gesture context)
@@ -2226,7 +2423,6 @@ export default function Veluna() {
         if (data.embedThumbnail !== undefined) setEmbedThumbnailState(ls('vg_embedThumb', data.embedThumbnail));
         if (data.duplicateDetect !== undefined) setDuplicateDetectState(ls('vg_dupDetect', data.duplicateDetect));
         if (data.loudnormEnabled !== undefined) { setLoudnormEnabledState(ls('vg_loudnorm', data.loudnormEnabled)); invoke('set_loudnorm_enabled', { enabled: data.loudnormEnabled }).catch(() => {}); }
-        if (data.streamQuality)   { setStreamQualityState(ls('vg_streamQuality', data.streamQuality)); invoke('set_stream_quality', { quality: data.streamQuality }).catch(() => {}); }
         if (data.skipSilence !== undefined) { setSkipSilenceState(ls('vg_skipSilence', data.skipSilence)); invoke('set_skip_silence', { enabled: data.skipSilence }).catch(() => {}); }
         if (data.searchHistory)   setSearchHistory(ls('vg_searchHistory', data.searchHistory));
         if (data.quickPicks)      setQuickPicks(ls('vg_quickPicks', data.quickPicks));
@@ -2343,11 +2539,21 @@ export default function Veluna() {
     setTrackDurationSeconds(0); trackDurationRef.current = 0;
     setAudioInfo(null);
 
+    let cover = '';
+    if (local.has_cover) {
+      try {
+        const coverB64 = await invoke<string | null>('get_audio_cover', { path: local.path });
+        if (coverB64) {
+          cover = coverB64;
+        }
+      } catch {}
+    }
+
     const synth: Track = {
       id: -1, title: local.title,
       artist: local.artist || local.extension.toUpperCase(),
       duration: local.duration || '0:00',
-      url: `local://${local.path}`, cover: '',
+      url: `local://${local.path}`, cover,
     };
     setCurrentTrack(synth); currentTrackRef.current = synth;
 
@@ -3720,15 +3926,16 @@ export default function Veluna() {
           )}
 
           {}
-          {activeNav === 'downloads' && (
+          <div style={{ display: activeNav === 'downloads' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0 }}>
             <DownloadsPanel
               downloadPath={downloadPath} onPlayLocalTrack={handlePlayLocalTrack}
               onDeleteLocalTrack={handleDeleteLocalTrack} currentTrackPath={currentLocalPath}
               isPlaying={isPlaying} isLoadingTrack={isLoadingTrack}
               onOpenInFileManager={handleOpenInFileManager} onExportM3u={handleExportM3u}
               onChangeFolder={handleSelectDirectory}
+              activeNav={activeNav}
             />
-          )}
+          </div>
 
           {}
           {activeNav === 'library' && (
@@ -4168,7 +4375,6 @@ export default function Veluna() {
               onReset={() => setConfirmModal({ message: 'Reset all Veluna data? This cannot be undone.', onConfirm: () => { localStorage.clear(); window.location.reload(); } })}
               backupPath={backupPath} setBackupPath={setBackupPath}
               loudnormEnabled={loudnormEnabled} setLoudnormEnabled={setLoudnormEnabledState}
-              streamQuality={streamQuality} setStreamQuality={setStreamQualityState}
               skipSilence={skipSilence} setSkipSilence={setSkipSilenceState}
               eq={eq} setEq={v => { setEqState(v); saveLS('vg_eq', v); }}
               showToast={showToast}

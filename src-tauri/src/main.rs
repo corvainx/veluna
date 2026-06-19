@@ -30,6 +30,17 @@ impl NoWindow for Command {
     }
 }
 
+impl NoWindow for tokio::process::Command {
+    #[cfg(windows)]
+    fn no_window(&mut self) -> &mut Self {
+        self.creation_flags(0x08000000)
+    }
+    #[cfg(not(windows))]
+    fn no_window(&mut self) -> &mut Self {
+        self
+    }
+}
+
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 
@@ -204,7 +215,6 @@ lazy_static::lazy_static! {
 
     static ref LOUDNORM_ENABLED: Arc<Mutex<bool>> = Arc::new(Mutex::new(true));
     static ref SKIP_SILENCE: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
-    static ref STREAM_QUALITY: Arc<Mutex<String>> = Arc::new(Mutex::new("best".to_string()));
 }
 
 // Persistent mpv process handle — spawned once at startup, reused across all tracks.
@@ -437,12 +447,7 @@ async fn prefetch_track(url: String) -> Result<(), String> {
     if PREFETCH_CACHE.lock().unwrap().contains_key(&url) { return Ok(()); }
     let cache = Arc::clone(&PREFETCH_CACHE);
     tokio::spawn(async move {
-        let url_clone = url.clone();
-        let result = tokio::task::spawn_blocking(move || {
-            extract_stream_url(&url_clone)
-        })
-        .await;
-        if let Ok(Some(stream_url)) = result {
+        if let Some(stream_url) = extract_stream_url_async(url.clone(), None).await {
             let mut c = cache.lock().unwrap();
             let now = std::time::Instant::now();
             c.retain(|_, v| now.duration_since(v.ts) < std::time::Duration::from_secs(4 * 3600));
@@ -478,11 +483,7 @@ fn set_skip_silence(enabled: bool) -> Result<(), String> {
     Ok(())
 }
 
-#[tauri::command]
-fn set_stream_quality(quality: String) -> Result<(), String> {
-    *STREAM_QUALITY.lock().unwrap() = quality;
-    Ok(())
-}
+
 
 fn mpv_af_flag() -> Option<String> {
     let loudnorm = *LOUDNORM_ENABLED.lock().unwrap();
@@ -526,6 +527,7 @@ fn ensure_mpv_running() -> bool {
         "--cache-on-disk=no".into(),
         "--audio-pitch-correction=yes".into(),
         "--force-window=no".into(),
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36".into(),
         format!("--input-ipc-server={}", SOCKET_PATH),
     ];
     if let Some(af) = mpv_af_flag() { args.push(af); }
@@ -560,74 +562,183 @@ fn switch_track_ipc(url: &str) -> Result<(), String> {
 /// Fast URL extraction using yt-dlp -g (URL-only, no metadata parsing).
 /// Tries multiple YouTube player clients and browser cookie sources in parallel.
 /// First valid https CDN URL wins; remaining threads abort via cancel flag.
-fn extract_stream_url(youtube_url: &str) -> Option<String> {
-    use std::sync::{Arc, Mutex};
-    use std::sync::atomic::{AtomicBool, Ordering};
+fn log_debug(msg: &str) {
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("/home/vanguard/veluna/debug.log")
+    {
+        use std::io::Write;
+        let _ = writeln!(file, "[{}] {}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(), msg);
+    }
+}
 
-    let found: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
-    let cancel: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Option<String> {
+    log_debug(&format!("extract_stream_url_async started for URL: {}, my_id: {:?}", youtube_url, my_id));
 
-    let fast_extract = |browser: Option<&str>, client: &str| -> Option<String> {
-        let mut cmd = Command::new(bin_ytdlp());
-        cmd.args([
-            "--no-warnings", "--no-playlist", "--no-check-certificates",
-            "--socket-timeout", "5", "--retries", "0",
-            "--no-call-home",
-            "-g",
-            "--extractor-args", &format!("youtube:player_client={},skip=webpage", client),
-        ]);
-        if let Some(b) = browser { cmd.args(["--cookies-from-browser", b]); }
-        cmd.args(["--", youtube_url]);
-        let o = cmd.no_window().output().ok()?;
-        if !o.status.success() { return None; }
-        // -g returns one URL per line when there are multiple formats;
-        // pick the first https non-manifest URL
-        String::from_utf8_lossy(&o.stdout)
-            .lines()
-            .find(|l| l.starts_with("http") && !l.contains(".m3u8") && !l.contains("manifest.googlevideo.com"))
-            .map(|s| s.trim().to_string())
-    };
+    if let Some(id) = my_id {
+        if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
+            log_debug("extract_stream_url_async superseded before starting");
+            return None;
+        }
+    }
 
-    // Ordered by SPEED first: ios skips YouTube JS player parsing (~0.3s faster),
-    // mweb is even lighter, web is most compatible. All run in parallel anyway,
-    // so the first to succeed cancels the rest.
-    let attempts: &[(Option<&str>, &str)] = &[
-        (None,              "ios"),         // fastest: no JS parsing, direct CDN
-        (None,              "mweb"),        // mobile web: also fast
-        (None,              "web"),         // most compatible fallback
-        (None,              "android"),     // another fast client
-        (Some("chrome"),    "ios"),         // with cookies: bot-proof
-        (Some("firefox"),   "ios"),
-        (Some("brave"),     "web"),
-        (Some("chromium"),  "web"),
-    ];
+    tokio::task::spawn_blocking(move || {
+        use std::process::{Command, Stdio};
+        use std::io::Read;
 
-    std::thread::scope(|s| {
-        let found = &found;
-        let cancel = &cancel;
-        let fast_extract = &fast_extract;
+        let attempts: &[(Option<&str>, &str)] = &[
+            (None,                          "default"),
+            (None,                          "android"),
+            (None,                          "ios"),
+            (Some("chrome+basictext"),      "web"),
+            (Some("firefox"),               "web"),
+            (Some("brave+basictext"),       "web"),
+            (Some("chromium+basictext"),    "web"),
+        ];
+
+        let mut children = Vec::new();
+
         for &(browser, client) in attempts {
-            s.spawn(move || {
-                // Exit immediately if another thread already found a URL
-                if cancel.load(Ordering::Relaxed) { return; }
-                if let Some(url) = fast_extract(browser, client) {
-                    let mut r = found.lock().unwrap();
-                    if r.is_none() {
-                        *r = Some(url);
-                        cancel.store(true, Ordering::Relaxed); // signal other threads to stop
+            if let Some(id) = my_id {
+                if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
+                    log_debug("extract_stream_url superseded during spawning");
+                    break;
+                }
+            }
+
+            let mut cmd = Command::new(bin_ytdlp());
+            cmd.no_window();
+            cmd.args([
+                "--no-warnings", "--no-playlist", "--no-check-certificates",
+                "--socket-timeout", "6", "--retries", "0",
+                "--no-call-home",
+                "--js-runtimes", "node",
+                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                "-g",
+            ]);
+            if client != "default" {
+                cmd.args(["--extractor-args", &format!("youtube:player_client={},skip=webpage", client)]);
+            }
+            cmd.args(["-f", "140/251/18/bestaudio"]);
+
+            if let Some(ref b) = browser {
+                cmd.args(["--cookies-from-browser", b]);
+            }
+            cmd.args(["--", &youtube_url]);
+
+            cmd.stdout(Stdio::piped());
+            cmd.stderr(Stdio::piped());
+            cmd.stdin(Stdio::null());
+
+            log_debug(&format!("Spawning std::process for client: {}, browser: {:?}", client, browser));
+            match cmd.spawn() {
+                Ok(child) => {
+                    children.push((child, browser, client));
+                }
+                Err(e) => {
+                    log_debug(&format!("Failed to spawn std::process for client: {}, browser: {:?}: {}", client, browser, e));
+                }
+            }
+        }
+
+        let start_time = std::time::Instant::now();
+        let timeout = std::time::Duration::from_millis(9500);
+        let mut resolved_url = None;
+
+        while start_time.elapsed() < timeout && resolved_url.is_none() && !children.is_empty() {
+            let mut finished_indices = Vec::new();
+
+            for (idx, (child, browser, client)) in children.iter_mut().enumerate() {
+                if let Some(id) = my_id {
+                    if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
+                        log_debug("extract_stream_url superseded during monitoring loop");
+                        break;
                     }
                 }
-            });
-        }
-    });
 
-    Arc::try_unwrap(found).ok()
-        .and_then(|m| m.into_inner().ok())
-        .flatten()
+                match child.try_wait() {
+                    Ok(Some(status)) => {
+                        finished_indices.push(idx);
+                        log_debug(&format!("Client {}, browser {:?} finished. Status: {}", client, browser, status));
+
+                        if status.success() {
+                            if let Some(mut stdout) = child.stdout.take() {
+                                let mut stdout_str = String::new();
+                                if let Ok(_) = stdout.read_to_string(&mut stdout_str) {
+                                    log_debug(&format!("Client {}, browser {:?} stdout read length: {}", client, browser, stdout_str.len()));
+                                    if let Some(url) = stdout_str.lines()
+                                        .find(|l| l.starts_with("http") && !l.contains(".m3u8") && !l.contains("manifest.googlevideo.com"))
+                                        .map(|s| s.trim().to_string())
+                                    {
+                                        log_debug(&format!("Client {}, browser {:?} found URL: {}", client, browser, &url[..url.len().min(60)]));
+                                        resolved_url = Some(url);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            if let Some(mut stderr) = child.stderr.take() {
+                                let mut stderr_str = String::new();
+                                let _ = stderr.read_to_string(&mut stderr_str);
+                                log_debug(&format!("Client {}, browser {:?} failed. Stderr: {}", client, browser, stderr_str.trim()));
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        // Still running
+                    }
+                    Err(e) => {
+                        finished_indices.push(idx);
+                        log_debug(&format!("Error checking client {}, browser {:?}: {}", client, browser, e));
+                    }
+                }
+            }
+
+            if resolved_url.is_some() {
+                break;
+            }
+
+            if let Some(id) = my_id {
+                if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
+                    break;
+                }
+            }
+
+            if !finished_indices.is_empty() {
+                finished_indices.sort_by(|a, b| b.cmp(a));
+                for idx in finished_indices {
+                    if idx < children.len() {
+                        children.remove(idx);
+                    }
+                }
+            }
+
+            if resolved_url.is_none() && !children.is_empty() {
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+        }
+
+        // Clean up remaining processes
+        for (mut child, browser, client) in children {
+            log_debug(&format!("Killing remaining child process for client: {}, browser: {:?}", client, browser));
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+
+        if resolved_url.is_none() && start_time.elapsed() >= timeout {
+            log_debug("Timeout (9.5s) reached in extract_stream_url_async!");
+        }
+
+        resolved_url
+    })
+    .await
+    .unwrap_or(None)
 }
 
 #[tauri::command]
 async fn play_audio(url: String) -> Result<(), String> {
+    log_debug(&format!("play_audio called with URL: {}", url));
     if url.starts_with("local://") {
         return play_local_file(url.trim_start_matches("local://").to_string()).await;
     }
@@ -636,52 +747,77 @@ async fn play_audio(url: String) -> Result<(), String> {
     // Increment counter — this is our play request ID.
     // Any extraction task that started before this call is now stale.
     let my_id = PLAY_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+    log_debug(&format!("Assigned my_id: {} for {}", my_id, safe_url));
 
-    tokio::task::spawn_blocking(move || {
-        // ── Step 1: Cache lookup ─────────────────────────────────────────────
-        let cached = {
-            let mut cache = PREFETCH_CACHE.lock().unwrap();
-            cache.remove(&safe_url).and_then(|entry| {
-                let age = std::time::Instant::now().duration_since(entry.ts);
-                // Google CDN URLs expire in ~6 hours, but treat them as
-                // valid for 4h to avoid serving stale URLs near expiry.
-                if age < std::time::Duration::from_secs(4 * 3600)
-                    && entry.url.starts_with("http")
-                    && !entry.url.contains(".m3u8")
-                    && !entry.url.contains("manifest.googlevideo.com")
-                { Some(entry.url) } else { None }
-            })
-        };
+    // ── Step 1: Cache lookup ─────────────────────────────────────────────
+    let cached = {
+        let mut cache = PREFETCH_CACHE.lock().unwrap();
+        cache.remove(&safe_url).and_then(|entry| {
+            let age = std::time::Instant::now().duration_since(entry.ts);
+            // Google CDN URLs expire in ~6 hours, but treat them as
+            // valid for 4h to avoid serving stale URLs near expiry.
+            if age < std::time::Duration::from_secs(4 * 3600)
+                && entry.url.starts_with("http")
+                && !entry.url.contains(".m3u8")
+                && !entry.url.contains("manifest.googlevideo.com")
+            { Some(entry.url) } else { None }
+        })
+    };
 
-        // ── Step 2: Race check ───────────────────────────────────────────────
-        // If user already requested a different track, bail out immediately.
+    if cached.is_some() {
+        log_debug("Found URL in prefetch cache!");
+    }
+
+    // ── Step 2: Race check ───────────────────────────────────────────────
+    if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
+        log_debug(&format!("Superseded during cache check. current PLAY_COUNTER: {}", PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst)));
+        return Err("Superseded by newer play request".to_string());
+    }
+
+    // ── Step 3: Extract URL ──────────────────────────────────────────────
+    let stream_url = if let Some(c) = cached {
+        c
+    } else {
+        let url = extract_stream_url_async(safe_url.clone(), Some(my_id))
+            .await
+            .ok_or_else(|| {
+                log_debug("Failed to extract stream URL in play_audio");
+                "Could not extract stream URL. Update yt-dlp: yt-dlp -U".to_string()
+            })?;
+
+        // Race check again after extraction
         if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
+            log_debug(&format!("Superseded after extraction. current PLAY_COUNTER: {}", PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst)));
             return Err("Superseded by newer play request".to_string());
         }
+        url
+    };
 
-        // ── Step 3: Extract URL (fast -g path, parallel browsers) ────────────
-        let stream_url = if let Some(c) = cached {
-            c
-        } else {
-            let url = extract_stream_url(&safe_url)
-                .ok_or_else(|| "Could not extract stream URL. Update yt-dlp: yt-dlp -U".to_string())?;
+    log_debug(&format!("Streaming URL resolved: {}", &stream_url[..stream_url.len().min(80)]));
 
-            // Race check again after extraction (may have taken 2-5s)
-            if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
-                return Err("Superseded by newer play request".to_string());
-            }
-            url
-        };
-
-        // ── Step 4: Ensure mpv is running (spawn once, reuse forever) ────────
+    // ── Step 4: Ensure mpv is running and play ───────────────────────────
+    tokio::task::spawn_blocking(move || {
+        if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != my_id {
+            log_debug("Superseded in spawn_blocking task startup");
+            return Err("Superseded by newer play request".to_string());
+        }
+        log_debug("Ensuring mpv is running...");
         if !ensure_mpv_running() {
+            log_debug("mpv failed to start!");
             return Err("mpv failed to start or is not installed".to_string());
         }
 
+        log_debug("Sending switch track command to mpv...");
         // Switch track via IPC — no process restart.
-        switch_track_ipc(&stream_url).map_err(|e| format!("IPC switch failed: {}", e))?;
+        if let Err(e) = switch_track_ipc(&stream_url) {
+            log_debug(&format!("switch_track_ipc failed: {}", e));
+            return Err(format!("IPC switch failed: {}", e));
+        }
+        
+        log_debug("Resuming playback...");
         // Explicitly unpause — switch_track_ipc pauses first, ensure we resume
         let _ = send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", false]}"#, 3);
+        log_debug("Play request successfully handled!");
         Ok(())
     })
     .await
@@ -1155,13 +1291,13 @@ async fn open_in_file_manager(path: String) -> Result<(), String> {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-struct AudioMetadata { title: String, artist: String, album: String, duration: String }
+struct AudioMetadata { title: String, artist: String, album: String, duration: String, has_cover: bool }
 
 #[tauri::command]
 async fn get_audio_metadata(path: String) -> Result<AudioMetadata, String> {
     tokio::task::spawn_blocking(move || {
         let output = Command::new(bin_ffprobe())
-            .args(["-v", "quiet", "-print_format", "json", "-show_format", &path])
+            .args(["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", &path])
             .no_window()
             .output()
             .map_err(|_| "ffprobe not found — install ffmpeg".to_string())?;
@@ -1173,16 +1309,92 @@ async fn get_audio_metadata(path: String) -> Result<AudioMetadata, String> {
             .as_str().and_then(|d| d.parse::<f64>().ok()).unwrap_or(0.0);
         let mins = (duration_secs as u64) / 60;
         let secs = (duration_secs as u64) % 60;
+        let has_cover = json["streams"].as_array()
+            .map(|streams| {
+                streams.iter().any(|s| {
+                    s["disposition"]["attached_pic"].as_i64() == Some(1)
+                        || s["disposition"]["attached_pic"].as_str() == Some("1")
+                })
+            })
+            .unwrap_or(false);
         Ok(AudioMetadata {
             title:    tags["title"].as_str().or_else(|| tags["TITLE"].as_str()).unwrap_or("").to_string(),
             artist:   tags["artist"].as_str().or_else(|| tags["ARTIST"].as_str())
                           .or_else(|| tags["album_artist"].as_str()).unwrap_or("").to_string(),
             album:    tags["album"].as_str().or_else(|| tags["ALBUM"].as_str()).unwrap_or("").to_string(),
             duration: format!("{}:{:02}", mins, secs),
+            has_cover,
         })
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn get_audio_cover(path: String) -> Result<Option<String>, String> {
+    tokio::task::spawn_blocking(move || {
+        let output = Command::new(bin_ffmpeg())
+            .args(["-i", &path, "-an", "-vcodec", "copy", "-f", "image2pipe", "-"])
+            .no_window()
+            .output();
+
+        match output {
+            Ok(out) => {
+                if out.status.success() && !out.stdout.is_empty() {
+                    let bytes = out.stdout;
+                    let mime = if bytes.starts_with(&[0xff, 0xd8, 0xff]) {
+                        "image/jpeg"
+                    } else if bytes.starts_with(&[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) {
+                        "image/png"
+                    } else if bytes.starts_with(b"RIFF") && bytes.get(8..12) == Some(b"WEBP") {
+                        "image/webp"
+                    } else {
+                        "image/jpeg" // fallback
+                    };
+
+                    let b64 = base64_encode(&bytes);
+                    Ok(Some(format!("data:{};base64,{}", mime, b64)))
+                } else {
+                    Ok(None)
+                }
+            }
+            Err(e) => Err(e.to_string()),
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+fn base64_encode(bytes: &[u8]) -> String {
+    const CHARSET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    for chunk in bytes.chunks(3) {
+        match chunk.len() {
+            3 => {
+                let n = ((chunk[0] as u32) << 16) | ((chunk[1] as u32) << 8) | (chunk[2] as u32);
+                result.push(CHARSET[((n >> 18) & 63) as usize] as char);
+                result.push(CHARSET[((n >> 12) & 63) as usize] as char);
+                result.push(CHARSET[((n >> 6) & 63) as usize] as char);
+                result.push(CHARSET[(n & 63) as usize] as char);
+            }
+            2 => {
+                let n = ((chunk[0] as u32) << 8) | (chunk[1] as u32);
+                result.push(CHARSET[((n >> 10) & 63) as usize] as char);
+                result.push(CHARSET[((n >> 4) & 63) as usize] as char);
+                result.push(CHARSET[((n << 2) & 63) as usize] as char);
+                result.push('=');
+            }
+            1 => {
+                let n = chunk[0] as u32;
+                result.push(CHARSET[((n >> 2) & 63) as usize] as char);
+                result.push(CHARSET[((n << 4) & 63) as usize] as char);
+                result.push('=');
+                result.push('=');
+            }
+            _ => unreachable!(),
+        }
+    }
+    result
 }
 
 #[tauri::command]
@@ -1944,7 +2156,6 @@ fn main() {
             open_url_in_browser,
             set_loudnorm_enabled,
             set_skip_silence,
-            set_stream_quality,
             get_loudnorm_enabled,
             play_audio,
             play_local_file,
@@ -1971,6 +2182,7 @@ fn main() {
             rename_local_file,
             open_in_file_manager,
             get_audio_metadata,
+            get_audio_cover,
             get_waveform_thumbnail,
             get_disk_usage,
             export_playlist_m3u,

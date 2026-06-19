@@ -282,3 +282,35 @@ kbd {
   background: rgba(222,218,215,0.18) !important;
   color: var(--v-fg) !important;
 }
+
+/* YouTube playlist import modal animations and helper classes */
+@keyframes ytModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ytModalScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.yt-import-modal-overlay {
+  animation: ytModalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.yt-import-modal-container {
+  animation: ytModalScaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Global input focus ring reset */
+input:focus, input:focus-visible, input:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.exportify-btn:hover {
+  background: rgba(29, 185, 84, 0.15) !important;
+  border-color: rgba(29, 185, 84, 0.4) !important;
+  color: #1ed760 !important;
+  transform: translateY(-1px);
+}
