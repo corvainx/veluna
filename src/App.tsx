@@ -421,8 +421,8 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
   );
 }
 
-function CopyButton({ text, label, icon: Icon, disabled = false, className = '' }: {
-  text: string; label: string; icon: React.ElementType; disabled?: boolean; className?: string;
+function CopyButton({ text, label, icon: Icon, disabled = false }: {
+  text: string; label: string; icon: React.ElementType; disabled?: boolean;
 }) {
   const [copied, setCopied] = React.useState(false);
   const handleCopy = async () => {
@@ -728,7 +728,6 @@ function YtImportModal({
   const [phase, setPhase] = useState<'input' | 'loading' | 'saving' | 'done'>('input');
   const [url, setUrl] = useState('');
   const [results, setResults] = useState<{ title: string; artist: string; id: string; duration: string; cover: string }[]>([]);
-  const [statusMsg, setStatusMsg] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -765,11 +764,9 @@ function YtImportModal({
       if (parsed.length === 0) { showToast('No tracks found'); setPhase('input'); return; }
       setResults(parsed);
       setPhase('saving');
-      setStatusMsg('');
     } catch (e) {
       showToast(`Import failed: ${e}`);
       setPhase('input');
-      setStatusMsg('');
     }
   };
 
@@ -3284,7 +3281,7 @@ export default function Veluna() {
               { id: 'downloads', label: 'Offline', icon: HardDrive },
               { id: 'stats', label: 'Stats', icon: BarChart2 },
               { id: 'settings', label: 'Settings', icon: Settings },
-            ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]).map(({ id, label, icon: Icon }) => (
+            ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }> }[]).map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => navigateTo(id)}
                 className={`v-nav-btn${activeNav===id?' v-nav-btn--active':''}`}>
                 <Icon size={17} style={activeNav===id?{color:'#9e9894'}:{color:'#363230'}} />
@@ -3529,7 +3526,7 @@ export default function Veluna() {
                             const isActive = currentTrack?.url === track.url;
                             return (
                               <div key={track.url}
-                                onClick={() => handlePlayInContext(track, quickPicks.slice(0, 8))} onMouseEnter={() => prefetchOnHover(track.url)}
+                                onClick={() => handlePlayInContext(track, quickPicks.slice(0, 8))}
                                 onContextMenu={e => openCtx(e, { type: 'quickpick', track })}
                                 style={{
                                   display:'flex',alignItems:'center',gap:'10px',
@@ -3539,8 +3536,19 @@ export default function Veluna() {
                                   transition:'background .12s,border-color .12s',
                                   animation:`fadeUpSm .18s cubic-bezier(0.2,0,0,1) ${cardIdx*35}ms both`,
                                 }}
-                                onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';}}}
-                                onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.025)';e.currentTarget.style.borderColor='rgba(255,255,255,0.05)';}}}
+                                onMouseEnter={e => {
+                                  prefetchOnHover(track.url);
+                                  if (!isActive) {
+                                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                                  }
+                                }}
+                                onMouseLeave={e => {
+                                  if (!isActive) {
+                                    e.currentTarget.style.background = 'rgba(255,255,255,0.025)';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                                  }
+                                }}
                               >
                                 <div style={{width:'42px',height:'42px',borderRadius:'7px',overflow:'hidden',flexShrink:0,position:'relative',background:'#1c1a1a'}}>
                                   <img src={track.cover} alt={track.title} style={{width:'100%',height:'100%',objectFit:'cover'}} loading="lazy" />
@@ -4613,7 +4621,7 @@ export default function Veluna() {
                   infoModalTrack.duration&&infoModalTrack.duration!=='0:00'&&{icon:<Clock size={9}/>,label:infoModalTrack.duration},
                   isYt&&{icon:<Youtube size={9}/>,label:"YouTube"},
                   trackAudioInfo?.codec&&trackAudioInfo.codec!=='unknown'&&{icon:<BarChart2 size={9}/>,label:`${trackAudioInfo.codec.toUpperCase()}${trackAudioInfo.bitrate>0?` · ${Math.round(trackAudioInfo.bitrate/1000)}k`:''}`},
-                  trackAudioInfo?.samplerate>0&&{icon:<Gauge size={9}/>,label:`${(trackAudioInfo.samplerate/1000).toFixed(1)}kHz`},
+                  (trackAudioInfo && trackAudioInfo.samplerate && trackAudioInfo.samplerate>0)&&{icon:<Gauge size={9}/>,label:`${(trackAudioInfo.samplerate/1000).toFixed(1)}kHz`},
                   trackAudioInfo?.channels&&{icon:<AlignLeft size={9}/>,label:trackAudioInfo.channels},
                   trackAudioInfo?.format&&{icon:<FileCode2 size={9}/>,label:trackAudioInfo.format},
                 ].filter(Boolean).map((item:any,i)=>(
@@ -4626,10 +4634,10 @@ export default function Veluna() {
               {}
               <div style={{margin:"0 14px 12px",borderRadius:"10px",overflow:"hidden",border:"1px solid #1c1a1a"}}>
                 {[
-                  { icon: Music, label: 'Title', value: infoModalTrack.title, color: 'text-neutral-400', bg: 'bg-neutral-800/10' },
-                  { icon: FileBadge2, label: 'Artist', value: infoModalTrack.artist, color: 'text-neutral-400', bg: 'bg-purple-500/10' },
-                  ...(ytId ? [{ icon: Hash, label: 'Video ID', value: ytId, color: 'text-neutral-400', bg: 'bg-neutral-800/50' }] : []),
-                ].map(({ icon: Icon, label, value, color, bg }) => (
+                  { icon: Music, label: 'Title', value: infoModalTrack.title },
+                  { icon: FileBadge2, label: 'Artist', value: infoModalTrack.artist },
+                  ...(ytId ? [{ icon: Hash, label: 'Video ID', value: ytId }] : []),
+                ].map(({ icon: Icon, label, value }) => (
                   <div key={label}
                     style={{display:"flex",alignItems:"flex-start",gap:"10px",padding:"10px",borderRadius:"9px",cursor:"pointer",transition:"background .1s"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.03)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
                     onClick={() => copyToClipboard(value)}
