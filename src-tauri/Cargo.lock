@@ -3,6 +3,26 @@
 version = 4
 
 [[package]]
+name = "Veluna"
+version = "0.1.0"
+dependencies = [
+ "discord-rich-presence",
+ "lazy_static",
+ "png 0.17.16",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-opener",
+ "tokio",
+ "urlencoding",
+ "zbus 3.15.2",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4837,26 +4857,6 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
-name = "veluna"
-version = "0.1.0"
-dependencies = [
- "discord-rich-presence",
- "lazy_static",
- "png 0.17.16",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-opener",
- "tokio",
- "urlencoding",
- "zbus 3.15.2",
-]
 
 [[package]]
 name = "version-compare"

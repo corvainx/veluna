@@ -327,15 +327,15 @@ async fn open_url_in_browser(url: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn import_youtube_playlist(url: String) -> Result<String, String> {
-    tokio::task::spawn_blocking(move || {
-        
+    let flat_output = tokio::task::spawn_blocking(move || {
         let mut child = Command::new(bin_ytdlp())
             .args([
                 "--flat-playlist",
                 "--no-warnings",
                 "--ignore-errors",
                 "--socket-timeout", "10",
-                "--print", "%(id)s====%(title)s====%(duration_string|)s====%(thumbnails.-1.url,thumbnail|)s",
+                "--no-config",
+                "--print", "%(id)s====%(title)s====%(duration_string|0:00)s====%(thumbnails.-1.url,thumbnail|no_thumb)s====%(artist,uploader,channel|Unknown)s====%(playlist_title|YouTube Playlist)s",
                 "--",
                 url.as_str(),
             ])
@@ -362,13 +362,60 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
         }
         let out = child.wait_with_output().map_err(|e| e.to_string())?;
         let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-        if stdout.trim().is_empty() {
-            return Err("No tracks found. Is this a public playlist?".to_string());
-        }
         Ok(stdout)
     })
     .await
-    .map_err(|e| e.to_string())?
+    .map_err(|e| e.to_string())??;
+
+    let lines: Vec<String> = flat_output.lines().filter(|l| !l.trim().is_empty()).map(|s| s.to_string()).collect();
+    if lines.is_empty() {
+        return Err("No tracks found. Is this a public playlist?".to_string());
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_millis(2000))
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
+
+    let mut handles = Vec::new();
+    for line in lines {
+        let client_clone = client.clone();
+        let handle = tokio::spawn(async move {
+            let parts: Vec<String> = line.split("====").map(|s| s.to_string()).collect();
+            if parts.len() < 6 {
+                return line;
+            }
+            let id = &parts[0];
+            let title = &parts[1];
+            let duration = &parts[2];
+            let thumb = &parts[3];
+            let mut artist = parts[4].clone();
+            let playlist_title = &parts[5];
+
+            let oembed_url = format!("https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={}&format=json", id);
+            if let Ok(resp) = client_clone.get(&oembed_url).send().await {
+                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                    if let Some(author) = json.get("author_name").and_then(|v| v.as_str()) {
+                        if !author.trim().is_empty() {
+                            artist = author.trim().to_string();
+                        }
+                    }
+                }
+            }
+            format!("{}===={}===={}===={}===={}===={}", id, title, duration, thumb, artist, playlist_title)
+        });
+        handles.push(handle);
+    }
+
+    let mut resolved_lines = Vec::new();
+    for h in handles {
+        if let Ok(res) = h.await {
+            resolved_lines.push(res);
+        }
+    }
+
+    Ok(resolved_lines.join("\n"))
 }
 
 #[tauri::command]
