@@ -127,13 +127,13 @@ const SleepTimerPopover = React.memo(({
   const [input, setInput] = useState('');
   const presets = [5, 10, 15, 20, 30, 45, 60, 90];
   return (
-    <div style={{width:'220px',background:'#161414',borderStyle:'solid',borderWidth:'1px',borderColor:'#252222',borderRadius:'12px',overflow:'hidden',boxShadow:'0 12px 40px rgba(0,0,0,0.8)'}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderBottomStyle:'solid',borderBottomWidth:'1px',borderBottomColor:'#1c1a1a'}}>
+    <div style={{width:'220px',background:'var(--v-bg2)',borderStyle:'solid',borderWidth:'1px',borderColor:'var(--v-bdr2)',borderRadius:'12px',overflow:'hidden',boxShadow:'0 12px 40px rgba(0,0,0,0.8)'}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderBottomStyle:'solid',borderBottomWidth:'1px',borderBottomColor:'var(--v-bdr2)'}}>
         <span style={{fontSize:'12px',fontWeight:700,color:'#9e9894',display:'flex',alignItems:'center',gap:'7px'}}><Moon size={13}/> Sleep Timer</span>
         <button onClick={onClose} style={{background:'none',borderStyle:'none',borderWidth:0,borderColor:'transparent',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent',cursor:'pointer',color:'#363230',display:'flex'}} onMouseEnter={e=>(e.currentTarget.style.color='#9e9894')} onMouseLeave={e=>(e.currentTarget.style.color='#363230')}><X size={13}/></button>
       </div>
       {sleepTimer > 0 && (
-        <div style={{padding:'10px 14px',borderBottomStyle:'solid',borderBottomWidth:'1px',borderBottomColor:'#1c1a1a',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{padding:'10px 14px',borderBottomStyle:'solid',borderBottomWidth:'1px',borderBottomColor:'var(--v-bdr2)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <span style={{fontSize:'12px',color:'#9e9894'}}>Pausing in <strong>{Math.ceil(sleepTimer/60)}m</strong></span>
           <button onClick={()=>{onCancel();onClose();}} style={{background:'none',borderStyle:'none',borderWidth:0,borderColor:'transparent',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent',cursor:'pointer',fontSize:'11px',color:'#5c5755',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}><X size={10}/>Cancel</button>
         </div>
@@ -157,8 +157,8 @@ const SleepTimerPopover = React.memo(({
               fontWeight:600,
               transition:'border-color .1s,color .1s,background .1s'
             }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.color='#9e9894';(e.currentTarget as HTMLElement).style.borderColor='#2e2b2b';}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent';(e.currentTarget as HTMLElement).style.color='#5c5755';(e.currentTarget as HTMLElement).style.borderColor='#252222';}}>
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.color='#9e9894';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent';(e.currentTarget as HTMLElement).style.color='#5c5755';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';}}>
             {m}m
           </button>
         ))}
@@ -167,7 +167,7 @@ const SleepTimerPopover = React.memo(({
         <input type="number" min="1" max="999" placeholder="Custom min"
           value={input} onChange={e=>setInput(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){const m=parseInt(input);if(m>0){onSet(m);onClose();}}}}
-          style={{flex:1,background:'#1c1a1a',borderStyle:'solid',borderWidth:'1px',borderColor:'#252222',color:'#e2ddd9',borderRadius:'7px',padding:'5px 8px',fontSize:'11px',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent'}}
+          style={{flex:1,background:'var(--v-bdr2)',borderStyle:'solid',borderWidth:'1px',borderColor:'var(--v-bdr2)',color:'#e2ddd9',borderRadius:'7px',padding:'5px 8px',fontSize:'11px',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent'}}
         />
         <button onClick={()=>{const m=parseInt(input);if(m>0){onSet(m);onClose();}}}
           style={{
@@ -175,7 +175,7 @@ const SleepTimerPopover = React.memo(({
             background:'rgba(226,221,217,0.07)',
             borderStyle:'solid',
             borderWidth:'1px',
-            borderColor:'#2e2b2b',
+            borderColor:'var(--v-bdr3)',
             outlineStyle:'none',
             outlineWidth:0,
             outlineColor:'transparent',
@@ -265,11 +265,11 @@ const TrackRow = React.memo(({
 
 const TrackRowSkeleton = ({ index }: { index: number }) => (
   <div style={{display:'flex',alignItems:'center',gap:'12px',padding:'8px 12px',animation:`fadeUpSm 0.18s cubic-bezier(0.2,0,0,1) ${index*40}ms both`}}>
-    <div style={{width:'26px',height:'12px',background:'#1c1a1a',borderRadius:'4px',flexShrink:0}} className="animate-pulse"/>
-    <div style={{width:'42px',height:'42px',borderRadius:'8px',background:'#1c1a1a',flexShrink:0}} className="animate-pulse"/>
+    <div style={{width:'26px',height:'12px',background:'var(--v-bdr2)',borderRadius:'4px',flexShrink:0}} className="animate-pulse"/>
+    <div style={{width:'42px',height:'42px',borderRadius:'8px',background:'var(--v-bdr2)',flexShrink:0}} className="animate-pulse"/>
     <div style={{flex:1,display:'flex',flexDirection:'column',gap:'6px'}}>
-      <div style={{height:'11px',background:'#1c1a1a',borderRadius:'3px',width:`${55+(index*13)%35}%`}} className="animate-pulse"/>
-      <div style={{height:'9px',background:'#1c1a1a',borderRadius:'3px',width:`${30+(index*7)%25}%`}} className="animate-pulse"/>
+      <div style={{height:'11px',background:'var(--v-bdr2)',borderRadius:'3px',width:`${55+(index*13)%35}%`}} className="animate-pulse"/>
+      <div style={{height:'9px',background:'var(--v-bdr2)',borderRadius:'3px',width:`${30+(index*7)%25}%`}} className="animate-pulse"/>
     </div>
   </div>
 );
@@ -337,19 +337,39 @@ const ThemedSelect = ({ value, options, onChange }: {
       const r = btnRef.current.getBoundingClientRect();
       const dropW = Math.max(r.width, 220);
       const left = Math.min(r.left, window.innerWidth - dropW - 8);
-      setDropPos({ top: r.bottom + 4, left: Math.max(8, left), width: dropW });
+      const dropH = dropRef.current ? dropRef.current.offsetHeight : (options.length * 56 + 10);
+      const spaceBelow = window.innerHeight - r.bottom - 8;
+      const spaceAbove = r.top - 8;
+      let top = r.bottom + 4;
+      if (spaceBelow < dropH && spaceAbove > spaceBelow) {
+        top = r.top - dropH - 4;
+      }
+      setDropPos({ top, left: Math.max(8, left), width: dropW });
     };
+    update();
+    const timer = setTimeout(update, 0);
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
-    return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
-  }, [open]);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open, options.length]);
 
   const handleOpen = () => {
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
       const dropW = Math.max(r.width, 220);
       const left = Math.min(r.left, window.innerWidth - dropW - 8);
-      setDropPos({ top: r.bottom + 4, left: Math.max(8, left), width: dropW });
+      const dropH = options.length * 56 + 10;
+      const spaceBelow = window.innerHeight - r.bottom - 8;
+      const spaceAbove = r.top - 8;
+      let top = r.bottom + 4;
+      if (spaceBelow < dropH && spaceAbove > spaceBelow) {
+        top = r.top - dropH - 4;
+      }
+      setDropPos({ top, left: Math.max(8, left), width: dropW });
     }
     setOpen(o => !o);
   };
@@ -402,7 +422,7 @@ const ThemedSelect = ({ value, options, onChange }: {
             borderBottomColor: 'transparent',
             borderTopStyle: i !== 0 ? 'solid' : 'none',
             borderTopWidth: i !== 0 ? 1 : 0,
-            borderTopColor: i !== 0 ? '#1c1a1a' : 'transparent',
+            borderTopColor: i !== 0 ? 'var(--v-bdr2)' : 'transparent',
           }}
           onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(226,221,217,0.04)'; }}
           onMouseLeave={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -428,18 +448,18 @@ const ThemedSelect = ({ value, options, onChange }: {
           fontWeight: 500,
           borderStyle: 'solid',
           borderWidth: '1px',
-          borderColor: open ? '#2e2b2b' : '#252222',
+          borderColor: open ? 'var(--v-bdr3)' : 'var(--v-bdr2)',
           outlineStyle: 'none',
           outlineWidth: 0,
           outlineColor: 'transparent',
-          background: open ? 'rgba(226,221,217,0.05)' : '#161414',
+          background: open ? 'rgba(226,221,217,0.05)' : 'var(--v-bg2)',
           color: open ? '#e2ddd9' : '#9e9894',
           cursor: 'pointer',
           minWidth: '130px',
           transition: 'border-color .12s,color .12s,background .12s',
         }}
-        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = '#2e2b2b'; (e.currentTarget as HTMLElement).style.color = '#e2ddd9'; } }}
-        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = '#252222'; (e.currentTarget as HTMLElement).style.color = '#9e9894'; } }}
+        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr3)'; (e.currentTarget as HTMLElement).style.color = '#e2ddd9'; } }}
+        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr2)'; (e.currentTarget as HTMLElement).style.color = '#9e9894'; } }}
       >
         <span style={{ flex: 1, textAlign: "left" }}>{current?.label}</span>
         <ChevronDown size={14} style={{ transition: "transform .2s", transform: open ? "rotate(180deg)" : "none" }} />
@@ -460,9 +480,9 @@ function ImportResultModal({
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
   return (
-    <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}}>
+    <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.9)"}}>
       <div style={{width:"380px",borderRadius:"14px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.95)",background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)"}}>
-        <div style={{padding:"14px 18px",borderBottom:"1px solid #1c1a1a"}}>
+        <div style={{padding:"14px 18px",borderBottom:"1px solid var(--v-bdr2)"}}>
           <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Save Playlist</h2>
           <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>
             <span style={{color:"#9e9894",fontWeight:700}}>{matchedCount}</span> tracks matched
@@ -475,19 +495,19 @@ function ImportResultModal({
             <input ref={inputRef} value={name} onChange={e=>setName(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onSave(name.trim(),desc.trim());}}
               placeholder="My Playlist" maxLength={80}
-              style={{width:"100%",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}/>
+              style={{width:"100%",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}/>
           </div>
           <div>
             <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"6px"}}>Description <span style={{color:"#363230",textTransform:"none",fontWeight:400}}>(optional)</span></label>
             <input value={desc} onChange={e=>setDesc(e.target.value)}
               placeholder="e.g. Chill vibes, road trip..." maxLength={160}
-              style={{width:"100%",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}/>
+              style={{width:"100%",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}/>
           </div>
           <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
             <button onClick={onClose}
               style={{flex:1,padding:"8px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
-              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}}
-              onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}}
+              onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
               Cancel
             </button>
             <button onClick={()=>{if(name.trim())onSave(name.trim(),desc.trim());}} disabled={!name.trim()}
@@ -515,16 +535,16 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
   return (
     <div ref={ref} style={{marginTop:'12px',flexShrink:0,position:'relative'}}>
       <button onClick={() => setOpen(o => !o)}
-        style={{width:'100%',borderRadius:'8px',border:`1px solid ${open?'#2e2b2b':'#252222'}`,padding:'7px 11px',display:'flex',alignItems:'center',gap:'8px',background:open?'rgba(226,221,217,0.04)':'transparent',color:open?'#e2ddd9':'#5c5755',cursor:'pointer',fontSize:'12px',fontWeight:600,transition:'border-color .12s,color .12s,background .12s'}}
+        style={{width:'100%',borderRadius:'8px',border:`1px solid ${open?'var(--v-bdr3)':'var(--v-bdr2)'}`,padding:'7px 11px',display:'flex',alignItems:'center',gap:'8px',background:open?'rgba(226,221,217,0.04)':'transparent',color:open?'#e2ddd9':'#5c5755',cursor:'pointer',fontSize:'12px',fontWeight:600,transition:'border-color .12s,color .12s,background .12s'}}
         onMouseEnter={e => {
           if (!open) {
-            e.currentTarget.style.borderColor = '#2e2b2b';
+            e.currentTarget.style.borderColor = 'var(--v-bdr3)';
             e.currentTarget.style.color = '#9e9894';
           }
         }}
         onMouseLeave={e => {
           if (!open) {
-            e.currentTarget.style.borderColor = '#252222';
+            e.currentTarget.style.borderColor = 'var(--v-bdr2)';
             e.currentTarget.style.color = '#5c5755';
           }
         }}>
@@ -542,7 +562,7 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
           display: 'flex',
           flexDirection: 'column',
           background: '#131111',
-          border: '1px solid #1c1a1a',
+          border: '1px solid var(--v-bdr2)',
           borderRadius: '8px',
           overflow: 'hidden',
           boxShadow: '0 -8px 24px rgba(0,0,0,0.5)',
@@ -558,7 +578,7 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
               style={{
                 width: '100%',
                 border: 'none',
-                borderTop: idx !== 0 ? '1px solid #1c1a1a' : 'none',
+                borderTop: idx !== 0 ? '1px solid var(--v-bdr2)' : 'none',
                 padding: '8px 12px',
                 display: 'flex',
                 alignItems: 'center',
@@ -604,9 +624,9 @@ function CopyButton({ text, label, icon: Icon, disabled = false }: {
   };
   return (
     <button onClick={handleCopy} disabled={disabled}
-      style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"7px",padding:"8px",borderRadius:"9px",border:"1px solid var(--v-bdr2)",background:"#1c1a1a",color:copied?"#9e9894":"#5c5755",fontSize:"12px",fontWeight:600,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.3:1,transition:"border-color .12s,color .12s,background .12s",width:"100%"}}
+      style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"7px",padding:"8px",borderRadius:"9px",border:"1px solid var(--v-bdr2)",background:"var(--v-bdr2)",color:copied?"#9e9894":"#5c5755",fontSize:"12px",fontWeight:600,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.3:1,transition:"border-color .12s,color .12s,background .12s",width:"100%"}}
       onMouseEnter={e=>{if(!disabled){e.currentTarget.style.background="#232020";e.currentTarget.style.color="#9e9894";}}}
-      onMouseLeave={e=>{e.currentTarget.style.background="#1c1a1a";e.currentTarget.style.color=copied?"#9e9894":"#5c5755";}}>
+      onMouseLeave={e=>{e.currentTarget.style.background="var(--v-bdr2)";e.currentTarget.style.color=copied?"#9e9894":"#5c5755";}}>
       {copied ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9e9894" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Copied!</> : <><Icon size={13}/>{label}</>}
     </button>
   );
@@ -782,7 +802,7 @@ function CsvImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='matching'?undefined:onClose}>
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='matching'?undefined:onClose}>
       <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
         onClick={e => e.stopPropagation()}>
 
@@ -987,9 +1007,8 @@ function YtImportModal({
   onSavePlaylist: (name: string, desc: string, tracks: Track[]) => void;
   showToast: (m: string) => void;
 }) {
-  const [phase, setPhase] = useState<'input' | 'loading' | 'saving' | 'done'>('input');
+  const [phase, setPhase] = useState<'input' | 'loading' | 'done'>('input');
   const [url, setUrl] = useState('');
-  const [results, setResults] = useState<{ title: string; artist: string; id: string; duration: string; cover: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isBtnHovered, setIsBtnHovered] = useState(false);
@@ -1009,24 +1028,125 @@ function YtImportModal({
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
-        const [id, title, duration, thumb] = l.split('====');
+        const parts = l.split('====');
+        if (parts.length < 4) return null;
+        const [id, title, duration, thumb, artist, playlistTitle] = parts;
         const idTrim = id?.trim() || '';
         const thumbTrim = thumb?.trim() || '';
         const cover = (thumbTrim && thumbTrim.startsWith('http'))
           ? thumbTrim
           : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
+
+        let parsedArtist = artist?.trim() || '';
+        let parsedTitle = title?.trim() || 'Unknown';
+
+        let cleanUploader = parsedArtist;
+        if (cleanUploader.toLowerCase().endsWith(' - topic')) {
+          cleanUploader = cleanUploader.slice(0, -8).trim();
+        }
+
+        const cleanA = cleanArtist(cleanUploader);
+
+        const descriptionTags = [
+          'slowed', 'sped up', 'reverb', 'bass boosted', 'looped', 'loop', 
+          'nightcore', 'remix', 'pitch', '1hour', '1 hour', 
+          '10min', '10 min', '10 minutes', 'clean', 'dirty', 'lyrics', 
+          'lyric', 'audio', 'video', 'official', 'mv', 'hq', 'hd', 
+          '4k', 'remaster', 'remastered', 'live', 'cover', 'instrumental', 
+          'karaoke', 'slow'
+        ];
+
+        const stopwords = [
+          'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'but', 
+          'is', 'are', 'was', 'were', 'you', 'me', 'my', 'your', 'we', 'us', 'our', 
+          'he', 'him', 'his', 'she', 'her', 'they', 'them', 'their', 'i', 'really', 
+          'here', 'there', 'miss', 'with', 'without', 'about', 'from', 'by'
+        ];
+
+        const hasStopwords = (s: string) => {
+          const words = s.toLowerCase().split(/\s+/);
+          return words.some(w => stopwords.includes(w));
+        };
+
+        if (parsedTitle.includes(' - ')) {
+          const tParts = parsedTitle.split(' - ');
+          const part1 = tParts[0].trim();
+          const part2 = tParts.slice(1).join(' - ').trim();
+
+          const part1Clean = part1.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
+          const part2Clean = part2.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
+
+          const isPart2Tag = descriptionTags.some(tag => part2Clean === tag || part2Clean.includes(tag));
+
+          if (isPart2Tag) {
+            parsedArtist = cleanA || 'Unknown';
+            parsedTitle = part1;
+          } else {
+            if (cleanA) {
+              const uploaderLower = cleanA.toLowerCase();
+              const part1Lower = part1.toLowerCase();
+              const part2Lower = part2.toLowerCase();
+
+              if (part2Lower.includes(uploaderLower) || uploaderLower.includes(part2Lower)) {
+                parsedArtist = cleanA;
+                parsedTitle = part1;
+              } else if (part1Lower.includes(uploaderLower) || uploaderLower.includes(part1Lower)) {
+                parsedArtist = cleanA;
+                parsedTitle = part2;
+              } else {
+                const p1Stop = hasStopwords(part1Clean);
+                const p2Stop = hasStopwords(part2Clean);
+                if (p1Stop && !p2Stop) {
+                  parsedArtist = part2;
+                  parsedTitle = part1;
+                } else if (p2Stop && !p1Stop) {
+                  parsedArtist = part1;
+                  parsedTitle = part2;
+                } else {
+                  parsedArtist = part1;
+                  parsedTitle = part2;
+                }
+              }
+            } else {
+              const p1Stop = hasStopwords(part1Clean);
+              const p2Stop = hasStopwords(part2Clean);
+              if (p1Stop && !p2Stop) {
+                parsedArtist = part2;
+                parsedTitle = part1;
+              } else if (p2Stop && !p1Stop) {
+                parsedArtist = part1;
+                parsedTitle = part2;
+              } else {
+                parsedArtist = part1;
+                parsedTitle = part2;
+              }
+            }
+          }
+        } else {
+          parsedArtist = cleanA || 'Unknown';
+        }
+
         return {
-          title: title?.trim() || 'Unknown',
-          artist: '',
+          title: parsedTitle,
+          artist: parsedArtist || 'Unknown',
           id: idTrim,
           duration: duration?.trim() || '',
           cover,
+          playlistTitle: playlistTitle?.trim() || 'YouTube Playlist',
         };
-      }).filter(t => t.id);
+      }).filter((t): t is NonNullable<typeof t> => t !== null && !!t.id);
 
       if (parsed.length === 0) { showToast('No tracks found'); setPhase('input'); return; }
-      setResults(parsed);
-      setPhase('saving');
+
+      const playlistName = parsed[0]?.playlistTitle || 'YouTube Import';
+      const tracks: Track[] = parsed.map((r, i) => ({
+        id: i, title: r.title, artist: r.artist || 'Unknown',
+        duration: r.duration || '', url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
+      }));
+
+      onSavePlaylist(playlistName, `Imported from YouTube: ${trimmed}`, tracks);
+      setPhase('done');
+      onClose();
     } catch (e) {
       showToast(`Import failed: ${e}`);
       setPhase('input');
@@ -1037,7 +1157,7 @@ function YtImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
       <div className="yt-import-modal-container" style={{width:"580px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
         onClick={e => e.stopPropagation()}>
 
@@ -1055,7 +1175,7 @@ function YtImportModal({
               <svg width="15" height="12" viewBox="0 0 18 14" fill="white"><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
             </div>
             <h2 style={{fontSize: "15px", fontWeight: 800, color: "#e2ddd9", margin: 0, letterSpacing: "-0.01em"}}>
-              {phase === 'saving' ? 'Playlist Preview' : 'Import YouTube Playlist'}
+              Import YouTube Playlist
             </h2>
           </div>
           <button onClick={onClose}
@@ -1238,117 +1358,8 @@ function YtImportModal({
         )}
 
         {}
-        {phase === 'saving' && (
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            padding: "20px 24px 24px 24px",
-            boxSizing: "border-box",
-            maxHeight: "380px",
-            overflow: "hidden"
-          }}>
-            {}
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "14px",
-              flexShrink: 0
-            }}>
-              <div style={{fontSize: "12.5px", color: "#9e9894"}}>
-                Found <span style={{color: "#e2ddd9", fontWeight: 700}}>{results.length}</span> videos
-              </div>
-              <div style={{
-                background: "rgba(255, 30, 39, 0.1)",
-                border: "1px solid rgba(255, 30, 39, 0.25)",
-                color: "#ff1e27",
-                fontSize: "10px",
-                fontWeight: 700,
-                padding: "2px 8px",
-                borderRadius: "4px"
-              }}>
-                READY TO SAVE
-              </div>
-            </div>
-
-            {}
-            <div className="yt-import-results-scroll" style={{
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px"
-            }}>
-              {results.slice(0, 50).map((r, i) => (
-                <div key={i} className="yt-track-card">
-                  {}
-                  <div style={{position: "relative", width: "52px", height: "29px", borderRadius: "6px", overflow: "hidden", flexShrink: 0}}>
-                    <img src={r.cover} style={{width: "100%", height: "100%", objectFit: "cover", background: "rgba(255,255,255,0.03)"}} alt=""
-                      onError={e=>{(e.currentTarget as HTMLImageElement).style.opacity='0';}} />
-                    {r.duration && (
-                      <span style={{
-                        position: "absolute",
-                        bottom: "2px",
-                        right: "2px",
-                        background: "rgba(0, 0, 0, 0.75)",
-                        color: "#fff",
-                        fontSize: "8.5px",
-                        fontWeight: 700,
-                        padding: "1px 3.5px",
-                        borderRadius: "2.5px",
-                        fontVariantNumeric: "tabular-nums"
-                      }}>
-                        {r.duration}
-                      </span>
-                    )}
-                  </div>
-
-                  {}
-                  <div style={{flex: 1, minWidth: 0}}>
-                    <div style={{fontSize: "12.5px", color: "#e2ddd9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600}}>
-                      {r.title}
-                    </div>
-                    {cleanArtist(r.artist) && (
-                      <div style={{fontSize: "11px", color: "#5c5755", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "1px"}}>
-                        {cleanArtist(r.artist)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {results.length > 50 && (
-                <div style={{
-                  fontSize: "11px",
-                  color: "rgba(255, 255, 255, 0.25)",
-                  padding: "8px 12px",
-                  textAlign: "center",
-                  background: "rgba(255, 255, 255, 0.01)",
-                  border: "1px dashed rgba(255, 255, 255, 0.05)",
-                  borderRadius: "6px"
-                }}>
-                  + {results.length - 50} more tracks in queue
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
-    {phase === 'saving' && (
-      <ImportResultModal
-        matchedCount={results.length}
-        failedCount={0}
-        onSave={(name, desc) => {
-          const tracks: Track[] = results.map((r, i) => ({
-            id: i, title: r.title, artist: r.artist || '',
-            duration: r.duration || '', url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
-          }));
-          onSavePlaylist(name, desc, tracks);
-          setPhase('done');
-          onClose();
-        }}
-        onClose={() => { setPhase('done'); onClose(); }}
-      />
-    )}
     </>
   );
 }
@@ -1394,7 +1405,7 @@ const SettingsSwitch = ({ checked, onChange }: { checked: boolean; onChange: () 
         flexShrink: 0,
         background: checked ? "rgba(226,221,217,0.75)" : "#232020",
         border: "1px solid",
-        borderColor: checked ? "rgba(226,221,217,0.25)" : hovered ? "#3a3735" : "#2e2b2b",
+        borderColor: checked ? "rgba(226,221,217,0.25)" : hovered ? "#3a3735" : "var(--v-bdr3)",
         transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         cursor: "pointer",
         outline: "none",
@@ -1650,16 +1661,16 @@ function SettingsPanel({
 
             <div style={{
               borderRadius:"12px",
-              border:updateAvailable?"1px solid rgba(226, 221, 217, 0.25)":"1px solid #1a1817",
+              border:updateAvailable?"1px solid rgba(226, 221, 217, 0.25)":"1px solid var(--v-bdr)",
               padding:"16px",
               display:"flex",
               alignItems:"flex-start",
               gap:"14px",
-              background:updateAvailable?"rgba(226, 221, 217, 0.02)":"#0c0b0b",
+              background:updateAvailable?"rgba(226, 221, 217, 0.02)":"var(--v-bg0)",
               transition:"all 0.2s"
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(226, 221, 217, 0.4)' : '#282525'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(226, 221, 217, 0.25)' : '#1a1817'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(226, 221, 217, 0.4)' : 'var(--v-bdr3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(226, 221, 217, 0.25)' : 'var(--v-bdr)'; }}
             >
               <div style={{marginTop:"2px",flexShrink:0,color:updateAvailable?"#e2ddd9":"#5c5755"}}>
                 {updateAvailable ? <ArrowUpCircle size={20}/> : <CheckCircle size={20}/>}
@@ -1698,7 +1709,7 @@ function SettingsPanel({
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Audio Specifications</h3>
               </div>
               
-              <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #141312"}}>
+              <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid var(--v-bdr)"}}>
                 <div>
                   <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Download Quality</p>
                   <p style={{fontSize:"11px",color:"#6f6966",marginTop:"4px"}}>
@@ -1904,7 +1915,7 @@ function SettingsPanel({
                     <div style={{position:"relative",height:"4px",background:"#1b1918",borderRadius:"2px"}}
                       onMouseEnter={() => setHoveredSlider(key)}
                       onMouseLeave={() => setHoveredSlider(null)}>
-                      <div style={{position:"absolute",top:0,left:"50%",width:"1px",height:"100%",background:"#2e2b2b",borderRadius:"1px",pointerEvents:"none"}}/>
+                      <div style={{position:"absolute",top:0,left:"50%",width:"1px",height:"100%",background:"var(--v-bdr3)",borderRadius:"1px",pointerEvents:"none"}}/>
                       <input type="range" min="-12" max="12" step="1" value={eq[key]}
                         onChange={e => {
                           const v = parseInt(e.target.value);
@@ -2007,6 +2018,7 @@ function SettingsPanel({
                     { id: 'forest', name: 'Forest Emerald', desc: 'Moss & dark greens', bg: '#040806', cardBg: '#0b1510', accent: '#10b981' },
                     { id: 'cyberpunk', name: 'Cyberpunk', desc: 'Vibrant neon purple', bg: '#0a0112', cardBg: '#1b032d', accent: '#d946ef' },
                     { id: 'sunset', name: 'Sunset Crimson', desc: 'Burnt red tones', bg: '#0a0505', cardBg: '#1b0c0c', accent: '#ef4444' },
+                    { id: 'pureblack', name: 'Pure Black', desc: 'Solid high contrast', bg: '#000000', cardBg: '#080808', accent: '#ffffff' },
                   ].map(t => {
                     const isSelected = theme === t.id;
                     return (
@@ -2352,7 +2364,9 @@ function DownloadsPanel({
   const [diskInfo, setDiskInfo] = useState<DiskInfo | null>(null);
   const [renaming, setRenaming] = useState<LocalTrack | null>(null);
   const [renameVal, setRenameVal] = useState('');
+  const [renameArtistVal, setRenameArtistVal] = useState('');
   const [renameInputFocused, setRenameInputFocused] = useState(false);
+  const [renameArtistInputFocused, setRenameArtistInputFocused] = useState(false);
   const [renameCloseHovered, setRenameCloseHovered] = useState(false);
   const [renameCancelHovered, setRenameCancelHovered] = useState(false);
   const [renameSaveHovered, setRenameSaveHovered] = useState(false);
@@ -2430,8 +2444,9 @@ function DownloadsPanel({
   const confirmRename = async () => {
     if (!renaming || !renameVal.trim()) return;
     try {
+      await invoke('write_audio_metadata', { path: renaming.path, title: renameVal.trim(), artist: renameArtistVal.trim(), album: '' });
       const newPath: string = await invoke('rename_local_file', { oldPath: renaming.path, newTitle: renameVal.trim() });
-      setTracks(prev => prev.map(t => t.path === renaming.path ? { ...t, title: renameVal.trim(), path: newPath } : t));
+      setTracks(prev => prev.map(t => t.path === renaming.path ? { ...t, title: renameVal.trim(), artist: renameArtistVal.trim(), path: newPath } : t));
       setRenaming(null);
     } catch (e) { setError(String(e)); }
   };
@@ -2457,15 +2472,15 @@ function DownloadsPanel({
         <div style={{display:"flex",alignItems:"center",gap:"5px",flexShrink:0}}>
           <button onClick={onChangeFolder} title="Change folder"
             style={{padding:"7px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
-            onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}><FolderOpen size={15}/></button>
+            onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}><FolderOpen size={15}/></button>
           {tracks.length > 0 && (
             <button onClick={()=>onExportM3u(tracks)} title="Export M3U"
               style={{padding:"7px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
-              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}><FileOutput size={15}/></button>
+              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}><FileOutput size={15}/></button>
           )}
           <button onClick={scan} disabled={scanning} title="Refresh"
             style={{padding:"7px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",background:"transparent",color:"#5c5755",cursor:scanning?"not-allowed":"pointer",display:"flex",opacity:scanning?0.4:1,transition:"color .12s,border-color .12s"}}
-            onMouseEnter={e=>{if(!scanning){e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+            onMouseEnter={e=>{if(!scanning){e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
             <RefreshCw size={15} style={scanning?{animation:"spin 0.8s linear infinite"}:{}}/>
           </button>
         </div>
@@ -2497,10 +2512,10 @@ function DownloadsPanel({
         <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} style={{display:"flex",alignItems:"center",gap:"12px",padding:"8px 12px"}}>
-              <div style={{width:"38px",height:"38px",borderRadius:"7px",background:"#1c1a1a",flexShrink:0}} className="animate-pulse"/>
+              <div style={{width:"38px",height:"38px",borderRadius:"7px",background:"var(--v-bdr2)",flexShrink:0}} className="animate-pulse"/>
               <div style={{flex:1,display:"flex",flexDirection:"column",gap:"6px"}}>
-                <div style={{height:"11px",background:"#1c1a1a",borderRadius:"3px",width:`${50+(i*11)%35}%`}} className="animate-pulse"/>
-                <div style={{height:"9px",background:"#1c1a1a",borderRadius:"3px",width:`${25+(i*7)%20}%`}} className="animate-pulse"/>
+                <div style={{height:"11px",background:"var(--v-bdr2)",borderRadius:"3px",width:`${50+(i*11)%35}%`}} className="animate-pulse"/>
+                <div style={{height:"9px",background:"var(--v-bdr2)",borderRadius:"3px",width:`${25+(i*7)%20}%`}} className="animate-pulse"/>
               </div>
             </div>
           ))}
@@ -2509,7 +2524,7 @@ function DownloadsPanel({
 
       {!scanning && tracks.length === 0 && !error && (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"160px",gap:"12px",textAlign:"center"}}>
-          <div style={{width:"52px",height:"52px",borderRadius:"12px",background:"var(--v-bg2)",border:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{width:"52px",height:"52px",borderRadius:"12px",background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <FileMusic size={22} strokeWidth={1} style={{color:"#363230"}}/>
           </div>
           <div>
@@ -2574,7 +2589,7 @@ function DownloadsPanel({
                         : isHov ? <Play size={12} style={{fill:"#e2ddd9",color:"#e2ddd9",margin:"0 auto"}}/>
                         : i+1}
                   </div>
-                  <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"#1c1a1a",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`,overflow:"hidden"}}>
+                  <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"var(--v-bdr2)",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`,overflow:"hidden"}}>
                     <LocalTrackCover path={track.path} hasCover={track.has_cover} cover={track.cover} isActive={isActive} />
                   </div>
                   <div className="v-track__info">
@@ -2582,7 +2597,7 @@ function DownloadsPanel({
                     <div className="v-track__artist">{track.artist||track.extension.toUpperCase()} · {formatBytes(track.size_bytes)}</div>
                   </div>
                   <div className="v-track__actions">
-                    <button className="v-track__btn" title="Rename" onClick={e=>{e.stopPropagation();setRenaming(track);setRenameVal(track.title);}}><Pencil size={12}/></button>
+                    <button className="v-track__btn" title="Rename" onClick={e=>{e.stopPropagation();setRenaming(track);setRenameVal(track.title);setRenameArtistVal(track.artist || '');}}><Pencil size={12}/></button>
                     <button className="v-track__btn" title="Show in folder" onClick={e=>{e.stopPropagation();onOpenInFileManager(track.path);}}><FolderOpen size={12}/></button>
                     <button className="v-track__btn" title="Delete" onClick={e=>{e.stopPropagation();onDeleteLocalTrack(track);scan();}}
                       onMouseEnter={e=>(e.currentTarget.style.color="#b05555")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><Trash2 size={12}/></button>
@@ -2596,12 +2611,12 @@ function DownloadsPanel({
       )}
 
       {renaming && ReactDOM.createPortal(
-        <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={()=>setRenaming(null)}>
+        <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={()=>setRenaming(null)}>
           <div className="yt-import-modal-container" style={{width:"380px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}} onClick={e => e.stopPropagation()}>
             <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"20px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.01)"}}>
               <div style={{flex:1}}>
-                <h2 style={{fontSize:"15px",fontWeight:800,color:"#e2ddd9",margin:0,letterSpacing:"-0.01em"}}>Rename Track</h2>
-                <p style={{fontSize:"11.5px",color:"#8a817c",margin:"2px 0 0 0",lineHeight:1.2}}>Change the title of this local track file.</p>
+                <h2 style={{fontSize:"15px",fontWeight:800,color:"#e2ddd9",margin:0,letterSpacing:"-0.01em"}}>Edit Track Metadata</h2>
+                <p style={{fontSize:"11.5px",color:"#8a817c",margin:"2px 0 0 0",lineHeight:1.2}}>Change the title and artist of this local track.</p>
               </div>
               <button
                 onClick={()=>setRenaming(null)}
@@ -2634,8 +2649,28 @@ function DownloadsPanel({
                   style={{
                     width:"100%",
                     background:"rgba(28, 26, 26, 0.6)",
-                    border:`1px solid ${renameInputFocused?'#e2ddd9':'#252222'}`,
+                    border:`1px solid ${renameInputFocused?'#e2ddd9':'var(--v-bdr2)'}`,
                     boxShadow:renameInputFocused?'0 0 0 2px rgba(226, 221, 217, 0.15)':'none',
+                    color:"#e2ddd9",
+                    borderRadius:"8px",
+                    padding:"10px 12px",
+                    fontSize:"13px",
+                    outline:"none",
+                    transition:"all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                    boxSizing:"border-box"
+                  }}/>
+              </div>
+              <div>
+                <label style={{display:"block",fontSize:"10px",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#8a817c",marginBottom:"6px"}}>Track Artist</label>
+                <input type="text" value={renameArtistVal} onChange={e=>setRenameArtistVal(e.target.value)}
+                  onFocus={() => setRenameArtistInputFocused(true)}
+                  onBlur={() => setRenameArtistInputFocused(false)}
+                  onKeyDown={e=>{if(e.key==='Enter')confirmRename();if(e.key==='Escape')setRenaming(null);}}
+                  style={{
+                    width:"100%",
+                    background:"rgba(28, 26, 26, 0.6)",
+                    border:`1px solid ${renameArtistInputFocused?'#e2ddd9':'var(--v-bdr2)'}`,
+                    boxShadow:renameArtistInputFocused?'0 0 0 2px rgba(226, 221, 217, 0.15)':'none',
                     color:"#e2ddd9",
                     borderRadius:"8px",
                     padding:"10px 12px",
@@ -2651,7 +2686,7 @@ function DownloadsPanel({
                 style={{
                   padding:"9px 16px",
                   borderRadius:"8px",
-                  border:`1px solid ${renameCancelHovered?'#3a3532':'#252222'}`,
+                  border:`1px solid ${renameCancelHovered?'#3a3532':'var(--v-bdr2)'}`,
                   color:renameCancelHovered?"#e2ddd9":"#8a817c",
                   background:renameCancelHovered?"rgba(255,255,255,0.03)":"transparent",
                   fontWeight:600,
@@ -3306,21 +3341,113 @@ export default function Veluna() {
       const raw = await invoke<string>('import_youtube_playlist', { url });
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
-        const [id, title, duration, thumb] = l.split('====');
+        const parts = l.split('====');
+        if (parts.length < 4) return null;
+        const [id, title, duration, thumb, artist] = parts;
         const idTrim = id?.trim() || '';
         const thumbTrim = thumb?.trim() || '';
         const cover = (thumbTrim && thumbTrim.startsWith('http'))
           ? thumbTrim
           : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
+
+        let parsedArtist = artist?.trim() || '';
+        let parsedTitle = title?.trim() || 'Unknown';
+
+        let cleanUploader = parsedArtist;
+        if (cleanUploader.toLowerCase().endsWith(' - topic')) {
+          cleanUploader = cleanUploader.slice(0, -8).trim();
+        }
+
+        const cleanA = cleanArtist(cleanUploader);
+
+        const descriptionTags = [
+          'slowed', 'sped up', 'reverb', 'bass boosted', 'looped', 'loop', 
+          'nightcore', 'remix', 'pitch', '1hour', '1 hour', 
+          '10min', '10 min', '10 minutes', 'clean', 'dirty', 'lyrics', 
+          'lyric', 'audio', 'video', 'official', 'mv', 'hq', 'hd', 
+          '4k', 'remaster', 'remastered', 'live', 'cover', 'instrumental', 
+          'karaoke', 'slow'
+        ];
+
+        const stopwords = [
+          'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'but', 
+          'is', 'are', 'was', 'were', 'you', 'me', 'my', 'your', 'we', 'us', 'our', 
+          'he', 'him', 'his', 'she', 'her', 'they', 'them', 'their', 'i', 'really', 
+          'here', 'there', 'miss', 'with', 'without', 'about', 'from', 'by'
+        ];
+
+        const hasStopwords = (s: string) => {
+          const words = s.toLowerCase().split(/\s+/);
+          return words.some(w => stopwords.includes(w));
+        };
+
+        if (parsedTitle.includes(' - ')) {
+          const tParts = parsedTitle.split(' - ');
+          const part1 = tParts[0].trim();
+          const part2 = tParts.slice(1).join(' - ').trim();
+
+          const part1Clean = part1.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
+          const part2Clean = part2.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
+
+          const isPart2Tag = descriptionTags.some(tag => part2Clean === tag || part2Clean.includes(tag));
+
+          if (isPart2Tag) {
+            parsedArtist = cleanA || 'Unknown';
+            parsedTitle = part1;
+          } else {
+            if (cleanA) {
+              const uploaderLower = cleanA.toLowerCase();
+              const part1Lower = part1.toLowerCase();
+              const part2Lower = part2.toLowerCase();
+
+              if (part2Lower.includes(uploaderLower) || uploaderLower.includes(part2Lower)) {
+                parsedArtist = cleanA;
+                parsedTitle = part1;
+              } else if (part1Lower.includes(uploaderLower) || uploaderLower.includes(part1Lower)) {
+                parsedArtist = cleanA;
+                parsedTitle = part2;
+              } else {
+                const p1Stop = hasStopwords(part1Clean);
+                const p2Stop = hasStopwords(part2Clean);
+                if (p1Stop && !p2Stop) {
+                  parsedArtist = part2;
+                  parsedTitle = part1;
+                } else if (p2Stop && !p1Stop) {
+                  parsedArtist = part1;
+                  parsedTitle = part2;
+                } else {
+                  parsedArtist = part1;
+                  parsedTitle = part2;
+                }
+              }
+            } else {
+              const p1Stop = hasStopwords(part1Clean);
+              const p2Stop = hasStopwords(part2Clean);
+              if (p1Stop && !p2Stop) {
+                parsedArtist = part2;
+                parsedTitle = part1;
+              } else if (p2Stop && !p1Stop) {
+                parsedArtist = part1;
+                parsedTitle = part2;
+              } else {
+                parsedArtist = part1;
+                parsedTitle = part2;
+              }
+            }
+          }
+        } else {
+          parsedArtist = cleanA || 'Unknown';
+        }
+
         return {
           id: -1,
-          title: title?.trim() || 'Unknown',
-          artist: 'Autoplay Recommendation',
+          title: parsedTitle,
+          artist: parsedArtist || 'Autoplay Recommendation',
           url: `https://www.youtube.com/watch?v=${idTrim}`,
           cover,
           duration: duration?.trim() || '3:00',
         } as Track;
-      }).filter(t => t.url && !t.url.includes('undefined'));
+      }).filter((t): t is NonNullable<typeof t> => t !== null && !!t.url && !t.url.includes('undefined'));
       return parsed;
     } catch {
       return [];
@@ -4457,7 +4584,7 @@ export default function Veluna() {
 
           {}
           <div style={{marginTop:"14px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 8px",flexShrink:0,borderBottom:"1px solid #1c1a1a"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 8px",flexShrink:0,borderBottom:"1px solid var(--v-bdr2)"}}>
               <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
                 style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#363230',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .12s'}}>
                 <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#363230'}}/>
@@ -4470,7 +4597,7 @@ export default function Veluna() {
               </button>
             </div>
             {sidebarPlaylistsExpanded && (
-              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"#252222 transparent"}}>
+              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"var(--v-bdr2) transparent"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:"1px",paddingBottom:"8px"}}>
                   {playlists.map(pl => {
                     const isOpen = openPlaylistId === pl.id && activeNav === 'library';
@@ -4543,11 +4670,11 @@ export default function Veluna() {
                       onChange={e => setSearchQuery(e.target.value)}
                       onFocus={() => !isSearching && setShowHistory(searchHistory.length > 0)}
                       onKeyDown={e => { if (e.key === 'Enter') { setShowHistory(false); searchMusic(); } if (e.key === 'Escape') setShowHistory(false); }}
-                      style={{width:'100%',height:'42px',background:'#161414',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'#252222'}`,borderRadius:'9px',padding:'0 12px 0 42px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
+                      style={{width:'100%',height:'42px',background:'var(--v-bg2)',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'var(--v-bdr2)'}`,borderRadius:'9px',padding:'0 12px 0 42px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
                     />
                     {showHistory && (
-                      <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:'6px',background:'#161414',border:'1px solid #252222',borderRadius:'10px',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,0.7)',zIndex:100}}>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',borderBottom:'1px solid #1c1a1a'}}>
+                      <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:'6px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',borderRadius:'10px',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,0.7)',zIndex:100}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',borderBottom:'1px solid var(--v-bdr2)'}}>
                           <span style={{fontSize:'9.5px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230'}}>Recent</span>
                           <button onClick={e=>{e.stopPropagation();setSearchHistory([]);setShowHistory(false);}} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'#363230',transition:'color .12s'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#363230')}>Clear</button>
                         </div>
@@ -4565,9 +4692,9 @@ export default function Veluna() {
                   </div>
                   <button onClick={() => { setShowHistory(false); searchMusic(); }}
                     disabled={isSearching || !searchQuery.trim()}
-                    style={{height:'42px',padding:'0 16px',borderRadius:'9px',border:'1px solid #252222',background:'#161414',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'6px',flexShrink:0,transition:'border-color .15s,color .15s,background .15s',whiteSpace:'nowrap'}}
-                    onMouseEnter={e=>{if(!isSearching&&searchQuery.trim()){(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.borderColor='#2e2b2b';}}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='#161414';(e.currentTarget as HTMLElement).style.borderColor='#252222';}}>
+                    style={{height:'42px',padding:'0 16px',borderRadius:'9px',border:'1px solid var(--v-bdr2)',background:'var(--v-bg2)',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'6px',flexShrink:0,transition:'border-color .15s,color .15s,background .15s',whiteSpace:'nowrap'}}
+                    onMouseEnter={e=>{if(!isSearching&&searchQuery.trim()){(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';}}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='var(--v-bg2)';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';}}>
                     {isSearching ? <div style={{width:'14px',height:'14px',border:'2px solid #5c5755',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} /> : <Search size={15} />}
                     {!isSearching && 'Search'}
                   </button>
@@ -4589,7 +4716,7 @@ export default function Veluna() {
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:"280px",gap:"20px"}}>
                     <div className="relative">
-                      <div style={{width:'56px',height:'56px',borderRadius:'12px',background:'#161414',border:'1px solid #1c1a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      <div style={{width:'56px',height:'56px',borderRadius:'12px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                         <Music size={24} strokeWidth={1} style={{color:'#363230'}} />
                       </div>
                       <div style={{position:"absolute",bottom:"-6px",right:"-6px",width:"26px",height:"26px",background:"rgba(226,221,217,0.06)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -5412,7 +5539,7 @@ export default function Veluna() {
                                         <span style={{ color: '#c8c4c0', fontWeight: 500 }}>{genre.label}</span>
                                         <span style={{ color: '#5c5755', fontVariantNumeric: 'tabular-nums' }}>{score} pts</span>
                                       </div>
-                                      <div style={{ height: '3px', background: '#1c1a1a', borderRadius: '1.5px', overflow: 'hidden' }}>
+                                      <div style={{ height: '3px', background: 'var(--v-bdr2)', borderRadius: '1.5px', overflow: 'hidden' }}>
                                         <div style={{ height: '100%', background: 'rgba(226,221,217,0.4)', width: `${percent}%`, borderRadius: '1.5px' }} />
                                       </div>
                                     </div>
@@ -5461,7 +5588,7 @@ export default function Veluna() {
                                       width: '32px',
                                       height: '32px',
                                       borderRadius: '6px',
-                                      background: isLiked ? 'linear-gradient(135deg, rgba(140,30,30,0.2) 0%, #1c1a1a 100%)' : '#1c1a1a',
+                                      background: isLiked ? 'linear-gradient(135deg, rgba(140,30,30,0.2) 0%, var(--v-bdr2) 100%)' : 'var(--v-bdr2)',
                                       border: '1px solid rgba(255,255,255,0.05)',
                                       display: 'flex',
                                       alignItems: 'center',
@@ -5512,7 +5639,7 @@ export default function Veluna() {
                   </div>
                 )}
                 {(tracks.length > 0 || isSearching) && (
-                  <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid #1c1a1a",marginBottom:"4px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid var(--v-bdr2)",marginBottom:"4px"}}>
                     <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
                     <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
                     <div style={{width:"60px",flexShrink:0}}/>
@@ -5575,7 +5702,7 @@ export default function Veluna() {
                   <span style={{fontSize:"13px",fontWeight:500}}>Playlists</span>
                 </button>
                 <div style={{display:"flex",alignItems:"flex-end",gap:"18px",marginBottom:"18px"}}>
-                  <div style={{width:"100px",height:"100px",borderRadius:"12px",background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(140,30,30,0.3) 0%,#1c1a1a 100%)":"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",overflow:"hidden",cursor:openPlaylist.id!=="p1"?"pointer":"default"}}
+                  <div style={{width:"100px",height:"100px",borderRadius:"12px",background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(140,30,30,0.3) 0%,var(--v-bdr2) 100%)":"var(--v-bdr2)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",overflow:"hidden",cursor:openPlaylist.id!=="p1"?"pointer":"default"}}
                     onClick={()=>openPlaylist.id!=='p1'&&handleCoverUpload(openPlaylist.id)} onMouseEnter={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='1';}} onMouseLeave={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='0';}}>
                     <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                       {openPlaylist.id === 'p1' ? <Heart size={48} style={{color:'#e05555',fill:'rgba(220,60,60,0.2)'}} /> : <ListMusic size={48} style={{color:'#5c5755'}} />}
@@ -5598,12 +5725,12 @@ export default function Veluna() {
                         <Play size={16} fill="currentColor" /> Play All
                       </button>
                       <button onClick={() => { setRenamingPlaylist(openPlaylist); setRenameVal(openPlaylist.name); setRenameDescVal(openPlaylist.description); }}
-                        style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid var(--v-bdr2)",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+                        style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid var(--v-bdr2)",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
                         <Pencil size={14} /> Edit
                       </button>
                       {openPlaylist.id !== 'p1' && (
                         <button onClick={() => { deletePlaylist(openPlaylist.id); setOpenPlaylistId(null); }}
-                          style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid var(--v-bdr2)",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#a05050";e.currentTarget.style.borderColor="rgba(160,40,40,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+                          style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid var(--v-bdr2)",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#a05050";e.currentTarget.style.borderColor="rgba(160,40,40,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
                           <Trash2 size={14} /> Delete
                         </button>
                       )}
@@ -5707,9 +5834,9 @@ export default function Veluna() {
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
                   <h2 style={{fontSize:'20px',fontWeight:800,color:'#e2ddd9',margin:0}}>Playlists</h2>
                   <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                    style={{padding:'7px 14px',background:'transparent',border:'1px solid #252222',color:'#9e9894',borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:600,display:'flex',alignItems:'center',gap:'7px',transition:'border-color .12s,color .12s,background .12s'}}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='#2e2b2b';(e.currentTarget as HTMLElement).style.color='#e2ddd9';}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='#252222';(e.currentTarget as HTMLElement).style.color='#9e9894';}}>
+                    style={{padding:'7px 14px',background:'transparent',border:'1px solid var(--v-bdr2)',color:'#9e9894',borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:600,display:'flex',alignItems:'center',gap:'7px',transition:'border-color .12s,color .12s,background .12s'}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';(e.currentTarget as HTMLElement).style.color='#e2ddd9';}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';(e.currentTarget as HTMLElement).style.color='#9e9894';}}>
                     <PlusCircle size={13} /> New Playlist
                   </button>
                 </div>
@@ -5725,7 +5852,7 @@ export default function Veluna() {
                         onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
                         onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
                         <div
-                          style={{width:"100%",aspectRatio:"1",borderRadius:"7px",overflow:"hidden",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",marginBottom:"8px",cursor:"grab"}}
+                          style={{width:"100%",aspectRatio:"1",borderRadius:"7px",overflow:"hidden",background:"var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",marginBottom:"8px",cursor:"grab"}}
                           onMouseDown={e => {
                             e.preventDefault();
                             dragPlaylistCardIdx.current = plIdx;
@@ -5750,7 +5877,7 @@ export default function Veluna() {
                           }}>
                           <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                             {pl.id==='p1'
-                              ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(140,30,30,0.5) 0%,#1c1a1a 100%)"}}><Heart size={22} style={{color:"#e05555",fill:"rgba(220,60,60,0.35)"}}/></div>
+                              ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(140,30,30,0.5) 0%,var(--v-bdr2) 100%)"}}><Heart size={22} style={{color:"#e05555",fill:"rgba(220,60,60,0.35)"}}/></div>
                               : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.03)"}}><ListMusic size={24} style={{color:"#363230"}}/></div>}
                           </div>
                           {cover && (
@@ -5935,7 +6062,7 @@ export default function Veluna() {
                   <button onClick={resetStats}
                     style={{fontSize:"11px",color:"#363230",cursor:"pointer",padding:"5px 10px",borderRadius:"7px",border:"1px solid var(--v-bdr2)",background:"transparent",transition:"color .12s,border-color .12s"}}
                     onMouseEnter={e=>{e.currentTarget.style.color="#b05555";e.currentTarget.style.borderColor="rgba(180,40,40,0.3)"}}
-                    onMouseLeave={e=>{e.currentTarget.style.color="#363230";e.currentTarget.style.borderColor="#252222"}}>
+                    onMouseLeave={e=>{e.currentTarget.style.color="#363230";e.currentTarget.style.borderColor="var(--v-bdr2)"}}>
                     Reset
                   </button>
                 </div>
@@ -5975,7 +6102,7 @@ export default function Veluna() {
                     <div key={label} className="v-stat-card" style={{
                       position: 'relative',
                       overflow: 'hidden',
-                      background: 'rgba(22, 20, 20, 0.6)',
+                      background: 'rgba(var(--v-bg2-rgb), 0.6)',
                       backdropFilter: 'blur(8px)',
                       border: '1px solid rgba(255,255,255,0.05)',
                       transition: 'all 0.2s ease',
@@ -6006,7 +6133,7 @@ export default function Veluna() {
                     <h2>{chartDaysCount === 7 ? 'Last 7 Days' : 'Last 30 Days'}</h2>
                     <span style={{fontSize:"11px",color:"#363230",marginLeft:"auto"}}>{days.reduce((s,d)=>s+d.count,0)} plays</span>
                   </div>
-                  <div style={{background:"var(--v-bg2)",border:"1px solid #1c1a1a",borderRadius:"12px",padding:"16px 16px 24px 16px"}}>
+                  <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"12px",padding:"16px 16px 24px 16px"}}>
                     <div style={{display:"flex",alignItems:"flex-end",gap:chartDaysCount === 30 ? "4px" : "8px",height:"130px"}}>
                       {days.map(({ label, count }, di) => {
                         const isToday = di === days.length - 1;
@@ -6036,7 +6163,7 @@ export default function Veluna() {
                               bottom: `${barH + 24}px`,
                               fontSize: "11px",
                               fontWeight: 700,
-                              background: '#1c1a1a',
+                              background: 'var(--v-bdr2)',
                               border: '1px solid rgba(255,255,255,0.1)',
                               padding: '2px 6px',
                               borderRadius: '4px',
@@ -6065,7 +6192,7 @@ export default function Veluna() {
                 </div>
 
                 <div style={{
-                  background:"var(--v-bg2)",border:"1px solid #1c1a1a",borderRadius:"12px",padding:"16px",
+                  background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"12px",padding:"16px",
                   display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px",marginBottom:"20px"
                 }}>
                   <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
@@ -6134,7 +6261,7 @@ export default function Veluna() {
                             <div key={artist} className="v-track"
                               onClick={() => { setSearchQuery(artist); searchMusic(artist); setActiveNav('home'); }}>
                               <div className="v-track__num">{i+1}</div>
-                              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+                              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--v-bdr2)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
                                 {thumb ? <img src={thumb} alt={artist} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:"11px",fontWeight:700,color:"#5c5755"}}>{artist.slice(0,2).toUpperCase()}</span>}
                               </div>
                               <div className="v-track__info">
@@ -6267,7 +6394,7 @@ export default function Veluna() {
 
             return (
               <>
-                <div style={{display:'flex',flexDirection:'column',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
+                <div style={{display:'flex',flexDirection:'column',borderBottom:'1px solid var(--v-bdr2)',flexShrink:0}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px 10px'}}>
                     <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px',letterSpacing:'.01em'}}>Play Queue</span>
                     <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
@@ -6343,7 +6470,7 @@ export default function Veluna() {
                       )}
                     </div>
                   </div>
-                  <div style={{display:'flex',background:'#0f0e0e'}}>
+                  <div style={{display:'flex',background:'var(--v-bg1)'}}>
                     <button 
                       onClick={() => selectQueueTab('queue')}
                       style={{
@@ -6392,10 +6519,10 @@ export default function Veluna() {
                 </div>
 
                 {currentTrack && (
-                  <div style={{padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
+                  <div style={{padding:'14px 16px',borderBottom:'1px solid var(--v-bdr2)',flexShrink:0}}>
                     <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',marginBottom:'8px'}}>Now Playing</div>
                     <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px',borderRadius:'8px',background:'rgba(226,221,217,0.04)',border:'1px solid rgba(226,221,217,0.08)'}}>
-                      <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'#1c1a1a',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'var(--v-bdr2)',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                         {currentTrack.cover ? <img src={currentTrack.cover} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" /> : <FileMusic size={16} style={{color:'#5c5755'}} />}
                         {!isLoadingTrack && isPlaying && (
                           <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -6632,10 +6759,10 @@ export default function Veluna() {
       </div>
 
       {}
-      <div style={{height:"84px",background:"var(--v-bg1)",borderTop:"1px solid #1c1a1a",display:"flex",alignItems:"center",padding:"0 20px",position:"relative",zIndex:20,flexShrink:0,gap:0}}>
+      <div style={{height:"84px",background:"var(--v-bg1)",borderTop:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",padding:"0 20px",position:"relative",zIndex:20,flexShrink:0,gap:0}}>
         {/* Loading bar */}
         {isLoadingTrack && (
-          <div style={{position:"absolute",top:0,left:0,width:"100%",height:"1px",overflow:"hidden",background:"#1c1a1a"}}>
+          <div style={{position:"absolute",top:0,left:0,width:"100%",height:"1px",overflow:"hidden",background:"var(--v-bdr2)"}}>
             <div style={{height:"100%",background:"rgba(226,221,217,0.4)",animation:"loadbar 1.6s ease-in-out infinite",width:"35%"}}/>
           </div>
         )}
@@ -6711,7 +6838,7 @@ export default function Veluna() {
             </>
           ) : (
             <>
-              <div style={{width:"42px",height:"42px",borderRadius:"7px",border:"1px solid #1c1a1a",background:"var(--v-bg2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <div style={{width:"42px",height:"42px",borderRadius:"7px",border:"1px solid var(--v-bdr2)",background:"var(--v-bg2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                 <Music size={16} style={{color:"#363230"}}/>
               </div>
               <div style={{flex:1,minWidth:0}}>
@@ -6769,7 +6896,7 @@ export default function Veluna() {
                 borderRadius:"5px",border:"1px solid",
                 fontSize:"10px",fontWeight:700,flexShrink:0,cursor:"pointer",
                 background:abLoop.b!==null?"rgba(226,221,217,0.08)":abLoop.a!==null?"rgba(226,221,217,0.04)":"transparent",
-                borderColor:abLoop.b!==null?"rgba(226,221,217,0.25)":abLoop.a!==null?"rgba(226,221,217,0.12)":"#252222",
+                borderColor:abLoop.b!==null?"rgba(226,221,217,0.25)":abLoop.a!==null?"rgba(226,221,217,0.12)":"var(--v-bdr2)",
                 color:abLoop.b!==null?"#e2ddd9":abLoop.a!==null?"#9e9894":"#363230",
                 transition:"all .12s",
               }}>
@@ -6794,7 +6921,7 @@ export default function Veluna() {
               onMouseEnter={e=>{const el=e.currentTarget.querySelector<HTMLElement>('.prog-tooltip');if(el)el.style.opacity='1';}}
               onMouseLeave={e=>{const el=e.currentTarget.querySelector<HTMLElement>('.prog-tooltip');if(el)el.style.opacity='0';}}>
               {/* Hover tooltip */}
-              {currentTrack&&<div className="prog-tooltip" style={{position:"absolute",top:"-26px",left:"0%",transform:"translateX(-50%)",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",zIndex:10,opacity:0,transition:"opacity .15s"}}/>}
+              {currentTrack&&<div className="prog-tooltip" style={{position:"absolute",top:"-26px",left:"0%",transform:"translateX(-50%)",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",zIndex:10,opacity:0,transition:"opacity .15s"}}/>}
               {waveformData.length>0&&<WaveformBar waveform={waveformData} progressPercent={calculateProgressPercent()} isDragging={isDraggingProgress}/>}
               {/* Fill + thumb */}
               <div style={{position:"absolute",top:0,left:0,height:"100%",background:"var(--v-accent)",borderRadius:"2px",pointerEvents:"none",width:`${calculateProgressPercent()}%`,transition:isDraggingProgress?'none':'width 0.5s linear'}}>
@@ -6837,7 +6964,7 @@ export default function Veluna() {
                 <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"11px",height:"11px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
               </div>
             </div>
-            <div style={{position:"absolute",bottom:"14px",left:"50%",transform:"translateX(-50%)",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",opacity:0,transition:"opacity .15s",zIndex:10}}>
+            <div style={{position:"absolute",bottom:"14px",left:"50%",transform:"translateX(-50%)",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",opacity:0,transition:"opacity .15s",zIndex:10}}>
               {Math.round(volume)}%
             </div>
           </div>
@@ -6927,9 +7054,9 @@ export default function Veluna() {
 
       {}
       {addToPlaylistTrack && (
-        <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.9)"}} onClick={()=>setAddToPlaylistTrack(null)}>
+        <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.9)"}} onClick={()=>setAddToPlaylistTrack(null)}>
           <div className="v-ctx" style={{width:"280px"}} onClick={e=>e.stopPropagation()}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:"1px solid #1c1a1a"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:"1px solid var(--v-bdr2)"}}>
               <div>
                 <div style={{fontWeight:700,color:"#e2ddd9",fontSize:"13px"}}>Add to Playlist</div>
                 <div style={{fontSize:"11px",color:"#5c5755",marginTop:"2px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"170px"}}>{addToPlaylistTrack.title}</div>
@@ -6943,7 +7070,7 @@ export default function Veluna() {
                   <button key={p.id} onClick={() => !alreadyIn && addTrackToPlaylist(p.id, addToPlaylistTrack)}
                     disabled={alreadyIn}
                     className="v-ctx__item" style={{opacity:alreadyIn?0.4:1,cursor:alreadyIn?"not-allowed":"pointer"}}>
-                    <div style={{width:"24px",height:"24px",borderRadius:"5px",overflow:"hidden",flexShrink:0,background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <div style={{width:"24px",height:"24px",borderRadius:"5px",overflow:"hidden",flexShrink:0,background:"var(--v-bdr2)",border:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                       {p.id === 'p1' ? <Heart size={12} style={{color:"#e05555",fill:"rgba(220,60,60,0.2)"}}/> : <ListMusic size={13} className="text-neutral-500" />}
                     </div>
                     <span style={{fontSize:"13px",color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.name}</span>
@@ -6953,7 +7080,7 @@ export default function Veluna() {
                 );
               })}
             </div>
-            <div style={{padding:"4px 0",borderTop:"1px solid #1c1a1a"}}>
+            <div style={{padding:"4px 0",borderTop:"1px solid var(--v-bdr2)"}}>
               <button onClick={() => { setAddToPlaylistTrack(null); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
                 style={{display:"flex",alignItems:"center",gap:"7px",color:"#9e9894",fontSize:"12px",fontWeight:600,textDecoration:"none"}}>
                 <PlusCircle size={14} /> New Playlist
@@ -6981,7 +7108,7 @@ export default function Veluna() {
                 {infoModalTrack.cover && (
                   <img src={infoModalTrack.cover} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.25,filter:"blur(20px)",transform:"scale(1.1)"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
                 )}
-                <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent,#161414)"}}/>
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent,var(--v-bg2))"}}/>
                 <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                   <div style={{position:"relative",width:"80px",height:"80px",borderRadius:"10px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 24px rgba(0,0,0,0.6)",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist),display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <Music size={24} style={{position:"absolute",color:"rgba(255,255,255,0.25)"}}/>
@@ -7011,14 +7138,14 @@ export default function Veluna() {
                   trackAudioInfo?.channels&&{icon:<AlignLeft size={9}/>,label:trackAudioInfo.channels},
                   trackAudioInfo?.format&&{icon:<FileCode2 size={9}/>,label:trackAudioInfo.format},
                 ].filter(Boolean).map((item:any,i)=>(
-                  <span key={i} style={{display:"flex",alignItems:"center",gap:"4px",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",padding:"3px 8px",borderRadius:"20px",fontSize:"10px",fontWeight:600,color:"#9e9894"}}>
+                  <span key={i} style={{display:"flex",alignItems:"center",gap:"4px",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",padding:"3px 8px",borderRadius:"20px",fontSize:"10px",fontWeight:600,color:"#9e9894"}}>
                     {item.icon}{item.label}
                   </span>
                 ))}
               </div>
 
               {}
-              <div style={{margin:"0 14px 12px",borderRadius:"10px",overflow:"hidden",border:"1px solid #1c1a1a"}}>
+              <div style={{margin:"0 14px 12px",borderRadius:"10px",overflow:"hidden",border:"1px solid var(--v-bdr2)"}}>
                 {[
                   { icon: Music, label: 'Title', value: infoModalTrack.title },
                   { icon: FileBadge2, label: 'Artist', value: infoModalTrack.artist },
@@ -7114,9 +7241,9 @@ export default function Veluna() {
           else seen.set(key, t);
         });
         return (
-          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.9)"}} onClick={()=>setShowDuplicatesPlaylist(null)}>
+          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(var(--v-bg0-rgb),0.9)"}} onClick={()=>setShowDuplicatesPlaylist(null)}>
             <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"100%",maxWidth:"500px",maxHeight:"80vh",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
-              <div style={{padding:"13px 16px",borderBottom:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{padding:"13px 16px",borderBottom:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Duplicate Finder</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{showDuplicatesPlaylist.name}</p>
@@ -7133,7 +7260,7 @@ export default function Veluna() {
                   <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
                     <p style={{fontSize:"12px",color:"#9e9894",marginBottom:"10px"}}>{dupes.length} duplicate{dupes.length > 1 ? 's' : ''} found</p>
                     {dupes.map((t, i) => (
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px",borderRadius:"8px",background:"#1c1a1a",border:"1px solid rgba(255,255,255,0.05)"}}>
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px",borderRadius:"8px",background:"var(--v-bdr2)",border:"1px solid rgba(255,255,255,0.05)"}}>
                         <div style={{
                           width:"38px",height:"38px",borderRadius:"6px",overflow:"hidden",flexShrink:0,border:"1px solid rgba(255,255,255,0.05)",
                           position: "relative",
@@ -7169,9 +7296,9 @@ export default function Veluna() {
       {}
       {bulkEditPlaylist && (() => {
         return (
-          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(4,3,3,0.9)"}}>
+          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(var(--v-bg0-rgb),0.9)"}}>
             <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"100%",maxWidth:"680px",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
-              <div style={{padding:"13px 16px",borderBottom:"1px solid #1c1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <div style={{padding:"13px 16px",borderBottom:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
                 <div>
                   <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Bulk Tag Editor</h3>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{bulkEditPlaylist.tracks.length} tracks in {bulkEditPlaylist.name}</p>
@@ -7180,7 +7307,7 @@ export default function Veluna() {
               </div>
               <div style={{flex:1,overflowY:"auto"}} className="custom-scrollbar">
                 <table style={{width:"100%",fontSize:"13px",borderCollapse:"collapse"}}>
-                  <thead style={{position:"sticky",top:0,background:"var(--v-bg2)",borderBottom:"1px solid #1c1a1a",zIndex:10}}>
+                  <thead style={{position:"sticky",top:0,background:"var(--v-bg2)",borderBottom:"1px solid var(--v-bdr2)",zIndex:10}}>
                     <tr>
                       <th style={{textAlign:"left",padding:"8px 14px",fontSize:"10px",fontWeight:700,color:"#5c5755",width:"32px",letterSpacing:".06em",textTransform:"uppercase"}}>#</th>
                       <th style={{textAlign:"left",padding:"8px 14px",fontSize:"10px",fontWeight:700,color:"#5c5755",letterSpacing:".06em",textTransform:"uppercase"}}>Title</th>
@@ -7189,7 +7316,7 @@ export default function Veluna() {
                   </thead>
                   <tbody>
                     {bulkEditPlaylist.tracks.map((t, i) => (
-                      <tr key={t.url} style={{borderBottom:"1px solid #1c1a1a"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+                      <tr key={t.url} style={{borderBottom:"1px solid var(--v-bdr2)"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
                         <td style={{padding:"6px 14px",fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums"}}>{i+1}</td>
                         <td style={{padding:"4px 8px"}}>
                           <input defaultValue={t.title}
@@ -7222,7 +7349,7 @@ export default function Veluna() {
                   </tbody>
                 </table>
               </div>
-              <div style={{padding:"10px 14px",borderTop:"1px solid #1c1a1a",display:"flex",justifyContent:"flex-end",gap:"8px",flexShrink:0}}>
+              <div style={{padding:"10px 14px",borderTop:"1px solid var(--v-bdr2)",display:"flex",justifyContent:"flex-end",gap:"8px",flexShrink:0}}>
                 <button onClick={() => { showToast('Tags saved'); setBulkEditPlaylist(null); }}
                   style={{padding:"7px 16px",background:"#e2ddd9",color:"var(--v-bg0)",fontWeight:700,borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"12px"}}>
                   Save & Close
@@ -7235,26 +7362,26 @@ export default function Veluna() {
 
       {}
       {isPlaylistModalOpen && (
-        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}>
+        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.88)"}}>
           <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",padding:"20px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
             <h3 style={{fontSize:"15px",fontWeight:700,color:"#e2ddd9",margin:"0 0 16px"}}>Create Playlist</h3>
             <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"16px"}}>
               <div>
                 <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"5px"}}>Name</label>
                 <input autoFocus type="text" value={newPlaylistName} onChange={e=>setNewPlaylistName(e.target.value)} placeholder="e.g. Cyberpunk Mix"
-                  style={{width:"100%",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}
+                  style={{width:"100%",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}
                   onKeyDown={e=>e.key==='Enter'&&confirmCreatePlaylist()}/>
               </div>
               <div>
                 <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"flex",alignItems:"center",gap:"5px",marginBottom:"5px"}}><AlignLeft size={10}/> Description <span style={{textTransform:"none",fontWeight:400,color:"#363230"}}>(optional)</span></label>
                 <textarea value={newPlaylistDesc} onChange={e=>setNewPlaylistDesc(e.target.value)} placeholder="What's this playlist about?" rows={2}
-                  style={{width:"100%",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",resize:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",resize:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
             <div style={{display:"flex",justifyContent:"flex-end",gap:"8px"}}>
               <button onClick={()=>setIsPlaylistModalOpen(false)}
                 style={{padding:"7px 14px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
-                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>Cancel</button>
+                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>Cancel</button>
               <button onClick={confirmCreatePlaylist} disabled={!newPlaylistName.trim()}
                 style={{padding:"7px 14px",borderRadius:"8px",border:"none",background:"#e2ddd9",color:"var(--v-bg0)",fontWeight:700,cursor:"pointer",fontSize:"12px",opacity:newPlaylistName.trim()?1:0.35}}>Create</button>
             </div>
@@ -7264,27 +7391,27 @@ export default function Veluna() {
 
       {}
       {renamingPlaylist && (
-        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}>
+        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.88)"}}>
           <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",padding:"20px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
             <h3 style={{fontSize:"15px",fontWeight:700,color:"#e2ddd9",margin:"0 0 16px"}}>Edit Playlist</h3>
             <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"16px"}}>
               <div>
                 <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"5px"}}>Name</label>
                 <input autoFocus type="text" value={renameVal} onChange={e=>setRenameVal(e.target.value)}
-                  style={{width:"100%",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}
+                  style={{width:"100%",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",boxSizing:"border-box"}}
                   onKeyDown={e=>{if(e.key==='Enter')confirmRenamePlaylist();if(e.key==='Escape')setRenamingPlaylist(null);}}/>
               </div>
               <div>
                 <label style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#5c5755",display:"block",marginBottom:"5px"}}>Description <span style={{textTransform:"none",fontWeight:400,color:"#363230"}}>(optional)</span></label>
                 <textarea value={renameDescVal} onChange={e=>setRenameDescVal(e.target.value)} rows={2}
                   placeholder="e.g. Chill vibes, road trip..."
-                  style={{width:"100%",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",resize:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"8px",padding:"8px 10px",fontSize:"13px",outline:"none",resize:"none",boxSizing:"border-box"}}/>
               </div>
             </div>
             <div style={{display:"flex",justifyContent:"flex-end",gap:"8px"}}>
               <button onClick={()=>setRenamingPlaylist(null)}
                 style={{padding:"7px 14px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
-                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>Cancel</button>
+                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>Cancel</button>
               <button onClick={confirmRenamePlaylist}
                 style={{padding:"7px 14px",borderRadius:"8px",border:"none",background:"#e2ddd9",color:"var(--v-bg0)",fontWeight:700,cursor:"pointer",fontSize:"12px"}}>Save</button>
             </div>
@@ -7297,11 +7424,11 @@ export default function Veluna() {
       {}
       {/* Keyboard Shortcuts Overlay — press ? to toggle */}
       {showShortcuts && (
-        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}
+        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.88)"}}
           onClick={()=>setShowShortcuts(false)}>
           <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"500px",maxHeight:"80vh",overflowY:"auto",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}} className="custom-scrollbar"
             onClick={e=>e.stopPropagation()}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",borderBottom:"1px solid #1c1a1a"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",borderBottom:"1px solid var(--v-bdr2)"}}>
               <h2 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Keyboard Shortcuts</h2>
               <button onClick={()=>setShowShortcuts(false)} style={{background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",padding:"3px",borderRadius:"5px",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><X size={15}/></button>
             </div>
@@ -7321,15 +7448,15 @@ export default function Veluna() {
                 action === null ? (
                   <div key={i} style={{gridColumn:"1/-1",marginTop:"10px",marginBottom:"4px",fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>{key}</div>
                 ) : (
-                  <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #1c1a1a"}}>
+                  <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--v-bdr2)"}}>
                     <span style={{fontSize:"12px",color:"#9e9894"}}>{action}</span>
-                    <kbd style={{padding:"2px 7px",borderRadius:"5px",fontSize:"10px",fontWeight:700,background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#5c5755",marginLeft:"12px",flexShrink:0,fontFamily:"monospace"}}>{key}</kbd>
+                    <kbd style={{padding:"2px 7px",borderRadius:"5px",fontSize:"10px",fontWeight:700,background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#5c5755",marginLeft:"12px",flexShrink:0,fontFamily:"monospace"}}>{key}</kbd>
                   </div>
                 )
               )}
             </div>
-            <div style={{padding:"10px 18px",borderTop:"1px solid #1c1a1a",textAlign:"center"}}>
-              <p style={{fontSize:"11px",color:"#363230"}}>Press <kbd style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9.5px",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#5c5755",fontFamily:"monospace"}}>?</kbd> or <kbd style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9.5px",background:"#1c1a1a",border:"1px solid var(--v-bdr2)",color:"#5c5755",fontFamily:"monospace"}}>Esc</kbd> to close</p>
+            <div style={{padding:"10px 18px",borderTop:"1px solid var(--v-bdr2)",textAlign:"center"}}>
+              <p style={{fontSize:"11px",color:"#363230"}}>Press <kbd style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9.5px",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#5c5755",fontFamily:"monospace"}}>?</kbd> or <kbd style={{padding:"2px 6px",borderRadius:"4px",fontSize:"9.5px",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",color:"#5c5755",fontFamily:"monospace"}}>Esc</kbd> to close</p>
             </div>
           </div>
         </div>
@@ -7345,21 +7472,21 @@ export default function Veluna() {
 
       {/* Custom confirm dialog — replaces window.confirm to avoid double native boxes */}
       {confirmModal && (
-        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.88)"}}
+        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.88)"}}
           onClick={()=>setConfirmModal(null)}>
           <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"12px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)",overflow:"hidden"}}
             onClick={e=>e.stopPropagation()}>
-            <div style={{padding:"14px 18px",borderBottom:"1px solid #1c1a1a"}}>
+            <div style={{padding:"14px 18px",borderBottom:"1px solid var(--v-bdr2)"}}>
               <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Confirm</h3>
             </div>
             <div style={{padding:"14px 18px"}}>
               <p style={{fontSize:"13px",color:"#9e9894",lineHeight:1.5,margin:0}}>{confirmModal.message}</p>
             </div>
-            <div style={{display:"flex",justifyContent:"flex-end",gap:"8px",padding:"10px 18px",borderTop:"1px solid #1c1a1a"}}>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:"8px",padding:"10px 18px",borderTop:"1px solid var(--v-bdr2)"}}>
               <button onClick={()=>setConfirmModal(null)}
                 style={{padding:"7px 14px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",color:"#5c5755",background:"transparent",fontWeight:600,cursor:"pointer",fontSize:"12px",transition:"border-color .12s,color .12s"}}
-                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="#2e2b2b";}}
-                onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#252222";}}>
+                onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}}
+                onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
                 Cancel
               </button>
               <button onClick={()=>{confirmModal.onConfirm();setConfirmModal(null);}}
@@ -7374,7 +7501,7 @@ export default function Veluna() {
       )}
 
       {toast && (
-        <div style={{position:"fixed",bottom:"80px",left:"50%",transform:"translateX(-50%)",zIndex:300,background:"#1c1a1a",border:"1px solid #2e2b2b",color:"#e2ddd9",fontSize:"12.5px",fontWeight:600,padding:"8px 14px",borderRadius:"10px",boxShadow:"0 8px 24px rgba(0,0,0,0.8)",pointerEvents:"none",animation:"toastIn 0.2s cubic-bezier(0.25,0,0,1) both",whiteSpace:"nowrap"}}>
+        <div style={{position:"fixed",bottom:"80px",left:"50%",transform:"translateX(-50%)",zIndex:300,background:"var(--v-bdr2)",border:"1px solid var(--v-bdr3)",color:"#e2ddd9",fontSize:"12.5px",fontWeight:600,padding:"8px 14px",borderRadius:"10px",boxShadow:"0 8px 24px rgba(0,0,0,0.8)",pointerEvents:"none",animation:"toastIn 0.2s cubic-bezier(0.25,0,0,1) both",whiteSpace:"nowrap"}}>
           {toast}
         </div>
       )}
@@ -7387,8 +7514,8 @@ export default function Veluna() {
             e.currentTarget.style.background = "#221f1f";
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.borderColor = "#252222";
-            e.currentTarget.style.background = "#1c1a1a";
+            e.currentTarget.style.borderColor = "var(--v-bdr2)";
+            e.currentTarget.style.background = "var(--v-bdr2)";
           }}
           style={{
             position: "fixed",
@@ -7401,7 +7528,7 @@ export default function Veluna() {
             padding: "10px 14px",
             borderRadius: "10px",
             border: "1px solid var(--v-bdr2)",
-            background: "#1c1a1a",
+            background: "var(--v-bdr2)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
             animation: "fadeUp 0.2s ease both",
             cursor: "pointer",
@@ -7474,7 +7601,7 @@ export default function Veluna() {
               <div style={{width:"208px",height:"208px",borderRadius:"20px",overflow:"hidden",flexShrink:0,boxShadow:"0 28px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",position:"relative"}}>
                 {currentTrack.cover
                   ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                  : <div style={{width:"100%",height:"100%",background:"#1c1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
+                  : <div style={{width:"100%",height:"100%",background:"var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
               </div>
 
               <div style={{textAlign:"center",width:"100%"}}>
@@ -7505,7 +7632,7 @@ export default function Veluna() {
                 <button onClick={handleSkipBack} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipBack size={19}/></button>
                 <button onClick={togglePlayPause}
                   style={{width:"46px",height:"46px",borderRadius:"50%",background:"#e2ddd9",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",transition:"transform .1s"}} onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.06)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-                  {isPlaying ? <Pause fill="#0c0b0b" size={19}/> : <Play fill="#0c0b0b" size={19} style={{marginLeft:"2px"}}/>}
+                  {isPlaying ? <Pause fill="var(--v-bg0)" size={19}/> : <Play fill="var(--v-bg0)" size={19} style={{marginLeft:"2px"}}/>}
                 </button>
                 <button onClick={handleSkipForward} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipForward size={19}/></button>
               </div>
@@ -7635,7 +7762,7 @@ function MetadataEditModal({
   };
 
   return (
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(4,3,3,0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
       <div className="yt-import-modal-container" style={{width:"420px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}} onClick={e => e.stopPropagation()}>
         <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"20px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.01)"}}>
           <div style={{flex:1}}>
@@ -7673,7 +7800,7 @@ function MetadataEditModal({
               style={{
                 width:"100%",
                 background:"rgba(28, 26, 26, 0.6)",
-                border:`1px solid ${focusedField==='title'?'#e2ddd9':'#252222'}`,
+                border:`1px solid ${focusedField==='title'?'#e2ddd9':'var(--v-bdr2)'}`,
                 boxShadow:focusedField==='title'?'0 0 0 2px rgba(226, 221, 217, 0.15)':'none',
                 color:"#e2ddd9",
                 borderRadius:"8px",
@@ -7694,7 +7821,7 @@ function MetadataEditModal({
               style={{
                 width:"100%",
                 background:"rgba(28, 26, 26, 0.6)",
-                border:`1px solid ${focusedField==='artist'?'#e2ddd9':'#252222'}`,
+                border:`1px solid ${focusedField==='artist'?'#e2ddd9':'var(--v-bdr2)'}`,
                 boxShadow:focusedField==='artist'?'0 0 0 2px rgba(226, 221, 217, 0.15)':'none',
                 color:"#e2ddd9",
                 borderRadius:"8px",
@@ -7715,7 +7842,7 @@ function MetadataEditModal({
               style={{
                 width:"100%",
                 background:"rgba(28, 26, 26, 0.6)",
-                border:`1px solid ${focusedField==='album'?'#e2ddd9':'#252222'}`,
+                border:`1px solid ${focusedField==='album'?'#e2ddd9':'var(--v-bdr2)'}`,
                 boxShadow:focusedField==='album'?'0 0 0 2px rgba(226, 221, 217, 0.15)':'none',
                 color:"#e2ddd9",
                 borderRadius:"8px",
@@ -7733,7 +7860,7 @@ function MetadataEditModal({
             style={{
               padding:"9px 16px",
               borderRadius:"8px",
-              border:`1px solid ${isCancelHovered?'#3a3532':'#252222'}`,
+              border:`1px solid ${isCancelHovered?'#3a3532':'var(--v-bdr2)'}`,
               color:isCancelHovered?"#e2ddd9":"#8a817c",
               background:isCancelHovered?"rgba(255,255,255,0.03)":"transparent",
               fontWeight:600,
