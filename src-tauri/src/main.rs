@@ -2135,10 +2135,9 @@ fn update_discord_rpc(title: String, artist: Option<String>, cover_url: Option<S
     std::thread::spawn(move || {
         let mut client_lock = get_discord_client().lock().unwrap();
         if client_lock.is_none() {
-            if let Ok(mut client) = DiscordIpcClient::new("1517835351044001953") {
-                if client.connect().is_ok() {
-                    *client_lock = Some(client);
-                }
+            let mut client = DiscordIpcClient::new("1517835351044001953");
+            if client.connect().is_ok() {
+                *client_lock = Some(client);
             }
         }
         if let Some(ref mut client) = *client_lock {
