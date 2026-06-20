@@ -1434,6 +1434,7 @@ function SettingsPanel({
   lyricsSource, setLyricsSource,
   trayEnabled, setTrayEnabled,
   audioDevices, setAudioDevices,
+  discordRpcEnabled, setDiscordRpcEnabled,
 }: {
   downloadQuality: string; setDownloadQuality: (q: string) => void;
   downloadPath: string; handleSelectDirectory: () => void;
@@ -1454,8 +1455,37 @@ function SettingsPanel({
   trayEnabled: boolean; setTrayEnabled: (v: boolean) => void;
   audioDevices: { id: string; name: string; form: string; is_default: boolean }[];
   setAudioDevices: React.Dispatch<React.SetStateAction<{ id: string; name: string; form: string; is_default: boolean }[]>>;
+  discordRpcEnabled: boolean; setDiscordRpcEnabled: (v: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('updates');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const matchesSearch = (textList: string[]) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return textList.some(txt => (txt || '').toLowerCase().includes(q));
+  };
+
+  const show = (tab: SettingsTab) => {
+    if (searchQuery) return true;
+    return activeTab === tab;
+  };
+
+  const hasMatches = () => {
+    if (!searchQuery) return true;
+    // updates
+    if (matchesSearch(["Updates", "Check for new releases of Veluna", "Update available", "You're up to date"])) return true;
+    // downloads
+    if (matchesSearch(["Downloads", "Configure download quality", "Audio Quality", "Download Folder", "Audio Format", "Embed Thumbnail", "Duplicate Detection"])) return true;
+    // playback
+    if (matchesSearch(["Playback", "Audio Normalizer", "Smart Playback", "Lyrics Provider", "Audio Output Device", "Equalizer Settings", "Bass", "Mid", "Treble"])) return true;
+    // storage
+    if (matchesSearch(["Storage", "Backup Location", "Backup & Restore Actions", "App Maintenance", "Reset Veluna App"])) return true;
+    // appearance
+    if (matchesSearch(["Appearance", "System Integration", "Start Behavior", "Enable Tray Icon", "Default Startup Page"])) return true;
+    return false;
+  };
   const [diskInfo, setDiskInfo] = useState<DiskInfo | null>(null);
   const [switchingDevice, setSwitchingDevice] = useState(false);
   const [startupNav, setStartupNav] = useState(() => loadLS('vg_startupNav', 'home'));
@@ -1479,39 +1509,131 @@ function SettingsPanel({
 
   return (
     <div style={{flex:1,display:"flex",overflow:"hidden"}}>
-      <div style={{width:"180px",flexShrink:0,borderRight:"1px solid #1c1a1a",display:"flex",flexDirection:"column",padding:"14px 10px",gap:"3px"}}>
+      <div style={{width:"200px",flexShrink:0,borderRight:"1px solid #1c1a1a",display:"flex",flexDirection:"column",padding:"14px 10px",gap:"3px"}}>
         <div style={{fontSize:"9px",fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",color:"#5c5755",padding:"0 8px 12px"}}>Settings</div>
-        {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            style={{
-              display:"flex",alignItems:"center",gap:"9px",
-              padding:"8px 10px 8px 12px",borderRadius:"8px",
-              border:"none",cursor:"pointer",
-              textAlign:"left",width:"100%",
-              fontSize:"12.5px",fontWeight:500,
-              background:activeTab===tab.id?"rgba(226,221,217,0.04)":"transparent",
-              color:activeTab===tab.id?"#e2ddd9":"#8c8682",
-              position:"relative",
-              transition:"background .12s,color .12s",
-            }}
-            onMouseEnter={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="rgba(255,255,255,0.015)";e.currentTarget.style.color="#e2ddd9";}}}
-            onMouseLeave={e=>{if(activeTab!==tab.id){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#8c8682";}}}>
-            {activeTab === tab.id && (
-              <span style={{position:"absolute",left:"0",top:"10px",bottom:"10px",width:"3px",borderRadius:"1.5px",background:"#9e9894"}} />
+        
+        {/* Search input */}
+        <div style={{ padding: "0 4px 10px" }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <Search size={13} style={{ position: "absolute", left: "10px", color: "#5c5755", pointerEvents: "none" }} />
+            <input
+              type="text"
+              placeholder="Find a setting"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 28px 6px 28px",
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid #1c1a1a",
+                borderRadius: "6px",
+                color: "#e2ddd9",
+                fontSize: "12px",
+                outline: "none",
+                transition: "border-color 0.12s",
+                boxSizing: "border-box"
+              }}
+              onFocus={e => e.currentTarget.style.borderColor = "#9e9894"}
+              onBlur={e => e.currentTarget.style.borderColor = "#1c1a1a"}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  background: "none",
+                  border: "none",
+                  color: "#5c5755",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: 0
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#e2ddd9")}
+                onMouseLeave={e => (e.currentTarget.style.color = "#5c5755")}
+              >
+                <X size={12} />
+              </button>
             )}
-            <span style={{color:activeTab===tab.id?"#9e9894":"#3a3735",display:"flex",flexShrink:0}}>{tab.icon}</span>
-            <span style={{flex:1}}>{tab.label}</span>
-            {tab.id === 'updates' && updateAvailable && (
-              <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"#9e9894",flexShrink:0}} />
-            )}
-          </button>
-        ))}
+          </div>
+        </div>
+
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id && !searchQuery;
+          return (
+            <button key={tab.id} onClick={() => { setSearchQuery(''); setActiveTab(tab.id); }}
+              style={{
+                display:"flex",alignItems:"center",gap:"9px",
+                padding:"8px 10px 8px 12px",borderRadius:"8px",
+                border:"none",cursor:"pointer",
+                textAlign:"left",width:"100%",
+                fontSize:"12.5px",fontWeight:500,
+                background:isActive?"rgba(226,221,217,0.04)":"transparent",
+                color:isActive?"#e2ddd9":"#8c8682",
+                position:"relative",
+                transition:"background .12s,color .12s",
+              }}
+              onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background="rgba(255,255,255,0.015)";e.currentTarget.style.color="#e2ddd9";}}}
+              onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#8c8682";}}}>
+              {isActive && (
+                <span style={{position:"absolute",left:"0",top:"10px",bottom:"10px",width:"3px",borderRadius:"1.5px",background:"#9e9894"}} />
+              )}
+              <span style={{color:isActive?"#9e9894":"#3a3735",display:"flex",flexShrink:0}}>{tab.icon}</span>
+              <span style={{flex:1}}>{tab.label}</span>
+              {tab.id === 'updates' && updateAvailable && (
+                <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"#9e9894",flexShrink:0}} />
+              )}
+            </button>
+          );
+        })}
+
+        {searchQuery && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "9px",
+            padding: "8px 10px 8px 12px",
+            borderRadius: "8px",
+            fontSize: "12.5px",
+            fontWeight: 500,
+            background: "rgba(158, 152, 148, 0.04)",
+            color: "#e2ddd9",
+            position: "relative"
+          }}>
+            <span style={{
+              position: "absolute",
+              left: "0",
+              top: "10px",
+              bottom: "10px",
+              width: "3px",
+              borderRadius: "1.5px",
+              background: "#9e9894"
+            }} />
+            <span style={{ color: "#9e9894", display: "flex", flexShrink: 0 }}><Search size={15} /></span>
+            <span>Search Results</span>
+          </div>
+        )}
       </div>
 
       <div style={{flex:1,overflowY:"auto",padding:"20px 24px"}} className="custom-scrollbar">
+        {searchQuery && (
+          <div style={{ marginBottom: "20px" }}>
+            <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#e2ddd9", margin: "0 0 3px" }}>Search Results</h2>
+            <p style={{ fontSize: "12px", color: "#5c5755", marginTop: "3px" }}>Showing settings matching "{searchQuery}"</p>
+          </div>
+        )}
+
+        {!hasMatches() ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 0", color: "#5c5755", gap: "10px" }}>
+            <Search size={28} strokeWidth={1.5} />
+            <p style={{ fontSize: "13px" }}>No settings match your search</p>
+          </div>
+        ) : (
+          <>
 
         {}
-        {activeTab === 'updates' && (
+        {show('updates') && matchesSearch(["Updates", "Check for new releases of Veluna", "Update available", "You're up to date"]) && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Updates</h2>
@@ -1556,7 +1678,7 @@ function SettingsPanel({
           </div>
         )}
 
-        {activeTab === 'downloads' && (
+        {show('downloads') && matchesSearch(["Downloads", "Configure download quality", "Audio Quality", "Download Folder", "Audio Format", "Embed Thumbnail", "Duplicate Detection"]) && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Downloads</h2>
@@ -1663,7 +1785,7 @@ function SettingsPanel({
           </div>
         )}
 
-        {activeTab === 'playback' && (
+        {show('playback') && matchesSearch(["Playback", "Audio Normalizer", "Smart Playback", "Lyrics Provider", "Audio Output Device", "Equalizer Settings", "Bass", "Mid", "Treble", "Discord Rich Presence", "Discord RPC"]) && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Playback</h2>
@@ -1717,6 +1839,13 @@ function SettingsPanel({
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{autoplayEnabled ? 'Queue similar tracks automatically when music ends' : 'Stop playback when music ends'}</p>
                 </div>
                 <SettingsSwitch checked={autoplayEnabled} onChange={() => setAutoplayEnabled(!autoplayEnabled)} />
+              </div>
+              <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderTop:"1px solid #1c1a1a"}}>
+                <div>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Discord Rich Presence</p>
+                  <p style={{fontSize:"11px",color:"#5c5755",marginTop:"4px"}}>{discordRpcEnabled ? 'Active — show listening activity on Discord' : 'Disabled — hide listening activity'}</p>
+                </div>
+                <SettingsSwitch checked={discordRpcEnabled} onChange={() => setDiscordRpcEnabled(!discordRpcEnabled)} />
               </div>
             </div>
 
@@ -1868,7 +1997,7 @@ function SettingsPanel({
           </div>
         )}
 
-        {activeTab === 'storage' && (
+        {show('storage') && matchesSearch(["Storage", "Backup Location", "Backup & Restore Actions", "App Maintenance", "Reset Veluna App"]) && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Storage</h2>
@@ -1941,7 +2070,7 @@ function SettingsPanel({
           </div>
         )}
 
-        {activeTab === 'appearance' && (
+        {show('appearance') && matchesSearch(["Appearance", "System Integration", "Start Behavior", "Enable Tray Icon", "Default Startup Page"]) && (
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             <div>
               <h2 style={{fontSize:"17px",fontWeight:700,color:"#e2ddd9",margin:"0 0 3px"}}>Appearance</h2>
@@ -1994,7 +2123,9 @@ function SettingsPanel({
             </div>
           </div>
         )}
-
+          </>
+        )
+      }
       </div>
     </div>
   );
@@ -2560,6 +2691,9 @@ export default function Veluna() {
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(() => loadLS('vg_repeatMode', 'off'));
   const repeatModeRef = useRef<RepeatMode>(loadLS('vg_repeatMode', 'off'));
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [queueTab, setQueueTab] = useState<'queue' | 'history'>('queue');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [discordRpcEnabled, setDiscordRpcEnabled] = useState<boolean>(() => loadLS('vg_discordRpcEnabled', true));
   const dragQueueIdx = useRef<number | null>(null);
   const dragOverQueueIdxRef = useRef<number | null>(null);
   const [dragOverQueueIdx, setDragOverQueueIdx] = React.useState<number | null>(null);
@@ -2660,6 +2794,19 @@ export default function Veluna() {
   const playlistContextRef = useRef<{ tracks: Track[]; index: number } | null>(null);
 
   useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
+  useEffect(() => {
+    if (discordRpcEnabled && isPlaying && currentTrack) {
+      const coverUrl = currentTrack.cover && !currentTrack.cover.startsWith('data:') && !currentTrack.cover.startsWith('blob:') ? currentTrack.cover : null;
+      invoke('update_discord_rpc', {
+        title: currentTrack.title,
+        artist: cleanArtist(currentTrack.artist) || null,
+        coverUrl
+      }).catch(() => {});
+    } else {
+      invoke('clear_discord_rpc').catch(() => {});
+    }
+  }, [discordRpcEnabled, isPlaying, currentTrack]);
+  useEffect(() => { saveLS('vg_discordRpcEnabled', discordRpcEnabled); }, [discordRpcEnabled]);
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
@@ -3851,6 +3998,36 @@ export default function Veluna() {
 
   const removeFromQueue = useCallback((url: string) => setQueue(p => p.filter(q => q.url !== url)), []);
 
+  const removeFromQueueByIndex = useCallback((index: number) => {
+    setQueue(prev => prev.filter((_, idx) => idx !== index));
+  }, []);
+
+  const removeFromHistory = useCallback((index: number) => {
+    setPlayHistory(prev => {
+      const next = prev.filter((_, idx) => idx !== index);
+      saveLS('vg_playHistory', next);
+      return next;
+    });
+  }, []);
+
+  const handleSaveQueueAsPlaylist = useCallback(() => {
+    if (queue.length === 0) return;
+    const name = `Queue - ${new Date().toLocaleDateString()}`;
+    const newPlaylist = {
+      id: `p${Date.now()}`,
+      name,
+      description: 'Saved from active queue',
+      tracks: [...queue]
+    };
+    setPlaylists(prev => [...prev, newPlaylist]);
+    showToast('Queue saved as playlist');
+  }, [queue, setPlaylists, showToast]);
+
+  const selectQueueTab = useCallback((tab: 'queue' | 'history') => {
+    setQueueTab(tab);
+    setShowClearConfirm(false);
+  }, []);
+
   const calculateProgressPercent = useCallback(() => {
     const total = trackDurationSeconds || parseDurationToSeconds(currentTrack?.duration || '0:00');
     return total === 0 ? 0 : Math.min((progressSeconds / total) * 100, 100);
@@ -4022,6 +4199,16 @@ export default function Veluna() {
         .v-queue-item:hover{background:rgba(255,255,255,0.03);}
         .v-queue-item:hover button{opacity:1!important;}
         .v-queue-item--active{background:rgba(226,221,217,0.04);}
+        .v-queue-item .v-queue-play-overlay{opacity:0;transition:opacity 0.15s;}
+        .v-queue-item:hover .v-queue-play-overlay{opacity:1;}
+        .v-queue-item .v-queue-duration{display:block;}
+        .v-queue-item:hover .v-queue-duration{display:none;}
+        .v-queue-item .v-queue-actions{display:none;}
+        .v-queue-item:hover .v-queue-actions{display:flex;}
+        .v-queue-item .v-queue-drag-index{display:block;}
+        .v-queue-item:hover .v-queue-drag-index{display:none;}
+        .v-queue-item .v-queue-drag-icon{display:none;}
+        .v-queue-item:hover .v-queue-drag-icon{display:block;}
 
         ::-webkit-scrollbar{width:3px;height:3px;}
         ::-webkit-scrollbar-track{background:transparent;}
@@ -5274,6 +5461,7 @@ export default function Veluna() {
               lyricsSource={lyricsSource} setLyricsSource={setLyricsSource}
               trayEnabled={trayEnabled} setTrayEnabled={setTrayEnabled}
               audioDevices={audioDevices} setAudioDevices={setAudioDevices}
+              discordRpcEnabled={discordRpcEnabled} setDiscordRpcEnabled={setDiscordRpcEnabled}
             />
           )}
           </div>
@@ -5281,101 +5469,389 @@ export default function Veluna() {
 
         {}
         <div style={{flexShrink:0,background:'#111010',borderLeft:'1px solid #1c1a1a',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'300px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
-          {isQueueOpen && (
-            <>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
-                <div style={{display:'flex',alignItems:'center',gap:'9px'}}>
-                  <ListOrdered size={15} style={{color:'#9e9894'}} />
-                  <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px',letterSpacing:'.01em'}}>Queue</span>
-                  {queue.length > 0 && <span className="v-badge">{queue.length}</span>}
-                </div>
-                {queue.length > 0 && <button onClick={() => { setQueue([]); showToast('Queue cleared'); }} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}>Clear</button>}
-              </div>
-              {currentTrack && (
-                <div style={{padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
-                  <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',marginBottom:'8px'}}>Now Playing</div>
-                  <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px',borderRadius:'8px',background:'rgba(226,221,217,0.04)',border:'1px solid rgba(226,221,217,0.08)'}}>
-                    <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'#1c1a1a',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                      {currentTrack.cover ? <img src={currentTrack.cover} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" /> : <FileMusic size={16} style={{color:'#5c5755'}} />}
-                      {!isLoadingTrack && isPlaying && (
-                        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                          <div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px'}}>{[100,60,80].map((h,i)=><div key={i} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+i*0.12}s ease-in-out ${i*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>
-                        </div>
+          {isQueueOpen && (() => {
+            const contextualTracks = (() => {
+              if (!playlistContextRef.current || !currentTrack) return [];
+              const { tracks, index } = playlistContextRef.current;
+              let idx = tracks.findIndex(t => t.url === currentTrack.url);
+              if (idx === -1) idx = index;
+              return tracks.slice(idx + 1, idx + 11);
+            })();
+
+            const getContextSourceLabel = () => {
+              if (!playlistContextRef.current) return 'Source';
+              const ctxTracks = playlistContextRef.current.tracks;
+              const matchedPlaylist = playlists.find(p => {
+                if (p.tracks.length !== ctxTracks.length) return false;
+                return p.tracks.every((t, idx) => t.url === ctxTracks[idx]?.url);
+              });
+              if (matchedPlaylist) return matchedPlaylist.name;
+              return 'Current List';
+            };
+
+            return (
+              <>
+                <div style={{display:'flex',flexDirection:'column',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px 10px'}}>
+                    <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px',letterSpacing:'.01em'}}>Play Queue</span>
+                    <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                      {queueTab === 'queue' && queue.length > 0 && (
+                        <button 
+                          onClick={handleSaveQueueAsPlaylist}
+                          title="Save Queue as Playlist"
+                          style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s',display:'flex',alignItems:'center',gap:'3px'}}
+                          onMouseEnter={e=>(e.currentTarget.style.color='#e2ddd9')}
+                          onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
+                        >
+                          <ListPlus size={13} />
+                          <span>Save</span>
+                        </button>
+                      )}
+                      {queueTab === 'queue' && queue.length > 0 && (
+                        showClearConfirm ? (
+                          <div style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'11px'}}>
+                            <span style={{color:'#b05555',fontWeight:500}}>Clear?</span>
+                            <button 
+                              onClick={() => { setQueue([]); setShowClearConfirm(false); showToast('Queue cleared'); }} 
+                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:700,color:'#b05555',padding:0}}
+                            >
+                              Yes
+                            </button>
+                            <span style={{color:'#363230'}}>|</span>
+                            <button 
+                              onClick={() => setShowClearConfirm(false)} 
+                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:500,color:'#5c5755',padding:0}}
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => setShowClearConfirm(true)} 
+                            style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} 
+                            onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} 
+                            onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
+                          >
+                            Clear
+                          </button>
+                        )
+                      )}
+                      {queueTab === 'history' && playHistory.length > 0 && (
+                        showClearConfirm ? (
+                          <div style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'11px'}}>
+                            <span style={{color:'#b05555',fontWeight:500}}>Clear?</span>
+                            <button 
+                              onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); setShowClearConfirm(false); showToast('History cleared'); }} 
+                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:700,color:'#b05555',padding:0}}
+                            >
+                              Yes
+                            </button>
+                            <span style={{color:'#363230'}}>|</span>
+                            <button 
+                              onClick={() => setShowClearConfirm(false)} 
+                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:500,color:'#5c5755',padding:0}}
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => setShowClearConfirm(true)} 
+                            style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} 
+                            onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} 
+                            onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
+                          >
+                            Clear
+                          </button>
+                        )
                       )}
                     </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:'12px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentTrack.title}</div>
-                      {cleanArtist(currentTrack.artist) && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{cleanArtist(currentTrack.artist)}</div>}
-                    </div>
+                  </div>
+                  <div style={{display:'flex',background:'#0f0e0e'}}>
+                    <button 
+                      onClick={() => selectQueueTab('queue')}
+                      style={{
+                        flex: 1,
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: queueTab === 'queue' ? '2px solid #e2ddd9' : '2px solid transparent',
+                        color: queueTab === 'queue' ? '#e2ddd9' : '#5c5755',
+                        padding: '10px 0',
+                        fontSize: '12px',
+                        fontWeight: queueTab === 'queue' ? 700 : 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span>Queue</span>
+                      {queue.length > 0 && <span className="v-badge" style={{fontSize:'9px',padding:'1px 4px'}}>{queue.length}</span>}
+                    </button>
+                    <button 
+                      onClick={() => selectQueueTab('history')}
+                      style={{
+                        flex: 1,
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: queueTab === 'history' ? '2px solid #e2ddd9' : '2px solid transparent',
+                        color: queueTab === 'history' ? '#e2ddd9' : '#5c5755',
+                        padding: '10px 0',
+                        fontSize: '12px',
+                        fontWeight: queueTab === 'history' ? 700 : 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span>History</span>
+                      {playHistory.length > 0 && <span className="v-badge" style={{fontSize:'9px',padding:'1px 4px'}}>{playHistory.length}</span>}
+                    </button>
                   </div>
                 </div>
-              )}
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {queue.length === 0
-                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"8px"}}><ListOrdered size={26} strokeWidth={1} /><p style={{fontSize:"13px"}}>Queue is empty</p></div>
-                  : <>
-                      <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',padding:'14px 16px 8px'}}>Up Next</div>
-                      {queue.map((track, i) => (
-                        <div key={`${track.url}-${i}`}
-                          className={`v-queue-item${currentTrack?.url===track.url?' v-queue-item--active':''}`} style={{position:'relative'}}
-                          onMouseEnter={() => { if (dragQueueIdx.current !== null) { dragOverQueueIdxRef.current = i; setDragOverQueueIdx(i); } }}
-                          onContextMenu={e => openCtx(e, { type: 'queue-track', track })}>
-                          {dragOverQueueIdx === i && dragQueueIdx.current !== null && dragQueueIdx.current !== i && (
-                            <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />
-                          )}
-                          <div style={{width:"20px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}
-                            onMouseDown={e => {
-                              e.preventDefault();
-                              dragQueueIdx.current = i;
-                              dragOverQueueIdxRef.current = i;
-                              setDragOverQueueIdx(i);
-                              const onUp = () => {
-                                const from = dragQueueIdx.current;
-                                const to = dragOverQueueIdxRef.current;
-                                dragQueueIdx.current = null;
-                                dragOverQueueIdxRef.current = null;
-                                setDragOverQueueIdx(null);
-                                window.removeEventListener('mouseup', onUp);
-                                if (from === null || to === null || from === to) return;
-                                setQueue(prev => {
-                                  const next = [...prev];
-                                  const [moved] = next.splice(from, 1);
-                                  next.splice(to, 0, moved);
-                                  return next;
-                                });
-                              };
-                              window.addEventListener('mouseup', onUp);
-                            }}>
-                            <div style={{width:"18px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"grab"}}
-                              onMouseEnter={e=>{(e.currentTarget.firstChild as HTMLElement).style.display="none";(e.currentTarget.lastChild as HTMLElement).style.display="block";}}
-                              onMouseLeave={e=>{(e.currentTarget.firstChild as HTMLElement).style.display="block";(e.currentTarget.lastChild as HTMLElement).style.display="none";}}>
-                              <span style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums",display:"block"}}>{i+1}</span>
-                              <svg width="9" height="13" viewBox="0 0 10 14" fill="#5c5755" style={{display:"none"}}><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
+
+                {currentTrack && (
+                  <div style={{padding:'14px 16px',borderBottom:'1px solid #1c1a1a',flexShrink:0}}>
+                    <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',marginBottom:'8px'}}>Now Playing</div>
+                    <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px',borderRadius:'8px',background:'rgba(226,221,217,0.04)',border:'1px solid rgba(226,221,217,0.08)'}}>
+                      <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'#1c1a1a',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        {currentTrack.cover ? <img src={currentTrack.cover} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" /> : <FileMusic size={16} style={{color:'#5c5755'}} />}
+                        {!isLoadingTrack && isPlaying && (
+                          <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px'}}>{[100,60,80].map((h,i)=><div key={i} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+i*0.12}s ease-in-out ${i*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:'12px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentTrack.title}</div>
+                        {cleanArtist(currentTrack.artist) && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{cleanArtist(currentTrack.artist)}</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  {queueTab === 'queue' ? (
+                    queue.length === 0 && contextualTracks.length === 0 ? (
+                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"180px",color:"#363230",gap:"8px"}}>
+                        <ListOrdered size={26} strokeWidth={1} />
+                        <p style={{fontSize:"13px"}}>Queue is empty</p>
+                      </div>
+                    ) : (
+                      <>
+                        {queue.length > 0 && (
+                          <>
+                            <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'14px 16px 8px'}}>Manually Queued</div>
+                            {queue.map((track, i) => (
+                              <div key={`${track.url}-${i}`}
+                                className={`v-queue-item${currentTrack?.url===track.url?' v-queue-item--active':''}`} style={{position:'relative'}}
+                                onMouseEnter={() => { if (dragQueueIdx.current !== null) { dragOverQueueIdxRef.current = i; setDragOverQueueIdx(i); } }}
+                                onContextMenu={e => openCtx(e, { type: 'queue-track', track })}>
+                                {dragOverQueueIdx === i && dragQueueIdx.current !== null && dragQueueIdx.current !== i && (
+                                  <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />
+                                )}
+                                <div style={{width:"20px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}
+                                  onMouseDown={e => {
+                                    e.preventDefault();
+                                    dragQueueIdx.current = i;
+                                    dragOverQueueIdxRef.current = i;
+                                    setDragOverQueueIdx(i);
+                                    const onUp = () => {
+                                      const from = dragQueueIdx.current;
+                                      const to = dragOverQueueIdxRef.current;
+                                      dragQueueIdx.current = null;
+                                      dragOverQueueIdxRef.current = null;
+                                      setDragOverQueueIdx(null);
+                                      window.removeEventListener('mouseup', onUp);
+                                      if (from === null || to === null || from === to) return;
+                                      setQueue(prev => {
+                                        const next = [...prev];
+                                        const [moved] = next.splice(from, 1);
+                                        next.splice(to, 0, moved);
+                                        return next;
+                                      });
+                                    };
+                                    window.addEventListener('mouseup', onUp);
+                                  }}>
+                                  <div style={{width:"18px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"grab"}}>
+                                    <span className="v-queue-drag-index" style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums"}}>{i+1}</span>
+                                    <div className="v-queue-drag-icon">
+                                      <svg width="9" height="13" viewBox="0 0 10 14" fill="#5c5755"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
+                                  onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                                  <div style={{
+                                    width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
+                                    position: "relative",
+                                    background: getTrackGradient(track.title, track.artist),
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center"
+                                  }}>
+                                    <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                    {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>}
+                                  </div>
+                                  <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
+                                    <Play size={12} fill="currentColor" />
+                                  </div>
+                                </div>
+                                <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                                  <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
+                                  {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
+                                </div>
+                                <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
+                                  <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
+                                    {track.duration || '0:00'}
+                                  </span>
+                                  <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
+                                    <button 
+                                      onClick={e => { e.stopPropagation(); removeFromQueueByIndex(i); }} 
+                                      title="Remove from queue"
+                                      style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                                      onMouseEnter={e => { e.currentTarget.style.color = "#b05555"; }}
+                                      onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
+                                    >
+                                      <X size={13} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+
+                        {contextualTracks.length > 0 && (
+                          <>
+                            <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'20px 16px 8px'}}>
+                              Next from {getContextSourceLabel()}
+                            </div>
+                            {contextualTracks.map((track, i) => (
+                              <div key={`${track.url}-${i}`}
+                                className="v-queue-item" style={{position:'relative', paddingLeft: '16px'}}
+                                onContextMenu={e => openCtx(e, { type: 'track', track })}>
+                                
+                                <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
+                                  onClick={() => {
+                                    if (playlistContextRef.current) {
+                                      handlePlayInContext(track, playlistContextRef.current.tracks);
+                                    }
+                                  }}>
+                                  <div style={{
+                                    width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
+                                    position: "relative",
+                                    background: getTrackGradient(track.title, track.artist),
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center"
+                                  }}>
+                                    <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                    {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>}
+                                  </div>
+                                  <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
+                                    <Play size={12} fill="currentColor" />
+                                  </div>
+                                </div>
+                                
+                                <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={() => {
+                                  if (playlistContextRef.current) {
+                                    handlePlayInContext(track, playlistContextRef.current.tracks);
+                                  }
+                                }}>
+                                  <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#c8c4c0"}}>{track.title}</div>
+                                  {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
+                                </div>
+
+                                <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
+                                  <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
+                                    {track.duration || '0:00'}
+                                  </span>
+                                  <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
+                                    <button 
+                                      onClick={e => { e.stopPropagation(); setQueue(prev => [...prev, track]); showToast('Added to queue'); }} 
+                                      title="Add to queue"
+                                      style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                                      onMouseEnter={e => { e.currentTarget.style.color = "#e2ddd9"; }}
+                                      onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
+                                    >
+                                      <ListPlus size={13} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    )
+                  ) : (
+                    playHistory.length === 0 ? (
+                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"180px",color:"#363230",gap:"8px"}}>
+                        <Clock size={26} strokeWidth={1} />
+                        <p style={{fontSize:"13px"}}>History is empty</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'14px 16px 8px'}}>Recently Played</div>
+                        {playHistory.map((track, i) => (
+                          <div key={`${track.url}-${i}`}
+                            className="v-queue-item" style={{position:'relative', paddingLeft: '16px'}}
+                            onContextMenu={e => openCtx(e, { type: 'track', track })}>
+                            
+                            <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
+                              onClick={() => handlePlayTrack(track, true)}>
+                              <div style={{
+                                width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
+                                position: "relative",
+                                background: getTrackGradient(track.title, track.artist),
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                              }}>
+                                <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>}
+                              </div>
+                              <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
+                                <Play size={12} fill="currentColor" />
+                              </div>
+                            </div>
+                            
+                            <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={() => handlePlayTrack(track, true)}>
+                              <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#c8c4c0"}}>{track.title}</div>
+                              {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
+                            </div>
+
+                            <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
+                              <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
+                                {track.duration || '0:00'}
+                              </span>
+                              <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
+                                <button 
+                                  onClick={e => { e.stopPropagation(); removeFromHistory(i); }} 
+                                  title="Remove from history"
+                                  style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                                  onMouseEnter={e => { e.currentTarget.style.color = "#b05555"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
+                                >
+                                  <X size={13} />
+                                </button>
+                              </div>
                             </div>
                           </div>
-                          <div style={{
-                            width:"38px",height:"38px",borderRadius:"6px",overflow:"hidden",flexShrink:0,border:"1px solid rgba(255,255,255,0.05)",cursor:"pointer",
-                            position: "relative",
-                            background: getTrackGradient(track.title, track.artist),
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
-                            <Music size={13} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                            <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.opacity = '0'; }} alt=""/>
-                          </div>
-                          <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
-                            <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
-                            {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
-                          </div>
-                          <button onClick={e=>{e.stopPropagation();removeFromQueue(track.url);}} style={{opacity:0,padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#363230",flexShrink:0,borderRadius:"4px",display:"flex",transition:"color .12s"}}
-                            onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.color="#b05555";}} onMouseLeave={e=>{e.currentTarget.style.opacity="0";e.currentTarget.style.color="#363230";}}><X size={12}/></button>
-                        </div>
-                      ))}
-                    </>}
-              </div>
-            </>
-          )}
+                        ))}
+                      </>
+                    )
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
