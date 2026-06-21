@@ -1,24 +1,10 @@
 #!/bin/sh
 set -e
 
-LIMIT=60
-while [ $LIMIT -gt 0 ]; do
-    flock -n /var/lib/dpkg/lock-frontend true 2>/dev/null && break
-    sleep 1
-    LIMIT=$((LIMIT - 1))
-done
-
-sleep 2
-
-YTDLP_PATH="/usr/bin/yt-dlp"
+YTDLP_PATH="/usr/local/bin/yt-dlp"
 YTDLP_URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
 
-if dpkg -s yt-dlp >/dev/null 2>&1; then
-    echo "Veluna: Removing old APT yt-dlp package..."
-    DEBIAN_FRONTEND=noninteractive apt-get purge -y yt-dlp || true
-    DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
-fi
-
+mkdir -p "$(dirname "$YTDLP_PATH")"
 rm -f "$YTDLP_PATH"
 
 echo "Veluna: Downloading latest yt-dlp binary..."

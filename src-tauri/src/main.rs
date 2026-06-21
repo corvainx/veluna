@@ -372,37 +372,68 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
         return Err("No tracks found. Is this a public playlist?".to_string());
     }
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_millis(2000))
-        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-        .build()
-        .unwrap_or_else(|_| reqwest::Client::new());
-
+    let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(6));
     let mut handles = Vec::new();
     for line in lines {
-        let client_clone = client.clone();
+        let sem_clone = std::sync::Arc::clone(&semaphore);
         let handle = tokio::spawn(async move {
             let parts: Vec<String> = line.split("====").map(|s| s.to_string()).collect();
             if parts.len() < 6 {
                 return line;
             }
-            let id = &parts[0];
-            let title = &parts[1];
-            let duration = &parts[2];
-            let thumb = &parts[3];
+            let id = parts[0].clone();
+            let title = parts[1].clone();
+            let duration = parts[2].clone();
+            let thumb = parts[3].clone();
             let mut artist = parts[4].clone();
-            let playlist_title = &parts[5];
+            let playlist_title = parts[5].clone();
 
-            let oembed_url = format!("https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={}&format=json", id);
-            if let Ok(resp) = client_clone.get(&oembed_url).send().await {
-                if let Ok(json) = resp.json::<serde_json::Value>().await {
-                    if let Some(author) = json.get("author_name").and_then(|v| v.as_str()) {
-                        if !author.trim().is_empty() {
-                            artist = author.trim().to_string();
+            if let Ok(_permit) = sem_clone.acquire().await {
+                let mut cmd = tokio::process::Command::new(bin_ytdlp());
+                cmd.args([
+                    "--no-warnings",
+                    "--ignore-errors",
+                    "--socket-timeout", "5",
+                    "--no-config",
+                    "--print", "%(artist,creator,uploader,channel|Unknown)s",
+                    "--",
+                    &id,
+                ])
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped())
+                .no_window();
+
+                if let Ok(mut child) = cmd.spawn() {
+                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+                    let mut status = None;
+                    loop {
+                        match child.try_wait() {
+                            Ok(Some(s)) => { status = Some(s); break; }
+                            Ok(None) => {
+                                if std::time::Instant::now() > deadline {
+                                    let _ = child.kill().await;
+                                    let _ = child.wait().await;
+                                    break;
+                                }
+                                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                            }
+                            Err(_) => break,
+                        }
+                    }
+                    if status.map_or(false, |s| s.success()) {
+                        if let Ok(out) = child.wait_with_output().await {
+                            let mut got = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                            if !got.is_empty() && got != "Unknown" {
+                                if got.to_lowercase().ends_with(" - topic") {
+                                    got = got[..got.len() - 8].trim().to_string();
+                                }
+                                artist = got;
+                            }
                         }
                     }
                 }
             }
+
             format!("{}===={}===={}===={}===={}===={}", id, title, duration, thumb, artist, playlist_title)
         });
         handles.push(handle);
@@ -1433,7 +1464,11 @@ async fn get_audio_cover(path: String) -> Result<Option<String>, String> {
 #[tauri::command]
 async fn write_audio_metadata(path: String, title: String, artist: String, album: String) -> Result<(), String> {
     tokio::task::spawn_blocking(move || {
-        let temp_path = format!("{}.tmp.edit", path);
+        let ext = std::path::Path::new(&path)
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("mp3");
+        let temp_path = format!("{}.tmp.edit.{}", path, ext);
         
         let status = Command::new(bin_ffmpeg())
             .args([

@@ -78,6 +78,24 @@ function parseDurationToSeconds(d: string): number {
   return p[0] || 0;
 }
 
+const lightenColor = (hex: string, percent: number): string => {
+  let num = parseInt(hex.replace("#", ""), 16),
+      amt = Math.round(2.55 * percent),
+      r = (num >> 16) + amt,
+      g = (num >> 8 & 0x00FF) + amt,
+      b = (num & 0x0000FF) + amt;
+  return "#" + (0x1000000 + (r < 255 ? r < 0 ? 0 : r : 255) * 0x10000 + (g < 255 ? g < 0 ? 0 : g : 255) * 0x100 + (b < 255 ? b < 0 ? 0 : b : 255)).toString(16).slice(1);
+};
+
+const hexToRgb = (hex: string): string => {
+  const cleaned = hex.replace('#', '');
+  if (cleaned.length !== 6) return "0, 0, 0";
+  const r = parseInt(cleaned.substring(0, 2), 16);
+  const g = parseInt(cleaned.substring(2, 4), 16);
+  const b = parseInt(cleaned.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+};
+
 const cleanArtist = (a?: string | null): string => {
   if (!a) return '';
   const t = a.trim();
@@ -561,8 +579,8 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
           marginBottom: '6px',
           display: 'flex',
           flexDirection: 'column',
-          background: '#131111',
-          border: '1px solid var(--v-bdr2)',
+          background: 'var(--v-bg1)',
+          border: '1px solid var(--v-bdr)',
           borderRadius: '8px',
           overflow: 'hidden',
           boxShadow: '0 -8px 24px rgba(0,0,0,0.5)',
@@ -578,7 +596,7 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
               style={{
                 width: '100%',
                 border: 'none',
-                borderTop: idx !== 0 ? '1px solid var(--v-bdr2)' : 'none',
+                borderTop: idx !== 0 ? '1px solid var(--v-bdr)' : 'none',
                 padding: '8px 12px',
                 display: 'flex',
                 alignItems: 'center',
@@ -592,8 +610,8 @@ function ImportButton({ onSpotify, onYoutube, onM3u }: {
                 transition: 'background .15s, color .15s'
               }}
               onMouseEnter={e=>{
-                (e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.05)';
-                (e.currentTarget as HTMLElement).style.color='#ffffff';
+                (e.currentTarget as HTMLElement).style.background='rgba(255, 255, 255, 0.02)';
+                (e.currentTarget as HTMLElement).style.color='var(--v-accent)';
               }}
               onMouseLeave={e=>{
                 (e.currentTarget as HTMLElement).style.background='transparent';
@@ -1038,97 +1056,13 @@ function YtImportModal({
           : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
 
         let parsedArtist = artist?.trim() || '';
-        let parsedTitle = title?.trim() || 'Unknown';
-
-        let cleanUploader = parsedArtist;
-        if (cleanUploader.toLowerCase().endsWith(' - topic')) {
-          cleanUploader = cleanUploader.slice(0, -8).trim();
-        }
-
-        const cleanA = cleanArtist(cleanUploader);
-
-        const descriptionTags = [
-          'slowed', 'sped up', 'reverb', 'bass boosted', 'looped', 'loop', 
-          'nightcore', 'remix', 'pitch', '1hour', '1 hour', 
-          '10min', '10 min', '10 minutes', 'clean', 'dirty', 'lyrics', 
-          'lyric', 'audio', 'video', 'official', 'mv', 'hq', 'hd', 
-          '4k', 'remaster', 'remastered', 'live', 'cover', 'instrumental', 
-          'karaoke', 'slow'
-        ];
-
-        const stopwords = [
-          'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'but', 
-          'is', 'are', 'was', 'were', 'you', 'me', 'my', 'your', 'we', 'us', 'our', 
-          'he', 'him', 'his', 'she', 'her', 'they', 'them', 'their', 'i', 'really', 
-          'here', 'there', 'miss', 'with', 'without', 'about', 'from', 'by'
-        ];
-
-        const hasStopwords = (s: string) => {
-          const words = s.toLowerCase().split(/\s+/);
-          return words.some(w => stopwords.includes(w));
-        };
-
-        if (parsedTitle.includes(' - ')) {
-          const tParts = parsedTitle.split(' - ');
-          const part1 = tParts[0].trim();
-          const part2 = tParts.slice(1).join(' - ').trim();
-
-          const part1Clean = part1.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
-          const part2Clean = part2.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
-
-          const isPart2Tag = descriptionTags.some(tag => part2Clean === tag || part2Clean.includes(tag));
-
-          if (isPart2Tag) {
-            parsedArtist = cleanA || 'Unknown';
-            parsedTitle = part1;
-          } else {
-            if (cleanA) {
-              const uploaderLower = cleanA.toLowerCase();
-              const part1Lower = part1.toLowerCase();
-              const part2Lower = part2.toLowerCase();
-
-              if (part2Lower.includes(uploaderLower) || uploaderLower.includes(part2Lower)) {
-                parsedArtist = cleanA;
-                parsedTitle = part1;
-              } else if (part1Lower.includes(uploaderLower) || uploaderLower.includes(part1Lower)) {
-                parsedArtist = cleanA;
-                parsedTitle = part2;
-              } else {
-                const p1Stop = hasStopwords(part1Clean);
-                const p2Stop = hasStopwords(part2Clean);
-                if (p1Stop && !p2Stop) {
-                  parsedArtist = part2;
-                  parsedTitle = part1;
-                } else if (p2Stop && !p1Stop) {
-                  parsedArtist = part1;
-                  parsedTitle = part2;
-                } else {
-                  parsedArtist = part1;
-                  parsedTitle = part2;
-                }
-              }
-            } else {
-              const p1Stop = hasStopwords(part1Clean);
-              const p2Stop = hasStopwords(part2Clean);
-              if (p1Stop && !p2Stop) {
-                parsedArtist = part2;
-                parsedTitle = part1;
-              } else if (p2Stop && !p1Stop) {
-                parsedArtist = part1;
-                parsedTitle = part2;
-              } else {
-                parsedArtist = part1;
-                parsedTitle = part2;
-              }
-            }
-          }
-        } else {
-          parsedArtist = cleanA || 'Unknown';
+        if (parsedArtist.toLowerCase().endsWith(' - topic')) {
+          parsedArtist = parsedArtist.slice(0, -8).trim();
         }
 
         return {
-          title: parsedTitle,
-          artist: parsedArtist || 'Unknown',
+          title: title?.trim() || 'Unknown',
+          artist: cleanArtist(parsedArtist) || 'Unknown',
           id: idTrim,
           duration: duration?.trim() || '',
           cover,
@@ -1403,13 +1337,13 @@ const SettingsSwitch = ({ checked, onChange }: { checked: boolean; onChange: () 
         height: "24px",
         borderRadius: "12px",
         flexShrink: 0,
-        background: checked ? "rgba(226,221,217,0.75)" : "#232020",
+        background: checked ? "var(--v-accent)" : "#232020",
         border: "1px solid",
-        borderColor: checked ? "rgba(226,221,217,0.25)" : hovered ? "#3a3735" : "var(--v-bdr3)",
+        borderColor: checked ? "var(--v-accent)" : hovered ? "#3a3735" : "var(--v-bdr3)",
         transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         cursor: "pointer",
         outline: "none",
-        boxShadow: checked ? "0 0 8px rgba(226,221,217,0.15)" : "none"
+        boxShadow: checked ? "0 0 8px var(--v-accent)" : "none"
       }}
     >
       <span
@@ -1420,7 +1354,7 @@ const SettingsSwitch = ({ checked, onChange }: { checked: boolean; onChange: () 
           height: "18px",
           borderRadius: "50%",
           transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-          background: checked ? "#0c0b0b" : "#5c5755",
+          background: checked ? "var(--v-bg0)" : "#5c5755",
           left: checked ? "20px" : "2px",
           boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
           transform: hovered ? "scale(1.05)" : "scale(1)"
@@ -1450,6 +1384,7 @@ function SettingsPanel({
   discordRpcEnabled, setDiscordRpcEnabled,
   theme, setThemeState,
   accentColor, setAccentColorState,
+  customBgColor, setCustomBgColorState,
 }: {
   downloadQuality: string; setDownloadQuality: (q: string) => void;
   downloadPath: string; handleSelectDirectory: () => void;
@@ -1473,6 +1408,7 @@ function SettingsPanel({
   discordRpcEnabled: boolean; setDiscordRpcEnabled: (v: boolean) => void;
   theme: string; setThemeState: (t: string) => void;
   accentColor: string; setAccentColorState: (a: string) => void;
+  customBgColor: string; setCustomBgColorState: (c: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('playback');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1751,10 +1687,24 @@ function SettingsPanel({
               <div style={{padding:"12px 16px",borderBottom:"1px solid var(--v-bdr)",background:"rgba(226,221,217,0.015)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Download Directory</h3>
               </div>
-              <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.15s ease-out"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(226,221,217,0.005)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={handleSelectDirectory}>
+              <div className="v-settings-row" style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.15s ease-out"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(226,221,217,0.005)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={handleSelectDirectory}>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"inline-block",padding:"5px 9px",background:"#141312",border:"1px solid #1e1b1a",borderRadius:"6px",fontSize:"11.5px",fontFamily:"monospace",color:"#c8c4c0",maxWidth:"90%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                    {downloadPath}
+                  <div className="v-settings-path-capsule" style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "11.5px",
+                    color: "#9e9894",
+                    background: "rgba(255, 255, 255, 0.02)",
+                    border: "1px solid var(--v-bdr)",
+                    borderRadius: "20px",
+                    padding: "4px 10px",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                    fontFamily: "monospace",
+                    maxWidth: "90%"
+                  }}>
+                    <FolderOpen size={12} style={{ color: "var(--v-accent)", flexShrink: 0 }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{downloadPath}</span>
                   </div>
                   {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"6px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} offline tracks</p>}
                 </div>
@@ -2019,16 +1969,17 @@ function SettingsPanel({
                     { id: 'cyberpunk', name: 'Cyberpunk', desc: 'Vibrant neon purple', bg: '#0a0112', cardBg: '#1b032d', accent: '#d946ef' },
                     { id: 'sunset', name: 'Sunset Crimson', desc: 'Burnt red tones', bg: '#0a0505', cardBg: '#1b0c0c', accent: '#ef4444' },
                     { id: 'pureblack', name: 'Pure Black', desc: 'Solid high contrast', bg: '#000000', cardBg: '#080808', accent: '#ffffff' },
+                    { id: 'custom', name: 'Custom Theme', desc: 'Personal background color', bg: customBgColor, cardBg: lightenColor(customBgColor, 4), accent: accentColor },
                   ].map(t => {
                     const isSelected = theme === t.id;
                     return (
-                      <button
+                      <div
                         key={t.id}
                         onClick={() => setThemeState(t.id)}
                         style={{
                           display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start",
+                          alignItems: "center",
+                          justifyContent: "space-between",
                           background: isSelected ? "rgba(226,221,217,0.03)" : "rgba(226,221,217,0.005)",
                           border: isSelected ? "1px solid var(--v-accent)" : "1px solid #1a1817",
                           borderRadius: "10px",
@@ -2052,14 +2003,90 @@ function SettingsPanel({
                           }
                         }}
                       >
-                        <div style={{ display: "flex", gap: "5px", marginBottom: "10px" }}>
-                          <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: t.bg, border: "1px solid rgba(255,255,255,0.08)" }} />
-                          <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: t.cardBg, border: "1px solid rgba(255,255,255,0.08)" }} />
-                          <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: t.accent, border: "1px solid rgba(255,255,255,0.08)" }} />
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                          <div style={{ display: "flex", gap: "5px", marginBottom: "10px" }}>
+                            <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: t.bg, border: "1px solid rgba(255,255,255,0.08)" }} />
+                            <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: t.cardBg, border: "1px solid rgba(255,255,255,0.08)" }} />
+                            <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: t.accent, border: "1px solid rgba(255,255,255,0.08)" }} />
+                          </div>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#e2ddd9" }}>{t.name}</span>
+                          <span style={{ fontSize: "10.5px", color: "#5c5755", marginTop: "2px" }}>{t.desc}</span>
                         </div>
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: "#e2ddd9" }}>{t.name}</span>
-                        <span style={{ fontSize: "10.5px", color: "#5c5755", marginTop: "2px" }}>{t.desc}</span>
-                      </button>
+                        {t.id === 'custom' && isSelected && (
+                          <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "6px 10px",
+                              background: "rgba(255, 255, 255, 0.01)",
+                              border: "1px solid var(--v-bdr)",
+                              borderRadius: "8px",
+                              marginLeft: "12px",
+                              flexShrink: 0
+                            }}
+                          >
+                            <span style={{ fontSize: "11px", color: "#5c5755", fontWeight: 500 }}>Hex:</span>
+                            <input
+                              type="text"
+                              value={customBgColor}
+                              onChange={e => {
+                                  const val = e.target.value;
+                                  if (val.startsWith('#') && val.length <= 7) {
+                                    setCustomBgColorState(val);
+                                  }
+                              }}
+                              placeholder="#000000"
+                              style={{
+                                width: "70px",
+                                padding: "4px 6px",
+                                fontSize: "11px",
+                                background: "rgba(226,221,217,0.015)",
+                                border: "1px solid var(--v-bdr2)",
+                                borderRadius: "6px",
+                                color: "#e2ddd9",
+                                outline: "none",
+                                boxSizing: "border-box"
+                              }}
+                            />
+                            <div
+                              style={{
+                                position: "relative",
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                border: "1px solid rgba(255,255,255,0.15)",
+                                cursor: "pointer",
+                                background: "linear-gradient(45deg, #ff0055, #00ffcc, #9900ff)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "all 0.15s cubic-bezier(0.16, 1, 0.3, 1)"
+                              }}
+                              title="Choose Color"
+                              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.12)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                            >
+                              <input
+                                type="color"
+                                value={customBgColor}
+                                onChange={e => setCustomBgColorState(e.target.value)}
+                                style={{
+                                  position: "absolute",
+                                  top: "-4px",
+                                  left: "-4px",
+                                  width: "28px",
+                                  height: "28px",
+                                  opacity: 0,
+                                  cursor: "pointer",
+                                }}
+                              />
+                              <span style={{ fontSize: "9px", fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.6)", pointerEvents: "none" }}>+</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -2227,15 +2254,29 @@ function SettingsPanel({
               <div style={{padding:"12px 16px",borderBottom:"1px solid var(--v-bdr)",background:"rgba(226,221,217,0.015)"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0}}>Backup Location</h3>
               </div>
-              <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.15s ease-out"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(226,221,217,0.005)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={async () => {
+              <div className="v-settings-row" style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.15s ease-out"}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(226,221,217,0.005)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")} onClick={async () => {
                 try {
                   const sel = await (await import('@tauri-apps/plugin-dialog')).open({ directory: true, multiple: false, defaultPath: backupPath });
                   if (sel) setBackupPath(sel as string);
                 } catch {}
               }}>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"inline-block",padding:"5px 9px",background:"#141312",border:"1px solid #1e1b1a",borderRadius:"6px",fontSize:"11.5px",fontFamily:"monospace",color:"#c8c4c0",maxWidth:"90%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                    {backupPath || downloadPath}
+                  <div className="v-settings-path-capsule" style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "11.5px",
+                    color: "#9e9894",
+                    background: "rgba(255, 255, 255, 0.02)",
+                    border: "1px solid var(--v-bdr)",
+                    borderRadius: "20px",
+                    padding: "4px 10px",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                    fontFamily: "monospace",
+                    maxWidth: "90%"
+                  }}>
+                    <FolderOpen size={12} style={{ color: "var(--v-accent)", flexShrink: 0 }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{backupPath || downloadPath}</span>
                   </div>
                   <p style={{fontSize:"11px",color:"#5c5755",marginTop:"6px"}}>Backup file: veluna_backup.json</p>
                 </div>
@@ -2344,6 +2385,7 @@ function DownloadsPanel({
   activeNav,
   refreshNonce = 0,
   onCtx,
+  setTracksRef,
 }: {
   downloadPath: string; onPlayLocalTrack: (t: LocalTrack, list?: LocalTrack[], idx?: number) => void;
   onDeleteLocalTrack: (t: LocalTrack) => void; currentTrackPath: string | null;
@@ -2353,8 +2395,19 @@ function DownloadsPanel({
   activeNav: string;
   refreshNonce?: number;
   onCtx?: (e: React.MouseEvent, t: LocalTrack) => void;
+  setTracksRef?: React.RefObject<React.Dispatch<React.SetStateAction<LocalTrack[]>> | null>;
 }) {
   const [tracks, setTracks] = useState<LocalTrack[]>([]);
+  useEffect(() => {
+    if (setTracksRef) {
+      (setTracksRef as any).current = setTracks;
+    }
+    return () => {
+      if (setTracksRef) {
+        (setTracksRef as any).current = null;
+      }
+    };
+  }, [setTracksRef]);
   const tracksRef = useRef(tracks);
   useEffect(() => { tracksRef.current = tracks; }, [tracks]);
   const [scanning, setScanning] = useState(false);
@@ -2453,46 +2506,173 @@ function DownloadsPanel({
 
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
-      {}
-      <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"14px"}}>
-        <div style={{width:"40px",height:"40px",borderRadius:"9px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(226,221,217,0.06)",border:"1px solid rgba(226,221,217,0.1)",flexShrink:0}}>
-          <HardDrive size={22} className="text-[#d4cfcf]" />
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "20px",
+        marginBottom: "20px",
+        background: "linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0%, rgba(255, 255, 255, 0) 100%)",
+        border: "1px solid var(--v-bdr)",
+        borderRadius: "16px",
+        padding: "20px",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <div style={{
+          position: "absolute",
+          top: "-50px",
+          left: "-50px",
+          width: "150px",
+          height: "150px",
+          background: "var(--v-accent)",
+          opacity: 0.05,
+          filter: "blur(40px)",
+          borderRadius: "50%",
+          pointerEvents: "none"
+        }} />
+        <div style={{
+          width: "60px",
+          height: "60px",
+          borderRadius: "14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+          flexShrink: 0
+        }}>
+          <HardDrive size={26} style={{ color: "var(--v-accent)", filter: "drop-shadow(0 2px 8px var(--v-accent))" }} />
         </div>
-        <div style={{flex:1,minWidth:0}}>
-          <h2 style={{fontSize:"20px",fontWeight:800,color:"#e2ddd9",margin:0}}>Offline</h2>
-          {}
-          <button onClick={onChangeFolder}
-            style={{display:"flex",alignItems:"center",gap:"5px",marginTop:"2px",fontSize:"12px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",fontFamily:"monospace",overflow:"hidden",maxWidth:"100%",padding:0,transition:"color .12s"}}
-            onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")} title="Change folder">
-            <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{downloadPath}</span>
-            <FolderOpen size={12} style={{flexShrink:0}}/>
-          </button>
-          {diskInfo && <p style={{fontSize:"11px",color:"#5c5755",marginTop:"3px"}}>{formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} files</p>}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ fontSize: "24px", fontWeight: 900, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Offline Library</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+            <button onClick={onChangeFolder}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "11.5px",
+                color: "#9e9894",
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid var(--v-bdr)",
+                borderRadius: "20px",
+                padding: "4px 10px",
+                cursor: "pointer",
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                fontFamily: "monospace"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = "var(--v-accent)";
+                e.currentTarget.style.color = "#fff";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = "var(--v-bdr)";
+                e.currentTarget.style.color = "#9e9894";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)";
+              }}
+              title="Change Folder"
+            >
+              <FolderOpen size={12} style={{ color: "var(--v-accent)" }} />
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "240px" }}>{downloadPath}</span>
+            </button>
+            {diskInfo && (
+              <div style={{
+                fontSize: "11px",
+                color: "#8a827e",
+                background: "rgba(255, 255, 255, 0.01)",
+                border: "1px solid rgba(255, 255, 255, 0.04)",
+                borderRadius: "20px",
+                padding: "4px 10px",
+                fontWeight: 500
+              }}>
+                {formatBytes(diskInfo.used_bytes)} used · {diskInfo.track_count} files
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:"5px",flexShrink:0}}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
           <button onClick={onChangeFolder} title="Change folder"
-            style={{padding:"7px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
-            onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}><FolderOpen size={15}/></button>
+            style={{
+              padding: "8px",
+              borderRadius: "10px",
+              border: "1px solid var(--v-bdr)",
+              background: "rgba(255, 255, 255, 0.01)",
+              color: "#9e9894",
+              cursor: "pointer",
+              display: "flex",
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "var(--v-bdr3)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#9e9894"; e.currentTarget.style.borderColor = "var(--v-bdr)"; e.currentTarget.style.background = "rgba(255,255,255,0.01)"; }}
+          >
+            <FolderOpen size={15} />
+          </button>
           {tracks.length > 0 && (
-            <button onClick={()=>onExportM3u(tracks)} title="Export M3U"
-              style={{padding:"7px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",background:"transparent",color:"#5c5755",cursor:"pointer",display:"flex",transition:"color .12s,border-color .12s"}}
-              onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}><FileOutput size={15}/></button>
+            <button onClick={() => onExportM3u(tracks)} title="Export M3U"
+              style={{
+                padding: "8px",
+                borderRadius: "10px",
+                border: "1px solid var(--v-bdr)",
+                background: "rgba(255, 255, 255, 0.01)",
+                color: "#9e9894",
+                cursor: "pointer",
+                display: "flex",
+                transition: "all 0.15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "var(--v-bdr3)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#9e9894"; e.currentTarget.style.borderColor = "var(--v-bdr)"; e.currentTarget.style.background = "rgba(255,255,255,0.01)"; }}
+            >
+              <FileOutput size={15} />
+            </button>
           )}
           <button onClick={scan} disabled={scanning} title="Refresh"
-            style={{padding:"7px",borderRadius:"8px",border:"1px solid var(--v-bdr2)",background:"transparent",color:"#5c5755",cursor:scanning?"not-allowed":"pointer",display:"flex",opacity:scanning?0.4:1,transition:"color .12s,border-color .12s"}}
-            onMouseEnter={e=>{if(!scanning){e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
-            <RefreshCw size={15} style={scanning?{animation:"spin 0.8s linear infinite"}:{}}/>
+            style={{
+              padding: "8px",
+              borderRadius: "10px",
+              border: "1px solid var(--v-bdr)",
+              background: "rgba(255, 255, 255, 0.01)",
+              color: "#9e9894",
+              cursor: scanning ? "not-allowed" : "pointer",
+              display: "flex",
+              opacity: scanning ? 0.4 : 1,
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={e => { if (!scanning) { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "var(--v-bdr3)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; } }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#9e9894"; e.currentTarget.style.borderColor = "var(--v-bdr)"; e.currentTarget.style.background = "rgba(255,255,255,0.01)"; }}
+          >
+            <RefreshCw size={15} style={scanning ? { animation: "spin 0.8s linear infinite" } : {}} />
           </button>
         </div>
       </div>
-
-      {}
       {!scanning && tracks.length > 0 && (
-        <div style={{position:"relative",marginBottom:"10px"}}>
-          <Search size={14} style={{position:"absolute",left:"11px",top:"50%",transform:"translateY(-50%)",color:searchQ?"#9e9894":"#363230",pointerEvents:"none"}}/>
-          <input ref={searchRef} type="text" placeholder="Filter tracks…" value={searchQ}
+        <div style={{position:"relative",marginBottom:"18px"}}>
+          <Search size={14} style={{position:"absolute",left:"12px",top:"50%",transform:"translateY(-50%)",color:searchQ?"#fff":"#5c5755",pointerEvents:"none",transition:"color 0.2s"}}/>
+          <input ref={searchRef} type="text" placeholder="Search offline tracks…" value={searchQ}
             onChange={e=>setSearchQ(e.target.value)}
-            style={{width:"100%",height:"36px",background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",color:"#e2ddd9",borderRadius:"9px",padding:"0 32px 0 34px",fontSize:"13px",outline:"none"}}
+            style={{
+              width:"100%",
+              height:"38px",
+              background:"rgba(255, 255, 255, 0.01)",
+              border:"1px solid var(--v-bdr)",
+              color:"#e2ddd9",
+              borderRadius:"19px",
+              padding:"0 32px 0 36px",
+              fontSize:"13px",
+              outline:"none",
+              transition:"all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+            onFocus={e => {
+              e.currentTarget.style.borderColor = "var(--v-accent)";
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.02), 0 0 8px rgba(255,255,255,0.04)";
+            }}
+            onBlur={e => {
+              e.currentTarget.style.borderColor = "var(--v-bdr)";
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.01)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           />
           {searchQ && (
             <button onClick={()=>setSearchQ('')} style={{position:"absolute",right:"8px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",padding:"2px"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
@@ -2874,11 +3054,50 @@ export default function Veluna() {
   const [statsTimeRange, setStatsTimeRange] = useState<'7days' | 'all'>('all');
   const [theme, setThemeState] = useState<string>(() => loadLS('vg_theme', 'obsidian'));
   const [accentColor, setAccentColorState] = useState<string>(() => loadLS('vg_accentColor', '#e2ddd9'));
+  const [customBgColor, setCustomBgColorState] = useState<string>(() => loadLS('vg_customBgColor', '#0c0b0b'));
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     saveLS('vg_theme', theme);
-  }, [theme]);
+    if (theme === 'custom') {
+      const bg0 = customBgColor;
+      const bg0Rgb = hexToRgb(bg0);
+      const bg1 = lightenColor(bg0, 2);
+      const bg2 = lightenColor(bg0, 4);
+      const bg2Rgb = hexToRgb(bg2);
+      const bg3 = lightenColor(bg0, 6);
+      const bg4 = lightenColor(bg0, 8);
+      const bg5 = lightenColor(bg0, 10);
+      const bdr = lightenColor(bg0, 5);
+      const bdr2 = lightenColor(bg0, 8);
+      const bdr3 = lightenColor(bg0, 12);
+
+      document.documentElement.style.setProperty('--v-bg0', bg0);
+      document.documentElement.style.setProperty('--v-bg0-rgb', bg0Rgb);
+      document.documentElement.style.setProperty('--v-bg1', bg1);
+      document.documentElement.style.setProperty('--v-bg2', bg2);
+      document.documentElement.style.setProperty('--v-bg2-rgb', bg2Rgb);
+      document.documentElement.style.setProperty('--v-bg3', bg3);
+      document.documentElement.style.setProperty('--v-bg4', bg4);
+      document.documentElement.style.setProperty('--v-bg5', bg5);
+      document.documentElement.style.setProperty('--v-bdr', bdr);
+      document.documentElement.style.setProperty('--v-bdr2', bdr2);
+      document.documentElement.style.setProperty('--v-bdr3', bdr3);
+      saveLS('vg_customBgColor', customBgColor);
+    } else {
+      document.documentElement.style.removeProperty('--v-bg0');
+      document.documentElement.style.removeProperty('--v-bg0-rgb');
+      document.documentElement.style.removeProperty('--v-bg1');
+      document.documentElement.style.removeProperty('--v-bg2');
+      document.documentElement.style.removeProperty('--v-bg2-rgb');
+      document.documentElement.style.removeProperty('--v-bg3');
+      document.documentElement.style.removeProperty('--v-bg4');
+      document.documentElement.style.removeProperty('--v-bg5');
+      document.documentElement.style.removeProperty('--v-bdr');
+      document.documentElement.style.removeProperty('--v-bdr2');
+      document.documentElement.style.removeProperty('--v-bdr3');
+    }
+  }, [theme, customBgColor]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--v-accent', accentColor);
@@ -2891,7 +3110,6 @@ export default function Veluna() {
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(() => loadLS('vg_repeatMode', 'off'));
   const repeatModeRef = useRef<RepeatMode>(loadLS('vg_repeatMode', 'off'));
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [queueTab, setQueueTab] = useState<'queue' | 'history'>('queue');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [discordRpcEnabled, setDiscordRpcEnabled] = useState<boolean>(() => loadLS('vg_discordRpcEnabled', true));
   const dragQueueIdx = useRef<number | null>(null);
@@ -2946,6 +3164,7 @@ export default function Veluna() {
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
   const [infoModalTrack, setInfoModalTrack] = useState<Track | null>(null);
   const [downloadingTracks, setDownloadingTracks] = useState<Record<string, number>>({});
+  const downloadsPanelSetTracksRef = useRef<React.Dispatch<React.SetStateAction<LocalTrack[]>> | null>(null);
   const [hoveredTrackUrl, setHoveredTrackUrl] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3351,98 +3570,14 @@ export default function Veluna() {
           : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
 
         let parsedArtist = artist?.trim() || '';
-        let parsedTitle = title?.trim() || 'Unknown';
-
-        let cleanUploader = parsedArtist;
-        if (cleanUploader.toLowerCase().endsWith(' - topic')) {
-          cleanUploader = cleanUploader.slice(0, -8).trim();
-        }
-
-        const cleanA = cleanArtist(cleanUploader);
-
-        const descriptionTags = [
-          'slowed', 'sped up', 'reverb', 'bass boosted', 'looped', 'loop', 
-          'nightcore', 'remix', 'pitch', '1hour', '1 hour', 
-          '10min', '10 min', '10 minutes', 'clean', 'dirty', 'lyrics', 
-          'lyric', 'audio', 'video', 'official', 'mv', 'hq', 'hd', 
-          '4k', 'remaster', 'remastered', 'live', 'cover', 'instrumental', 
-          'karaoke', 'slow'
-        ];
-
-        const stopwords = [
-          'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'but', 
-          'is', 'are', 'was', 'were', 'you', 'me', 'my', 'your', 'we', 'us', 'our', 
-          'he', 'him', 'his', 'she', 'her', 'they', 'them', 'their', 'i', 'really', 
-          'here', 'there', 'miss', 'with', 'without', 'about', 'from', 'by'
-        ];
-
-        const hasStopwords = (s: string) => {
-          const words = s.toLowerCase().split(/\s+/);
-          return words.some(w => stopwords.includes(w));
-        };
-
-        if (parsedTitle.includes(' - ')) {
-          const tParts = parsedTitle.split(' - ');
-          const part1 = tParts[0].trim();
-          const part2 = tParts.slice(1).join(' - ').trim();
-
-          const part1Clean = part1.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
-          const part2Clean = part2.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim().toLowerCase();
-
-          const isPart2Tag = descriptionTags.some(tag => part2Clean === tag || part2Clean.includes(tag));
-
-          if (isPart2Tag) {
-            parsedArtist = cleanA || 'Unknown';
-            parsedTitle = part1;
-          } else {
-            if (cleanA) {
-              const uploaderLower = cleanA.toLowerCase();
-              const part1Lower = part1.toLowerCase();
-              const part2Lower = part2.toLowerCase();
-
-              if (part2Lower.includes(uploaderLower) || uploaderLower.includes(part2Lower)) {
-                parsedArtist = cleanA;
-                parsedTitle = part1;
-              } else if (part1Lower.includes(uploaderLower) || uploaderLower.includes(part1Lower)) {
-                parsedArtist = cleanA;
-                parsedTitle = part2;
-              } else {
-                const p1Stop = hasStopwords(part1Clean);
-                const p2Stop = hasStopwords(part2Clean);
-                if (p1Stop && !p2Stop) {
-                  parsedArtist = part2;
-                  parsedTitle = part1;
-                } else if (p2Stop && !p1Stop) {
-                  parsedArtist = part1;
-                  parsedTitle = part2;
-                } else {
-                  parsedArtist = part1;
-                  parsedTitle = part2;
-                }
-              }
-            } else {
-              const p1Stop = hasStopwords(part1Clean);
-              const p2Stop = hasStopwords(part2Clean);
-              if (p1Stop && !p2Stop) {
-                parsedArtist = part2;
-                parsedTitle = part1;
-              } else if (p2Stop && !p1Stop) {
-                parsedArtist = part1;
-                parsedTitle = part2;
-              } else {
-                parsedArtist = part1;
-                parsedTitle = part2;
-              }
-            }
-          }
-        } else {
-          parsedArtist = cleanA || 'Unknown';
+        if (parsedArtist.toLowerCase().endsWith(' - topic')) {
+          parsedArtist = parsedArtist.slice(0, -8).trim();
         }
 
         return {
           id: -1,
-          title: parsedTitle,
-          artist: parsedArtist || 'Autoplay Recommendation',
+          title: title?.trim() || 'Unknown',
+          artist: cleanArtist(parsedArtist) || 'Autoplay Recommendation',
           url: `https://www.youtube.com/watch?v=${idTrim}`,
           cover,
           duration: duration?.trim() || '3:00',
@@ -3623,10 +3758,12 @@ export default function Veluna() {
     const path = metadataEditingTrack.url.substring(8);
     try {
       await invoke('write_audio_metadata', { path, title, artist, album });
+      const newPath: string = await invoke('rename_local_file', { oldPath: path, newTitle: title.trim() });
+      const newUrl = `local://${newPath}`;
       
       const updateSynthesizedTrack = (t: Track | null): Track | null => {
         if (!t || t.url !== metadataEditingTrack.url) return t;
-        return { ...t, title, artist };
+        return { ...t, title, artist, url: newUrl };
       };
       
       if (currentTrack && currentTrack.url === metadataEditingTrack.url) {
@@ -3641,9 +3778,12 @@ export default function Veluna() {
         tracks: pl.tracks.map(t => t.url === metadataEditingTrack.url ? (updateSynthesizedTrack(t) || t) : t)
       })));
       
+      if (downloadsPanelSetTracksRef.current) {
+        downloadsPanelSetTracksRef.current(prev => prev.map(t => t.path === path ? { ...t, title, artist, path: newPath } : t));
+      }
+      
       showToast('Metadata updated successfully');
       setMetadataEditingTrack(null);
-      
       setLocalRefreshNonce(prev => prev + 1);
     } catch (e) {
       showToast(`Failed to save metadata: ${e}`);
@@ -4297,14 +4437,6 @@ export default function Veluna() {
     setQueue(prev => prev.filter((_, idx) => idx !== index));
   }, []);
 
-  const removeFromHistory = useCallback((index: number) => {
-    setPlayHistory(prev => {
-      const next = prev.filter((_, idx) => idx !== index);
-      saveLS('vg_playHistory', next);
-      return next;
-    });
-  }, []);
-
   const handleSaveQueueAsPlaylist = useCallback(() => {
     if (queue.length === 0) return;
     const name = `Queue - ${new Date().toLocaleDateString()}`;
@@ -4317,11 +4449,6 @@ export default function Veluna() {
     setPlaylists(prev => [...prev, newPlaylist]);
     showToast('Queue saved as playlist');
   }, [queue, setPlaylists, showToast]);
-
-  const selectQueueTab = useCallback((tab: 'queue' | 'history') => {
-    setQueueTab(tab);
-    setShowClearConfirm(false);
-  }, []);
 
   const calculateProgressPercent = useCallback(() => {
     const total = trackDurationSeconds || parseDurationToSeconds(currentTrack?.duration || '0:00');
@@ -4338,22 +4465,22 @@ export default function Veluna() {
         button{border-style:none;border-width:0;border-color:transparent;outline-style:none;outline-width:0;outline-color:transparent;appearance:none;-webkit-appearance:none;}
         #root{height:100%;overflow:hidden;}
 
-        .v-track{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:10px;border:1px solid transparent;transition:background .12s,border-color .12s;cursor:pointer;}
-        .v-track:hover{background:rgba(226,221,217,0.04);border-color:rgba(226,221,217,0.07);}
-        .v-track--active{background:rgba(226,221,217,0.06);border-color:rgba(226,221,217,0.14);}
+        .v-track{display:flex;align-items:center;gap:14px;padding:8px 12px;border-radius:10px;border:1px solid transparent;transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);cursor:pointer;}
+        .v-track:hover{background:rgba(255, 255, 255, 0.015);border-color:var(--v-bdr);box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+        .v-track--active{background:rgba(255, 255, 255, 0.025);border-color:var(--v-accent);box-shadow:0 4px 24px rgba(0,0,0,0.2);}
         .v-track__num{width:30px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--v-fg4);flex-shrink:0;}
-        .v-track--active .v-track__num{color:var(--v-fg);}
+        .v-track--active .v-track__num{color:var(--v-accent);}
         .v-track__art{width:50px;height:50px;border-radius:9px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.06);}
         .v-track__art img{width:100%;height:100%;object-fit:cover;}
         .v-track__info{flex:1;min-width:0;}
-        .v-track__title{font-size:14.5px;font-weight:600;color:var(--v-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;}
-        .v-track--active .v-track__title{color:#fff;}
+        .v-track__title{font-size:14.5px;font-weight:600;color:var(--v-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;transition:color 0.2s;}
+        .v-track--active .v-track__title{color:var(--v-accent);}
         .v-track__artist{font-size:13px;color:var(--v-fg3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .v-track__dur{font-size:11px;color:var(--v-fg4);font-variant-numeric:tabular-nums;flex-shrink:0;}
-        .v-track__actions{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity .12s;flex-shrink:0;}
+        .v-track__actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .12s;flex-shrink:0;}
         .v-track:hover .v-track__actions,.v-track--active .v-track__actions{opacity:1;}
-        .v-track__btn{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s,color .1s;}
-        .v-track__btn:hover{background:rgba(226,221,217,0.08);color:var(--v-fg);}
+        .v-track__btn{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s ease;}
+        .v-track__btn:hover{background:rgba(255, 255, 255, 0.06);color:#fff;}
 
         .v-card{flex-shrink:0;width:180px;cursor:pointer;animation:fadeUpSm .2s cubic-bezier(0.2,0,0,1) both;}
         .v-card__art{width:180px;height:180px;border-radius:13px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);position:relative;background:var(--v-bg3);transition:transform .18s cubic-bezier(0.2,0,0,1);}
@@ -4498,6 +4625,11 @@ export default function Veluna() {
         }
         .banner-glow {
           animation: subtlePulse 8s ease-in-out infinite;
+        }
+        .v-settings-row:hover .v-settings-path-capsule {
+          border-color: var(--v-accent) !important;
+          color: #fff !important;
+          background: rgba(255, 255, 255, 0.04) !important;
         }
       `}</style>
 
@@ -4670,7 +4802,7 @@ export default function Veluna() {
                       onChange={e => setSearchQuery(e.target.value)}
                       onFocus={() => !isSearching && setShowHistory(searchHistory.length > 0)}
                       onKeyDown={e => { if (e.key === 'Enter') { setShowHistory(false); searchMusic(); } if (e.key === 'Escape') setShowHistory(false); }}
-                      style={{width:'100%',height:'42px',background:'var(--v-bg2)',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'var(--v-bdr2)'}`,borderRadius:'9px',padding:'0 12px 0 42px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
+                      style={{width:'100%',height:'42px',background:'var(--v-bg2)',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'var(--v-bdr2)'}`,borderRadius:'21px',padding:'0 12px 0 42px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
                     />
                     {showHistory && (
                       <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:'6px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',borderRadius:'10px',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,0.7)',zIndex:100}}>
@@ -4692,7 +4824,7 @@ export default function Veluna() {
                   </div>
                   <button onClick={() => { setShowHistory(false); searchMusic(); }}
                     disabled={isSearching || !searchQuery.trim()}
-                    style={{height:'42px',padding:'0 16px',borderRadius:'9px',border:'1px solid var(--v-bdr2)',background:'var(--v-bg2)',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'6px',flexShrink:0,transition:'border-color .15s,color .15s,background .15s',whiteSpace:'nowrap'}}
+                    style={{height:'42px',padding:'0 16px',borderRadius:'21px',border:'1px solid var(--v-bdr2)',background:'var(--v-bg2)',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'6px',flexShrink:0,transition:'border-color .15s,color .15s,background .15s',whiteSpace:'nowrap'}}
                     onMouseEnter={e=>{if(!isSearching&&searchQuery.trim()){(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';}}}
                     onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='var(--v-bg2)';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';}}>
                     {isSearching ? <div style={{width:'14px',height:'14px',border:'2px solid #5c5755',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} /> : <Search size={15} />}
@@ -4702,7 +4834,7 @@ export default function Veluna() {
                     <button
                       onClick={() => { setActiveNav('settings'); }}
                       title={`Update available — v${updateAvailable}`}
-                      style={{flexShrink:0,width:"42px",height:"42px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"9px",border:"1px solid var(--v-bdr2)",background:"var(--v-bg2)",cursor:"pointer",position:"relative"}}
+                      style={{flexShrink:0,width:"42px",height:"42px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"21px",border:"1px solid var(--v-bdr2)",background:"var(--v-bg2)",cursor:"pointer",position:"relative"}}
                     >
                       <Info size={17} />
                       <span style={{position:"absolute",top:"5px",right:"5px",width:"6px",height:"6px",borderRadius:"50%",background:"#9e9894"}}/>
@@ -5679,6 +5811,7 @@ export default function Veluna() {
               onChangeFolder={handleSelectDirectory}
               activeNav={activeNav}
               refreshNonce={localRefreshNonce}
+              setTracksRef={downloadsPanelSetTracksRef}
               onCtx={(e, localTrack) => {
                 const synth: Track = {
                   id: -1,
@@ -5696,49 +5829,241 @@ export default function Veluna() {
           {}
           {activeNav === 'library' && (
             openPlaylist ? (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
-                <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }} style={{display:"flex",alignItems:"center",gap:"7px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",marginBottom:"20px",padding:0,transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
-                  <ChevronLeft size={18} style={{flexShrink:0}}/>
-                  <span style={{fontSize:"13px",fontWeight:500}}>Playlists</span>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10,position:"relative"}}>
+                {getPlaylistCover(openPlaylist) ? (
+                  <div style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: "360px",
+                    backgroundImage: `url(${getPlaylistCover(openPlaylist)})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    filter: "blur(60px) opacity(0.2)",
+                    pointerEvents: "none",
+                    zIndex: 0
+                  }} />
+                ) : (
+                  <div style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: "360px",
+                    background: openPlaylist.id === "p1"
+                      ? "linear-gradient(180deg, rgba(224,85,85,0.08) 0%, rgba(0,0,0,0) 100%)"
+                      : "linear-gradient(180deg, rgba(226,221,217,0.05) 0%, rgba(0,0,0,0) 100%)",
+                    pointerEvents: "none",
+                    zIndex: 0
+                  }} />
+                )}
+                <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }}
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    display:"flex",
+                    alignItems:"center",
+                    justifyContent:"center",
+                    width:"36px",
+                    height:"36px",
+                    borderRadius:"50%",
+                    color:"#9e9894",
+                    background:"rgba(255,255,255,0.03)",
+                    border:"1px solid rgba(255,255,255,0.05)",
+                    cursor:"pointer",
+                    marginBottom:"24px",
+                    padding:0,
+                    transition:"all .2s cubic-bezier(0.2,0,0,1)"
+                  }}
+                  onMouseEnter={e=>{
+                    e.currentTarget.style.color="#e2ddd9";
+                    e.currentTarget.style.background="rgba(255,255,255,0.08)";
+                    e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";
+                    e.currentTarget.style.transform="scale(1.05)";
+                  }}
+                  onMouseLeave={e=>{
+                    e.currentTarget.style.color="#9e9894";
+                    e.currentTarget.style.background="rgba(255,255,255,0.03)";
+                    e.currentTarget.style.borderColor="rgba(255,255,255,0.05)";
+                    e.currentTarget.style.transform="scale(1)";
+                  }}>
+                  <ChevronLeft size={20} style={{flexShrink:0}}/>
                 </button>
-                <div style={{display:"flex",alignItems:"flex-end",gap:"18px",marginBottom:"18px"}}>
-                  <div style={{width:"100px",height:"100px",borderRadius:"12px",background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(140,30,30,0.3) 0%,var(--v-bdr2) 100%)":"var(--v-bdr2)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",overflow:"hidden",cursor:openPlaylist.id!=="p1"?"pointer":"default"}}
-                    onClick={()=>openPlaylist.id!=='p1'&&handleCoverUpload(openPlaylist.id)} onMouseEnter={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='1';}} onMouseLeave={e=>{const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;if(ov)ov.style.opacity='0';}}>
-                    <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                      {openPlaylist.id === 'p1' ? <Heart size={48} style={{color:'#e05555',fill:'rgba(220,60,60,0.2)'}} /> : <ListMusic size={48} style={{color:'#5c5755'}} />}
+                <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"flex-end",gap:"24px",marginBottom:"28px"}}>
+                  <div style={{
+                    width:"140px",
+                    height:"140px",
+                    borderRadius:"16px",
+                    background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.02) 100%)":"rgba(255,255,255,0.02)",
+                    border:"1px solid rgba(255,255,255,0.06)",
+                    boxShadow:"0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02)",
+                    display:"flex",
+                    alignItems:"center",
+                    justifyContent:"center",
+                    flexShrink:0,
+                    position:"relative",
+                    overflow:"hidden",
+                    cursor:openPlaylist.id!=="p1"?"pointer":"default",
+                    transition:"transform 0.3s cubic-bezier(0.2,0,0,1)"
+                  }}
+                    onClick={()=>openPlaylist.id!=='p1'&&handleCoverUpload(openPlaylist.id)}
+                    onMouseEnter={e=>{
+                      e.currentTarget.style.transform="scale(1.03)";
+                      const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;
+                      if(ov)ov.style.opacity='1';
+                    }}
+                    onMouseLeave={e=>{
+                      e.currentTarget.style.transform="scale(1)";
+                      const ov=e.currentTarget.querySelector('.pl-cover-ov') as HTMLElement;
+                      if(ov)ov.style.opacity='0';
+                    }}>
+                    <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      {openPlaylist.id==='p1'?<Heart size={56} style={{color:'#e05555',fill:'rgba(224,85,85,0.15)'}}/>:<ListMusic size={56} style={{color:'rgba(255,255,255,0.12)'}}/>}
                     </div>
                     {getPlaylistCover(openPlaylist) && (
-                      <img src={getPlaylistCover(openPlaylist)!} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                      <img src={getPlaylistCover(openPlaylist)!} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.currentTarget.style.display='none';}} alt=""/>
                     )}
-                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}><ImagePlus size={20} style={{color:"#e2ddd9"}}/></div>}
+                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}><ImagePlus size={24} style={{color:"#e2ddd9"}}/></div>}
                   </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#5c5755",marginBottom:"4px"}}>Playlist</p>
-                    <h2 style={{fontSize:"20px",fontWeight:800,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",margin:0}}>{openPlaylist.name}</h2>
+                  <div style={{flex:1,minWidth:0,paddingBottom:"4px"}}>
+                    <span style={{
+                      fontSize:"10.5px",
+                      fontWeight:700,
+                      letterSpacing:".18em",
+                      textTransform:"uppercase",
+                      color:openPlaylist.id==='p1'?'#ff5e5e':'#8a807c',
+                      display:"block",
+                      marginBottom:"6px"
+                    }}>
+                      Playlist
+                    </span>
+                    <h2 style={{
+                      fontSize:"32px",
+                      fontWeight:900,
+                      color:"#e2ddd9",
+                      overflow:"hidden",
+                      textOverflow:"ellipsis",
+                      whiteSpace:"nowrap",
+                      margin:0,
+                      letterSpacing:"-0.02em"
+                    }}>
+                      {openPlaylist.name}
+                    </h2>
                     {openPlaylist.description && openPlaylist.description.trim() && (
-                      <p style={{fontSize:"12px",color:"#5c5755",marginTop:"3px"}}>{openPlaylist.description}</p>
+                      <p style={{
+                        fontSize:"13px",
+                        color:"#8a807c",
+                        marginTop:"6px",
+                        marginBottom:0,
+                        lineHeight:"1.4",
+                        maxWidth:"600px",
+                        overflowWrap:"anywhere"
+                      }}>
+                        {openPlaylist.description}
+                      </p>
                     )}
-                    <p style={{fontSize:"12px",color:"#363230",marginTop:"2px"}}>{openPlaylist.tracks.length} {openPlaylist.tracks.length === 1 ? 'track' : 'tracks'}</p>
-                    <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"14px"}}>
-                      <button onClick={() => playAll(openPlaylist.tracks)} disabled={!openPlaylist.tracks.length}
-                        style={{display:"flex",alignItems:"center",gap:"7px",padding:"7px 16px",background:"#e2ddd9",color:"var(--v-bg0)",fontWeight:700,borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"12.5px",opacity:openPlaylist.tracks.length?1:0.4}}>
-                        <Play size={16} fill="currentColor" /> Play All
+                    <div style={{
+                      display:"flex",
+                      alignItems:"center",
+                      gap:"6px",
+                      fontSize:"12px",
+                      color:"#5c5755",
+                      marginTop:"8px"
+                    }}>
+                      <span style={{fontWeight:600,color:"#8a807c"}}>{openPlaylist.tracks.length} {openPlaylist.tracks.length===1?'song':'songs'}</span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:"10px",marginTop:"18px"}}>
+                      <button onClick={()=>playAll(openPlaylist.tracks)} disabled={!openPlaylist.tracks.length}
+                        style={{
+                          display:"flex",
+                          alignItems:"center",
+                          gap:"8px",
+                          padding:"9px 20px",
+                          background:"linear-gradient(135deg,#e2ddd9 0%,#c8beba 100%)",
+                          color:"var(--v-bg0)",
+                          fontWeight:800,
+                          borderRadius:"10px",
+                          border:"none",
+                          cursor:"pointer",
+                          fontSize:"13px",
+                          opacity:openPlaylist.tracks.length?1:0.4,
+                          boxShadow:"0 4px 15px rgba(226,221,217,0.15)",
+                          transition:"all 0.2s cubic-bezier(0.2,0,0,1)"
+                        }}
+                        onMouseEnter={e=>{
+                          if(openPlaylist.tracks.length){
+                            e.currentTarget.style.transform="translateY(-1px)";
+                            e.currentTarget.style.boxShadow="0 6px 20px rgba(226,221,217,0.25)";
+                          }
+                        }}
+                        onMouseLeave={e=>{
+                          e.currentTarget.style.transform="translateY(0)";
+                          e.currentTarget.style.boxShadow="0 4px 15px rgba(226,221,217,0.15)";
+                        }}>
+                        <Play size={16} fill="currentColor"/> Play All
                       </button>
-                      <button onClick={() => { setRenamingPlaylist(openPlaylist); setRenameVal(openPlaylist.name); setRenameDescVal(openPlaylist.description); }}
-                        style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid var(--v-bdr2)",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#9e9894";e.currentTarget.style.borderColor="var(--v-bdr3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
-                        <Pencil size={14} /> Edit
+                      <button onClick={()=>{setRenamingPlaylist(openPlaylist);setRenameVal(openPlaylist.name);setRenameDescVal(openPlaylist.description);}}
+                        style={{
+                          display:"flex",
+                          alignItems:"center",
+                          gap:"6px",
+                          padding:"9px 14px",
+                          color:"#e2ddd9",
+                          borderRadius:"10px",
+                          background:"rgba(255,255,255,0.03)",
+                          border:"1px solid rgba(255,255,255,0.06)",
+                          fontSize:"13px",
+                          fontWeight:600,
+                          cursor:"pointer",
+                          transition:"all .2s cubic-bezier(0.2,0,0,1)"
+                        }}
+                        onMouseEnter={e=>{
+                          e.currentTarget.style.background="rgba(255,255,255,0.08)";
+                          e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";
+                          e.currentTarget.style.transform="translateY(-1px)";
+                        }}
+                        onMouseLeave={e=>{
+                          e.currentTarget.style.background="rgba(255,255,255,0.03)";
+                          e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";
+                          e.currentTarget.style.transform="translateY(0)";
+                        }}>
+                        <Pencil size={14}/> Edit
                       </button>
                       {openPlaylist.id !== 'p1' && (
-                        <button onClick={() => { deletePlaylist(openPlaylist.id); setOpenPlaylistId(null); }}
-                          style={{display:"flex",alignItems:"center",gap:"6px",padding:"7px 12px",color:"#5c5755",borderRadius:"8px",background:"transparent",border:"1px solid var(--v-bdr2)",fontSize:"12.5px",fontWeight:500,cursor:"pointer",transition:"color .12s,border-color .12s"}} onMouseEnter={e=>{e.currentTarget.style.color="#a05050";e.currentTarget.style.borderColor="rgba(160,40,40,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="var(--v-bdr2)";}}>
-                          <Trash2 size={14} /> Delete
+                        <button onClick={()=>{deletePlaylist(openPlaylist.id);setOpenPlaylistId(null);}}
+                          style={{
+                            display:"flex",
+                            alignItems:"center",
+                            gap:"6px",
+                            padding:"9px 14px",
+                            color:"#ff7070",
+                            borderRadius:"10px",
+                            background:"rgba(220,60,60,0.02)",
+                            border:"1px solid rgba(220,60,60,0.08)",
+                            fontSize:"13px",
+                            fontWeight:600,
+                            cursor:"pointer",
+                            transition:"all .2s cubic-bezier(0.2,0,0,1)"
+                          }}
+                          onMouseEnter={e=>{
+                            e.currentTarget.style.background="rgba(220, 60, 60, 0.15)";
+                            e.currentTarget.style.borderColor="rgba(220, 60, 60, 0.3)";
+                            e.currentTarget.style.transform="translateY(-1px)";
+                          }}
+                          onMouseLeave={e=>{
+                            e.currentTarget.style.background="rgba(220,60,60,0.02)";
+                            e.currentTarget.style.borderColor="rgba(220,60,60,0.08)";
+                            e.currentTarget.style.transform="translateY(0)";
+                          }}>
+                          <Trash2 size={14}/> Delete
                         </button>
                       )}
                     </div>
                   </div>
                 </div>
                 {openPlaylist.tracks.length === 0
-                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"10px"}}><Music size={28} strokeWidth={1} /><p style={{fontSize:"13px"}}>No tracks yet.</p></div>
+                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"10px",position:"relative",zIndex:1}}><Music size={28} strokeWidth={1}/><p style={{fontSize:"13px"}}>No tracks yet.</p></div>
                   : (() => {
                       const q = playlistSearchQ.trim().toLowerCase();
                       const filteredTracks = q
@@ -5749,21 +6074,60 @@ export default function Veluna() {
                           })
                         : openPlaylist.tracks;
                       return (
-                        <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
-                          <div style={{position:"relative",marginBottom:"10px"}}>
-                            <Search size={14} style={{position:"absolute",left:"10px",top:"50%",transform:"translateY(-50%)",color:"#5c5755",pointerEvents:"none"}} />
+                        <div style={{display:"flex",flexDirection:"column",gap:"4px",position:"relative",zIndex:1}}>
+                          <div style={{position:"relative",marginBottom:"18px"}}>
+                            <Search size={15} style={{position:"absolute",left:"12px",top:"50%",transform:"translateY(-50%)",color:"#5c5755",pointerEvents:"none"}} />
                             <input
                               type="text"
                               value={playlistSearchQ}
                               onChange={e => setPlaylistSearchQ(e.target.value)}
                               placeholder="Search in playlist..."
-                              style={{width:"100%",background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"9px",padding:"9px 32px",fontSize:"13.5px",color:"#e2ddd9",outline:"none",boxSizing:"border-box"}}
+                              style={{
+                                width:"100%",
+                                background:"rgba(255,255,255,0.02)",
+                                border:"1px solid rgba(255,255,255,0.05)",
+                                borderRadius:"21px",
+                                padding:"10px 38px",
+                                fontSize:"14px",
+                                color:"#e2ddd9",
+                                outline:"none",
+                                boxSizing:"border-box",
+                                transition:"all 0.2s cubic-bezier(0.2,0,0,1)"
+                              }}
+                              onFocus={e => {
+                                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                                e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                                e.currentTarget.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.1)";
+                              }}
+                              onBlur={e => {
+                                e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                                e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
+                                e.currentTarget.style.boxShadow = "none";
+                              }}
                             />
                             {playlistSearchQ && (
-                              <button onClick={() => setPlaylistSearchQ('')} style={{position:"absolute",right:"8px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex"}}>
-                                <X size={13} />
+                              <button onClick={() => setPlaylistSearchQ('')} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
+                                <X size={15} />
                               </button>
                             )}
+                          </div>
+                          <div style={{
+                            display:"flex",
+                            alignItems:"center",
+                            padding:"8px 12px",
+                            color:"#5c5755",
+                            fontSize:"11px",
+                            fontWeight:700,
+                            letterSpacing:"0.1em",
+                            textTransform:"uppercase",
+                            borderBottom:"1px solid rgba(255,255,255,0.03)",
+                            marginBottom:"6px"
+                          }}>
+                            {!playlistSearchQ && <div style={{ width: "22px", flexShrink: 0 }} />}
+                            <div style={{ width: "30px", flexShrink: 0, textAlign: "center" }}>#</div>
+                            <div style={{ width: "50px", flexShrink: 0, marginLeft: "14px" }} />
+                            <div style={{ flex: 1, minWidth: 0, paddingLeft: "14px" }}>Title</div>
+                            <div style={{ width: "150px", textAlign: "right", paddingRight: "12px" }}>Duration</div>
                           </div>
                           {filteredTracks.length === 0
                             ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"110px",color:"#363230",gap:"7px"}}><Search size={24} strokeWidth={1} /><p style={{fontSize:"13px",color:"#5c5755"}}>No results for "{playlistSearchQ}"</p></div>
@@ -6365,6 +6729,7 @@ export default function Veluna() {
               discordRpcEnabled={discordRpcEnabled} setDiscordRpcEnabled={setDiscordRpcEnabled}
               theme={theme} setThemeState={setThemeState}
               accentColor={accentColor} setAccentColorState={setAccentColorState}
+              customBgColor={customBgColor} setCustomBgColorState={setCustomBgColorState}
             />
           )}
           </div>
@@ -6394,127 +6759,50 @@ export default function Veluna() {
 
             return (
               <>
-                <div style={{display:'flex',flexDirection:'column',borderBottom:'1px solid var(--v-bdr2)',flexShrink:0}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px 10px'}}>
-                    <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px',letterSpacing:'.01em'}}>Play Queue</span>
-                    <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                      {queueTab === 'queue' && queue.length > 0 && (
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderBottom:'1px solid var(--v-bdr2)',flexShrink:0}}>
+                  <span style={{fontWeight:700,color:'#e2ddd9',fontSize:'13px',letterSpacing:'.01em'}}>Play Queue</span>
+                  <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                    {queue.length > 0 && (
+                      <button 
+                        onClick={handleSaveQueueAsPlaylist}
+                        title="Save Queue as Playlist"
+                        style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s',display:'flex',alignItems:'center',gap:'3px'}}
+                        onMouseEnter={e=>(e.currentTarget.style.color='#e2ddd9')}
+                        onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
+                      >
+                        <ListPlus size={13} />
+                        <span>Save</span>
+                      </button>
+                    )}
+                    {queue.length > 0 && (
+                      showClearConfirm ? (
+                        <div style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'11px'}}>
+                          <span style={{color:'#b05555',fontWeight:500}}>Clear?</span>
+                          <button 
+                            onClick={() => { setQueue([]); setShowClearConfirm(false); showToast('Queue cleared'); }} 
+                            style={{background:'none',border:'none',cursor:'pointer',fontWeight:700,color:'#b05555',padding:0}}
+                          >
+                            Yes
+                          </button>
+                          <span style={{color:'#363230'}}>|</span>
+                          <button 
+                            onClick={() => setShowClearConfirm(false)} 
+                            style={{background:'none',border:'none',cursor:'pointer',fontWeight:500,color:'#5c5755',padding:0}}
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
                         <button 
-                          onClick={handleSaveQueueAsPlaylist}
-                          title="Save Queue as Playlist"
-                          style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s',display:'flex',alignItems:'center',gap:'3px'}}
-                          onMouseEnter={e=>(e.currentTarget.style.color='#e2ddd9')}
+                          onClick={() => setShowClearConfirm(true)} 
+                          style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} 
+                          onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} 
                           onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
                         >
-                          <ListPlus size={13} />
-                          <span>Save</span>
+                          Clear
                         </button>
-                      )}
-                      {queueTab === 'queue' && queue.length > 0 && (
-                        showClearConfirm ? (
-                          <div style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'11px'}}>
-                            <span style={{color:'#b05555',fontWeight:500}}>Clear?</span>
-                            <button 
-                              onClick={() => { setQueue([]); setShowClearConfirm(false); showToast('Queue cleared'); }} 
-                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:700,color:'#b05555',padding:0}}
-                            >
-                              Yes
-                            </button>
-                            <span style={{color:'#363230'}}>|</span>
-                            <button 
-                              onClick={() => setShowClearConfirm(false)} 
-                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:500,color:'#5c5755',padding:0}}
-                            >
-                              No
-                            </button>
-                          </div>
-                        ) : (
-                          <button 
-                            onClick={() => setShowClearConfirm(true)} 
-                            style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} 
-                            onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} 
-                            onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
-                          >
-                            Clear
-                          </button>
-                        )
-                      )}
-                      {queueTab === 'history' && playHistory.length > 0 && (
-                        showClearConfirm ? (
-                          <div style={{display:'flex',alignItems:'center',gap:'5px',fontSize:'11px'}}>
-                            <span style={{color:'#b05555',fontWeight:500}}>Clear?</span>
-                            <button 
-                              onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); setShowClearConfirm(false); showToast('History cleared'); }} 
-                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:700,color:'#b05555',padding:0}}
-                            >
-                              Yes
-                            </button>
-                            <span style={{color:'#363230'}}>|</span>
-                            <button 
-                              onClick={() => setShowClearConfirm(false)} 
-                              style={{background:'none',border:'none',cursor:'pointer',fontWeight:500,color:'#5c5755',padding:0}}
-                            >
-                              No
-                            </button>
-                          </div>
-                        ) : (
-                          <button 
-                            onClick={() => setShowClearConfirm(true)} 
-                            style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:500,color:'#5c5755',transition:'color .12s'}} 
-                            onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} 
-                            onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}
-                          >
-                            Clear
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </div>
-                  <div style={{display:'flex',background:'var(--v-bg1)'}}>
-                    <button 
-                      onClick={() => selectQueueTab('queue')}
-                      style={{
-                        flex: 1,
-                        background: 'none',
-                        border: 'none',
-                        borderBottom: queueTab === 'queue' ? '2px solid #e2ddd9' : '2px solid transparent',
-                        color: queueTab === 'queue' ? '#e2ddd9' : '#5c5755',
-                        padding: '10px 0',
-                        fontSize: '12px',
-                        fontWeight: queueTab === 'queue' ? 700 : 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '5px'
-                      }}
-                    >
-                      <span>Queue</span>
-                      {queue.length > 0 && <span className="v-badge" style={{fontSize:'9px',padding:'1px 4px'}}>{queue.length}</span>}
-                    </button>
-                    <button 
-                      onClick={() => selectQueueTab('history')}
-                      style={{
-                        flex: 1,
-                        background: 'none',
-                        border: 'none',
-                        borderBottom: queueTab === 'history' ? '2px solid #e2ddd9' : '2px solid transparent',
-                        color: queueTab === 'history' ? '#e2ddd9' : '#5c5755',
-                        padding: '10px 0',
-                        fontSize: '12px',
-                        fontWeight: queueTab === 'history' ? 700 : 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '5px'
-                      }}
-                    >
-                      <span>History</span>
-                      {playHistory.length > 0 && <span className="v-badge" style={{fontSize:'9px',padding:'1px 4px'}}>{playHistory.length}</span>}
-                    </button>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -6539,217 +6827,158 @@ export default function Veluna() {
                 )}
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  {queueTab === 'queue' ? (
-                    queue.length === 0 && contextualTracks.length === 0 ? (
-                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"180px",color:"#363230",gap:"8px"}}>
-                        <ListOrdered size={26} strokeWidth={1} />
-                        <p style={{fontSize:"13px"}}>Queue is empty</p>
-                      </div>
-                    ) : (
-                      <>
-                        {queue.length > 0 && (
-                          <>
-                            <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'14px 16px 8px'}}>Manually Queued</div>
-                            {queue.map((track, i) => (
-                              <div key={`${track.url}-${i}`}
-                                className={`v-queue-item${currentTrack?.url===track.url?' v-queue-item--active':''}`} style={{position:'relative'}}
-                                onMouseEnter={() => { if (dragQueueIdx.current !== null) { dragOverQueueIdxRef.current = i; setDragOverQueueIdx(i); } }}
-                                onContextMenu={e => openCtx(e, { type: 'queue-track', track })}>
-                                {dragOverQueueIdx === i && dragQueueIdx.current !== null && dragQueueIdx.current !== i && (
-                                  <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />
-                                )}
-                                <div style={{width:"20px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}
-                                  onMouseDown={e => {
-                                    e.preventDefault();
-                                    dragQueueIdx.current = i;
-                                    dragOverQueueIdxRef.current = i;
-                                    setDragOverQueueIdx(i);
-                                    const onUp = () => {
-                                      const from = dragQueueIdx.current;
-                                      const to = dragOverQueueIdxRef.current;
-                                      dragQueueIdx.current = null;
-                                      dragOverQueueIdxRef.current = null;
-                                      setDragOverQueueIdx(null);
-                                      window.removeEventListener('mouseup', onUp);
-                                      if (from === null || to === null || from === to) return;
-                                      setQueue(prev => {
-                                        const next = [...prev];
-                                        const [moved] = next.splice(from, 1);
-                                        next.splice(to, 0, moved);
-                                        return next;
-                                      });
-                                    };
-                                    window.addEventListener('mouseup', onUp);
-                                  }}>
-                                  <div style={{width:"18px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"grab"}}>
-                                    <span className="v-queue-drag-index" style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums"}}>{i+1}</span>
-                                    <div className="v-queue-drag-icon">
-                                      <svg width="9" height="13" viewBox="0 0 10 14" fill="#5c5755"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
-                                  onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
-                                  <div style={{
-                                    width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
-                                    position: "relative",
-                                    background: getTrackGradient(track.title, track.artist),
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center"
-                                  }}>
-                                    <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                                    {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
-                                  </div>
-                                  <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
-                                    <Play size={12} fill="currentColor" />
-                                  </div>
-                                </div>
-                                <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
-                                  <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
-                                  {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
-                                </div>
-                                <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
-                                  <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
-                                    {track.duration || '0:00'}
-                                  </span>
-                                  <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
-                                    <button 
-                                      onClick={e => { e.stopPropagation(); removeFromQueueByIndex(i); }} 
-                                      title="Remove from queue"
-                                      style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
-                                      onMouseEnter={e => { e.currentTarget.style.color = "#b05555"; }}
-                                      onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
-                                    >
-                                      <X size={13} />
-                                    </button>
+                  {queue.length === 0 && contextualTracks.length === 0 ? (
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"180px",color:"#363230",gap:"8px"}}>
+                      <ListOrdered size={26} strokeWidth={1} />
+                      <p style={{fontSize:"13px"}}>Queue is empty</p>
+                    </div>
+                  ) : (
+                    <>
+                      {queue.length > 0 && (
+                        <>
+                          <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'14px 16px 8px'}}>Manually Queued</div>
+                          {queue.map((track, i) => (
+                            <div key={`${track.url}-${i}`}
+                              className={`v-queue-item${currentTrack?.url===track.url?' v-queue-item--active':''}`} style={{position:'relative'}}
+                              onMouseEnter={() => { if (dragQueueIdx.current !== null) { dragOverQueueIdxRef.current = i; setDragOverQueueIdx(i); } }}
+                              onContextMenu={e => openCtx(e, { type: 'queue-track', track })}>
+                              {dragOverQueueIdx === i && dragQueueIdx.current !== null && dragQueueIdx.current !== i && (
+                                <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />
+                              )}
+                              <div style={{width:"20px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}
+                                onMouseDown={e => {
+                                  e.preventDefault();
+                                  dragQueueIdx.current = i;
+                                  dragOverQueueIdxRef.current = i;
+                                  setDragOverQueueIdx(i);
+                                  const onUp = () => {
+                                    const from = dragQueueIdx.current;
+                                    const to = dragOverQueueIdxRef.current;
+                                    dragQueueIdx.current = null;
+                                    dragOverQueueIdxRef.current = null;
+                                    setDragOverQueueIdx(null);
+                                    window.removeEventListener('mouseup', onUp);
+                                    if (from === null || to === null || from === to) return;
+                                    setQueue(prev => {
+                                      const next = [...prev];
+                                      const [moved] = next.splice(from, 1);
+                                      next.splice(to, 0, moved);
+                                      return next;
+                                    });
+                                  };
+                                  window.addEventListener('mouseup', onUp);
+                                }}>
+                                <div style={{width:"18px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"grab"}}>
+                                  <span className="v-queue-drag-index" style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums"}}>{i+1}</span>
+                                  <div className="v-queue-drag-icon">
+                                    <svg width="9" height="13" viewBox="0 0 10 14" fill="#5c5755"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
                                   </div>
                                 </div>
                               </div>
-                            ))}
-                          </>
-                        )}
-
-                        {contextualTracks.length > 0 && (
-                          <>
-                            <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'20px 16px 8px'}}>
-                              Next from {getContextSourceLabel()}
-                            </div>
-                            {contextualTracks.map((track, i) => (
-                              <div key={`${track.url}-${i}`}
-                                className="v-queue-item" style={{position:'relative', paddingLeft: '16px'}}
-                                onContextMenu={e => openCtx(e, { type: 'track', track })}>
-                                
-                                <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
-                                  onClick={() => {
-                                    if (playlistContextRef.current) {
-                                      handlePlayInContext(track, playlistContextRef.current.tracks);
-                                    }
-                                  }}>
-                                  <div style={{
-                                    width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
-                                    position: "relative",
-                                    background: getTrackGradient(track.title, track.artist),
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center"
-                                  }}>
-                                    <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                                    {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
-                                  </div>
-                                  <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
-                                    <Play size={12} fill="currentColor" />
-                                  </div>
+                              <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
+                                onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                                <div style={{
+                                  width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
+                                  position: "relative",
+                                  background: getTrackGradient(track.title, track.artist),
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
+                                }}>
+                                  <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                  {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
                                 </div>
-                                
-                                <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={() => {
+                                <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
+                                  <Play size={12} fill="currentColor" />
+                                </div>
+                              </div>
+                              <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={()=>{if(dragQueueIdx.current===null){setQueue(p=>p.filter((_,idx)=>idx!==i));handlePlayTrack(track,true);}}}>
+                                <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:currentTrack?.url===track.url?"#e2ddd9":"#c8c4c0"}}>{track.title}</div>
+                                {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
+                              </div>
+                              <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
+                                <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
+                                  {track.duration || '0:00'}
+                                </span>
+                                <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
+                                  <button 
+                                    onClick={e => { e.stopPropagation(); removeFromQueueByIndex(i); }} 
+                                    title="Remove from queue"
+                                    style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                                    onMouseEnter={e => { e.currentTarget.style.color = "#b05555"; }}
+                                    onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {contextualTracks.length > 0 && (
+                        <>
+                          <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'20px 16px 8px'}}>
+                            Next from {getContextSourceLabel()}
+                          </div>
+                          {contextualTracks.map((track, i) => (
+                            <div key={`${track.url}-${i}`}
+                              className="v-queue-item" style={{position:'relative', paddingLeft: '16px'}}
+                              onContextMenu={e => openCtx(e, { type: 'track', track })}>
+                              
+                              <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
+                                onClick={() => {
                                   if (playlistContextRef.current) {
                                     handlePlayInContext(track, playlistContextRef.current.tracks);
                                   }
                                 }}>
-                                  <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#c8c4c0"}}>{track.title}</div>
-                                  {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
+                                <div style={{
+                                  width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
+                                  position: "relative",
+                                  background: getTrackGradient(track.title, track.artist),
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
+                                }}>
+                                  <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
+                                  {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
                                 </div>
-
-                                <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
-                                  <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
-                                    {track.duration || '0:00'}
-                                  </span>
-                                  <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
-                                    <button 
-                                      onClick={e => { e.stopPropagation(); setQueue(prev => [...prev, track]); showToast('Added to queue'); }} 
-                                      title="Add to queue"
-                                      style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
-                                      onMouseEnter={e => { e.currentTarget.style.color = "#e2ddd9"; }}
-                                      onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
-                                    >
-                                      <ListPlus size={13} />
-                                    </button>
-                                  </div>
+                                <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
+                                  <Play size={12} fill="currentColor" />
                                 </div>
                               </div>
-                            ))}
-                          </>
-                        )}
-                      </>
-                    )
-                  ) : (
-                    playHistory.length === 0 ? (
-                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"180px",color:"#363230",gap:"8px"}}>
-                        <Clock size={26} strokeWidth={1} />
-                        <p style={{fontSize:"13px"}}>History is empty</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#5c5755',padding:'14px 16px 8px'}}>Recently Played</div>
-                        {playHistory.map((track, i) => (
-                          <div key={`${track.url}-${i}`}
-                            className="v-queue-item" style={{position:'relative', paddingLeft: '16px'}}
-                            onContextMenu={e => openCtx(e, { type: 'track', track })}>
-                            
-                            <div className="v-queue-cover-container" style={{position:'relative',width:'36px',height:'36px',borderRadius:'6px',overflow:'hidden',flexShrink:0,cursor:'pointer'}}
-                              onClick={() => handlePlayTrack(track, true)}>
-                              <div style={{
-                                width:"100%",height:"100%",border:"1px solid rgba(255,255,255,0.05)",
-                                position: "relative",
-                                background: getTrackGradient(track.title, track.artist),
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
+                              
+                              <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={() => {
+                                if (playlistContextRef.current) {
+                                  handlePlayInContext(track, playlistContextRef.current.tracks);
+                                }
                               }}>
-                                <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                                {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
+                                <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#c8c4c0"}}>{track.title}</div>
+                                {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
                               </div>
-                              <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
-                                <Play size={12} fill="currentColor" />
-                              </div>
-                            </div>
-                            
-                            <div style={{flex:1,minWidth:0,cursor:"pointer",marginLeft:'10px'}} onClick={() => handlePlayTrack(track, true)}>
-                              <div style={{fontSize:"12.5px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#c8c4c0"}}>{track.title}</div>
-                              {cleanArtist(track.artist) && <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:"1px"}}>{cleanArtist(track.artist)}</div>}
-                            </div>
 
-                            <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
-                              <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
-                                {track.duration || '0:00'}
-                              </span>
-                              <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
-                                <button 
-                                  onClick={e => { e.stopPropagation(); removeFromHistory(i); }} 
-                                  title="Remove from history"
-                                  style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
-                                  onMouseEnter={e => { e.currentTarget.style.color = "#b05555"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
-                                >
-                                  <X size={13} />
-                                </button>
+                              <div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0,marginRight:'14px'}}>
+                                <span className="v-queue-duration" style={{fontSize:'11px',color:'#5c5755',fontVariantNumeric:'tabular-nums'}}>
+                                  {track.duration || '0:00'}
+                                </span>
+                                <div className="v-queue-actions" style={{alignItems:'center',gap:'4px'}}>
+                                  <button 
+                                    onClick={e => { e.stopPropagation(); setQueue(prev => [...prev, track]); showToast('Added to queue'); }} 
+                                    title="Add to queue"
+                                    style={{padding:"4px",border:"none",background:"none",cursor:"pointer",color:"#5c5755",borderRadius:"4px",display:"flex",transition:"color .12s"}}
+                                    onMouseEnter={e => { e.currentTarget.style.color = "#e2ddd9"; }}
+                                    onMouseLeave={e => { e.currentTarget.style.color = "#5c5755"; }}
+                                  >
+                                    <ListPlus size={13} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </>
-                    )
+                          ))}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
               </>
@@ -6978,7 +7207,16 @@ export default function Veluna() {
           return (
             <div className="v-ctx" style={{position:'fixed',zIndex:9999,width:'220px',top:ctxMenu.y,left:ctxMenu.x}} onClick={e => e.stopPropagation()}>
               <div className="v-ctx__header">
-                <div className="v-ctx__art"><img src={track.cover} alt="" /></div>
+                <div className="v-ctx__art" style={{
+                  position: 'relative',
+                  background: getTrackGradient(track.title, track.artist),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Music size={14} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
+                  {track.cover && <img src={track.cover} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                </div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:'13px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{track.title}</div>
                   {cleanArtist(track.artist) && <div style={{fontSize:'11px',color:'#5c5755',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginTop:'2px'}}>{cleanArtist(track.artist)}</div>}
