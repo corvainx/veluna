@@ -1385,6 +1385,8 @@ function SettingsPanel({
   theme, setThemeState,
   accentColor, setAccentColorState,
   customBgColor, setCustomBgColorState,
+  autoCheckUpdates, setAutoCheckUpdates,
+  isCheckingUpdate, handleCheckUpdate,
 }: {
   downloadQuality: string; setDownloadQuality: (q: string) => void;
   downloadPath: string; handleSelectDirectory: () => void;
@@ -1409,6 +1411,8 @@ function SettingsPanel({
   theme: string; setThemeState: (t: string) => void;
   accentColor: string; setAccentColorState: (a: string) => void;
   customBgColor: string; setCustomBgColorState: (c: string) => void;
+  autoCheckUpdates: boolean; setAutoCheckUpdates: (v: boolean) => void;
+  isCheckingUpdate: boolean; handleCheckUpdate: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('playback');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1598,36 +1602,152 @@ function SettingsPanel({
             <div style={{
               borderRadius:"12px",
               border:updateAvailable?"1px solid rgba(226, 221, 217, 0.25)":"1px solid var(--v-bdr)",
-              padding:"16px",
+              padding:"20px",
               display:"flex",
-              alignItems:"flex-start",
-              gap:"14px",
+              alignItems:"center",
+              gap:"20px",
               background:updateAvailable?"rgba(226, 221, 217, 0.02)":"var(--v-bg0)",
-              transition:"all 0.2s"
+              transition:"all 0.2s",
+              position:"relative",
+              overflow:"hidden"
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(226, 221, 217, 0.4)' : 'var(--v-bdr3)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = updateAvailable ? 'rgba(226, 221, 217, 0.25)' : 'var(--v-bdr)'; }}
             >
-              <div style={{marginTop:"2px",flexShrink:0,color:updateAvailable?"#e2ddd9":"#5c5755"}}>
-                {updateAvailable ? <ArrowUpCircle size={20}/> : <CheckCircle size={20}/>}
+              <div style={{
+                position: "absolute",
+                top: "-20px",
+                left: "-20px",
+                width: "120px",
+                height: "120px",
+                background: "var(--v-accent)",
+                opacity: 0.05,
+                filter: "blur(30px)",
+                borderRadius: "50%",
+                pointerEvents: "none"
+              }} />
+
+              <div style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.2)",
+                flexShrink: 0,
+                position: "relative"
+              }}>
+                <div style={{
+                  position: "absolute",
+                  bottom: "-3px",
+                  right: "-3px",
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "50%",
+                  background: "var(--v-bg0)",
+                  border: `1px solid ${updateAvailable ? "rgba(226, 221, 217, 0.25)" : "var(--v-bdr)"}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: updateAvailable ? "#e2ddd9" : "var(--v-accent)"
+                }}>
+                  {updateAvailable ? <ArrowUpCircle size={11}/> : <CheckCircle size={11}/>}
+                </div>
+                <svg width="34" height="34" viewBox="0 0 28 28" fill="none" style={{
+                  flexShrink: 0,
+                  filter: "drop-shadow(0 2px 6px var(--v-accent))"
+                }}>
+                  <rect width="28" height="28" rx="6" fill="var(--v-accent)"/>
+                  <polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#0e0d0d"/>
+                  <polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="var(--v-accent)"/>
+                </svg>
               </div>
-              <div style={{flex:1,minWidth:0}}>
+
+              <div style={{flex:1,minWidth:0,position:"relative",zIndex:1}}>
                 {updateAvailable ? (
                   <>
-                    <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",marginBottom:"4px"}}>Update available — v{updateAvailable}</div>
-                    <div style={{fontSize:"11.5px",color:"#6f6966",marginBottom:"12px"}}>A new version of Veluna is ready to download. Features and stability updates await.</div>
+                    <div style={{fontSize:"13.5px",fontWeight:700,color:"#ffffff",marginBottom:"4px"}}>Update available — v{updateAvailable}</div>
+                    <div style={{fontSize:"11.5px",color:"#6f6966",lineHeight:1.4,marginBottom:"10px"}}>A new version of Veluna is ready to download. Features and stability updates await.</div>
                     <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna/releases/latest');}}
-                      style={{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",fontWeight:600,color:"#e2ddd9",textDecoration:"none"}}
+                      style={{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",fontWeight:600,color:"var(--v-accent)",textDecoration:"none"}}
                       onMouseEnter={e=>(e.currentTarget.style.textDecoration="underline")} onMouseLeave={e=>(e.currentTarget.style.textDecoration="none")}>
                       <ExternalLink size={12}/> View Release Notes on GitHub
                     </a>
                   </>
                 ) : (
                   <>
-                    <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",marginBottom:"4px"}}>You're up to date</div>
-                    <div style={{fontSize:"11.5px",color:"#6f6966"}}>Veluna v{appVersion} is currently the latest version.</div>
+                    <div style={{fontSize:"13.5px",fontWeight:700,color:"#ffffff",marginBottom:"4px"}}>You're up to date</div>
+                    <div style={{fontSize:"11.5px",color:"#6f6966",lineHeight:1.4,marginBottom:"10px"}}>Veluna v{appVersion} is currently the latest version.</div>
+                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna');}}
+                      style={{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",fontWeight:600,color:"var(--v-accent)",textDecoration:"none"}}
+                      onMouseEnter={e=>(e.currentTarget.style.textDecoration="underline")} onMouseLeave={e=>(e.currentTarget.style.textDecoration="none")}>
+                      <ExternalLink size={12}/> Visit GitHub Repository
+                    </a>
                   </>
                 )}
+              </div>
+            </div>
+
+            <div style={{borderRadius:"12px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",overflow:"hidden"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"1px solid #141312"}}>
+                <div>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Check Automatically on Startup</p>
+                  <p style={{fontSize:"11px",color:"#6f6966",marginTop:"4px"}}>Automatically check for new releases when launching Veluna</p>
+                </div>
+                <SettingsSwitch checked={autoCheckUpdates} onChange={() => setAutoCheckUpdates(!autoCheckUpdates)} />
+              </div>
+              
+              <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Manual Update Check</p>
+                  <p style={{fontSize:"11px",color:"#6f6966",marginTop:"4px"}}>Force a search for the latest version of Veluna on GitHub</p>
+                </div>
+                <button
+                  onClick={handleCheckUpdate}
+                  disabled={isCheckingUpdate}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "18px",
+                    background: isCheckingUpdate ? "rgba(255,255,255,0.02)" : "var(--v-accent)",
+                    color: isCheckingUpdate ? "#5c5755" : "var(--v-bg0)",
+                    border: "none",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: isCheckingUpdate ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "all 0.15s ease",
+                    boxShadow: isCheckingUpdate ? "none" : "0 2px 8px rgba(0,0,0,0.15)"
+                  }}
+                  onMouseEnter={e => {
+                    if (!isCheckingUpdate) {
+                      e.currentTarget.style.filter = "brightness(1.1)";
+                      e.currentTarget.style.transform = "scale(1.02)";
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isCheckingUpdate) {
+                      e.currentTarget.style.filter = "none";
+                      e.currentTarget.style.transform = "none";
+                    }
+                  }}
+                >
+                  {isCheckingUpdate ? (
+                    <>
+                      <div style={{width:"12px",height:"12px",border:"2px solid #5c5755",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw size={12} />
+                      Check Now
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -1820,16 +1940,16 @@ function SettingsPanel({
                       }}
                       onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(226,221,217,0.01)";}}
                       onMouseLeave={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                      <div style={{width:"28px",height:"28px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.02)"}`,background:isDefault?"rgba(226,221,217,0.03)":"#121111"}}>
+                      <div style={{width:"28px",height:"28px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"var(--v-accent)":"rgba(255,255,255,0.02)"}`,background:isDefault?"rgba(226,221,217,0.03)":"#121111"}}>
                         {dev.form === 'headphones'
-                          ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? '#e2ddd9' : '#5c5755'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                          : <Volume2 size={13} style={{color:isDefault?"#e2ddd9":"#5c5755"}}/>}
+                          ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? 'var(--v-accent)' : '#5c5755'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                          : <Volume2 size={13} style={{color:isDefault?"var(--v-accent)":"#5c5755"}}/>}
                       </div>
                       <div style={{flex:1,minWidth:0}}>
                         <p style={{fontSize:"13px",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isDefault?"#e2ddd9":"#8c8682"}}>{dev.name}</p>
                         {dev.form&&<p style={{fontSize:"10px",color:"#5c5755",textTransform:"capitalize",marginTop:"2px"}}>{dev.form}</p>}
                       </div>
-                      {isDefault&&<span style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"9px",fontWeight:700,color:"#e2ddd9",flexShrink:0,letterSpacing:".06em"}}><span style={{width:"4px",height:"4px",borderRadius:"50%",background:"#e2ddd9",boxShadow:"0 0 4px #e2ddd9"}}/>ACTIVE</span>}
+                      {isDefault&&<span style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"9px",fontWeight:700,color:"var(--v-accent)",flexShrink:0,letterSpacing:".06em"}}><span style={{width:"4px",height:"4px",borderRadius:"50%",background:"var(--v-accent)",boxShadow:"0 0 4px var(--v-accent)"}}/>ACTIVE</span>}
                     </button>
                   );
                 })}
@@ -1879,7 +1999,7 @@ function SettingsPanel({
                           position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s",
                           left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
                           width: `${(Math.abs(eq[key]) / 24) * 100}%`,
-                          background: eq[key] >= 0 ? '#e2ddd9' : '#3a3735',
+                          background: 'var(--v-accent)',
                         }} />
                       <div style={{
                           position: "absolute",
@@ -1890,7 +2010,7 @@ function SettingsPanel({
                           borderRadius: "50%",
                           borderStyle: "solid",
                           borderWidth: "2px",
-                          borderColor: "#e2ddd9",
+                          borderColor: "var(--v-accent)",
                           background: "var(--v-bg0)",
                           boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
                           pointerEvents: "none",
@@ -1961,7 +2081,7 @@ function SettingsPanel({
               </div>
               <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:"12px"}}>
                 <p style={{fontSize:"12px",color:"#6f6966",margin:0}}>Choose from one of our curated high-contrast dark modes.</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:"12px",marginTop:"4px"}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:"12px",marginTop:"4px"}}>
                   {[
                     { id: 'obsidian', name: 'Obsidian', desc: 'True deep black', bg: '#0c0b0b', cardBg: '#171515', accent: '#e2ddd9' },
                     { id: 'midnight', name: 'Midnight Navy', desc: 'Deep navy tones', bg: '#05070e', cardBg: '#0d1222', accent: '#4f46e5' },
@@ -1969,7 +2089,6 @@ function SettingsPanel({
                     { id: 'cyberpunk', name: 'Cyberpunk', desc: 'Vibrant neon purple', bg: '#0a0112', cardBg: '#1b032d', accent: '#d946ef' },
                     { id: 'sunset', name: 'Sunset Crimson', desc: 'Burnt red tones', bg: '#0a0505', cardBg: '#1b0c0c', accent: '#ef4444' },
                     { id: 'pureblack', name: 'Pure Black', desc: 'Solid high contrast', bg: '#000000', cardBg: '#080808', accent: '#ffffff' },
-                    { id: 'custom', name: 'Custom Theme', desc: 'Personal background color', bg: customBgColor, cardBg: lightenColor(customBgColor, 4), accent: accentColor },
                   ].map(t => {
                     const isSelected = theme === t.id;
                     return (
@@ -1981,24 +2100,22 @@ function SettingsPanel({
                           alignItems: "center",
                           justifyContent: "space-between",
                           background: isSelected ? "rgba(226,221,217,0.03)" : "rgba(226,221,217,0.005)",
-                          border: isSelected ? "1px solid var(--v-accent)" : "1px solid #1a1817",
+                          border: isSelected ? "1px solid var(--v-accent)" : "1px solid rgba(255,255,255,0.04)",
                           borderRadius: "10px",
                           padding: "12px",
                           cursor: "pointer",
                           transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                           textAlign: "left",
-                          flex: "1 1 calc(33.33% - 12px)",
-                          minWidth: "150px",
                         }}
                         onMouseEnter={e => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = "#282525";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                             e.currentTarget.style.background = "rgba(226, 221, 217, 0.015)";
                           }
                         }}
                         onMouseLeave={e => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = "#1a1817";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)";
                             e.currentTarget.style.background = "rgba(226,221,217,0.005)";
                           }
                         }}
@@ -2012,83 +2129,125 @@ function SettingsPanel({
                           <span style={{ fontSize: "13px", fontWeight: 700, color: "#e2ddd9" }}>{t.name}</span>
                           <span style={{ fontSize: "10.5px", color: "#5c5755", marginTop: "2px" }}>{t.desc}</span>
                         </div>
-                        {t.id === 'custom' && isSelected && (
-                          <div
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "6px 10px",
-                              background: "rgba(255, 255, 255, 0.01)",
-                              border: "1px solid var(--v-bdr)",
-                              borderRadius: "8px",
-                              marginLeft: "12px",
-                              flexShrink: 0
-                            }}
-                          >
-                            <span style={{ fontSize: "11px", color: "#5c5755", fontWeight: 500 }}>Hex:</span>
-                            <input
-                              type="text"
-                              value={customBgColor}
-                              onChange={e => {
-                                  const val = e.target.value;
-                                  if (val.startsWith('#') && val.length <= 7) {
-                                    setCustomBgColorState(val);
-                                  }
-                              }}
-                              placeholder="#000000"
-                              style={{
-                                width: "70px",
-                                padding: "4px 6px",
-                                fontSize: "11px",
-                                background: "rgba(226,221,217,0.015)",
-                                border: "1px solid var(--v-bdr2)",
-                                borderRadius: "6px",
-                                color: "#e2ddd9",
-                                outline: "none",
-                                boxSizing: "border-box"
-                              }}
-                            />
-                            <div
-                              style={{
-                                position: "relative",
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "50%",
-                                border: "1px solid rgba(255,255,255,0.15)",
-                                cursor: "pointer",
-                                background: "linear-gradient(45deg, #ff0055, #00ffcc, #9900ff)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                transition: "all 0.15s cubic-bezier(0.16, 1, 0.3, 1)"
-                              }}
-                              title="Choose Color"
-                              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.12)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-                            >
-                              <input
-                                type="color"
-                                value={customBgColor}
-                                onChange={e => setCustomBgColorState(e.target.value)}
-                                style={{
-                                  position: "absolute",
-                                  top: "-4px",
-                                  left: "-4px",
-                                  width: "28px",
-                                  height: "28px",
-                                  opacity: 0,
-                                  cursor: "pointer",
-                                }}
-                              />
-                              <span style={{ fontSize: "9px", fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.6)", pointerEvents: "none" }}>+</span>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
+                </div>
+
+                <div
+                  onClick={() => setThemeState('custom')}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    background: theme === 'custom' ? "rgba(226,221,217,0.03)" : "rgba(226,221,217,0.005)",
+                    border: theme === 'custom' ? "1px solid var(--v-accent)" : "1px solid rgba(255,255,255,0.04)",
+                    borderRadius: "10px",
+                    padding: "16px 20px",
+                    cursor: "pointer",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                    textAlign: "left",
+                    marginTop: "12px"
+                  }}
+                  onMouseEnter={e => {
+                    if (theme !== 'custom') {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.background = "rgba(226, 221, 217, 0.015)";
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (theme !== 'custom') {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.background = "rgba(226,221,217,0.005)";
+                    }
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <div style={{ display: "flex", gap: "5px" }}>
+                      <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: customBgColor, border: "1px solid rgba(255,255,255,0.08)" }} />
+                      <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: lightenColor(customBgColor, 4), border: "1px solid rgba(255,255,255,0.08)" }} />
+                      <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: accentColor, border: "1px solid rgba(255,255,255,0.08)" }} />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 700, color: "#e2ddd9" }}>Custom Theme</span>
+                      <span style={{ fontSize: "11px", color: "#5c5755", marginTop: "2px" }}>Personal background color</span>
+                    </div>
+                  </div>
+                  
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "6px 12px",
+                      background: "rgba(255, 255, 255, 0.015)",
+                      border: "1px solid rgba(255, 255, 255, 0.04)",
+                      borderRadius: "8px",
+                      opacity: theme === 'custom' ? 1 : 0.6,
+                      transition: "opacity 0.2s"
+                    }}
+                  >
+                    <span style={{ fontSize: "11px", color: "#6f6966", fontWeight: 500 }}>Hex:</span>
+                    <input
+                      type="text"
+                      value={customBgColor}
+                      disabled={theme !== 'custom'}
+                      onChange={e => {
+                          const val = e.target.value;
+                          if (val.startsWith('#') && val.length <= 7) {
+                            setCustomBgColorState(val);
+                          }
+                      }}
+                      placeholder="#0c0b0b"
+                      style={{
+                        width: "75px",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        background: "rgba(0, 0, 0, 0.2)",
+                        border: "1px solid rgba(255, 255, 255, 0.06)",
+                        borderRadius: "6px",
+                        color: "#e2ddd9",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "22px",
+                        height: "22px",
+                        borderRadius: "50%",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        cursor: theme === 'custom' ? "pointer" : "default",
+                        background: "linear-gradient(45deg, #ff0055, #00ffcc, #9900ff)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "all 0.15s cubic-bezier(0.16, 1, 0.3, 1)"
+                      }}
+                      title={theme === 'custom' ? "Choose Color" : "Select Custom Theme First"}
+                      onMouseEnter={e => { if (theme === 'custom') e.currentTarget.style.transform = "scale(1.12)"; }}
+                      onMouseLeave={e => { if (theme === 'custom') e.currentTarget.style.transform = "scale(1)"; }}
+                    >
+                      <input
+                        type="color"
+                        value={customBgColor}
+                        disabled={theme !== 'custom'}
+                        onChange={e => setCustomBgColorState(e.target.value)}
+                        style={{
+                          position: "absolute",
+                          top: "-4px",
+                          left: "-4px",
+                          width: "30px",
+                          height: "30px",
+                          opacity: 0,
+                          cursor: theme === 'custom' ? "pointer" : "default",
+                        }}
+                      />
+                      <span style={{ fontSize: "10px", fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.6)", pointerEvents: "none" }}>+</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3121,6 +3280,7 @@ export default function Veluna() {
   const dragPlaylistCardIdx = useRef<number | null>(null);
   const dragOverPlaylistCardIdxRef = useRef<number | null>(null);
   const [dragOverPlaylistCardIdx, setDragOverPlaylistCardIdx] = React.useState<number | null>(null);
+  const [dragPlaylistCardIdxState, setDragPlaylistCardIdxState] = React.useState<number | null>(null);
 
   const [volume, setVolume] = useState<number>(() => loadLS('vg_volume', 100));
   const [previousVolume, setPreviousVolume] = useState(100);
@@ -3173,6 +3333,9 @@ export default function Veluna() {
   const [downloadFormat, setDownloadFormatState] = useState<string>(() => loadLS('vg_dlFormat', 'mp3'));
   const [embedThumbnail, setEmbedThumbnailState] = useState<boolean>(() => loadLS('vg_embedThumb', true));
   const [duplicateDetect, setDuplicateDetectState] = useState<boolean>(() => loadLS('vg_dupDetect', true));
+  const [autoCheckUpdates, setAutoCheckUpdatesState] = useState<boolean>(() => loadLS('vg_autoCheckUpdates', true));
+  const setAutoCheckUpdates = useCallback((v: boolean) => { setAutoCheckUpdatesState(v); saveLS('vg_autoCheckUpdates', v); }, []);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [downloadPath, setDownloadPath] = useState<string>(() => loadLS('vg_dlPath', '~/Downloads'));
   const [backupPath, setBackupPathState] = useState<string>(() => loadLS('vg_backupPath', ''));
   const setBackupPath = useCallback((p: string) => { setBackupPathState(p); saveLS('vg_backupPath', p); }, []);
@@ -3348,8 +3511,28 @@ export default function Veluna() {
   }, []);
 
   useEffect(() => {
-    invoke<string | null>('check_for_update').then(v => setUpdateAvailable(v ?? null)).catch(() => {});
+    const autoCheck = loadLS('vg_autoCheckUpdates', true);
+    if (autoCheck) {
+      invoke<string | null>('check_for_update').then(v => setUpdateAvailable(v ?? null)).catch(() => {});
+    }
   }, []);
+
+  const handleCheckUpdate = useCallback(async () => {
+    setIsCheckingUpdate(true);
+    try {
+      const v = await invoke<string | null>('check_for_update');
+      setUpdateAvailable(v ?? null);
+      if (v) {
+        showToast(`Update available: v${v}`);
+      } else {
+        showToast("You're up to date!");
+      }
+    } catch (e) {
+      showToast(`Failed to check updates: ${e}`);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  }, [showToast]);
 
   // Fetch artist thumbnails when stats page opens
   useEffect(() => {
@@ -3439,6 +3622,37 @@ export default function Veluna() {
       }
     });
   }, [openPlaylistId, playlists]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const urls: string[] = [];
+    quickPicks.slice(0, 6).forEach(t => {
+      if (t.url && !t.url.startsWith('local://') && !urls.includes(t.url)) {
+        urls.push(t.url);
+      }
+    });
+    Object.entries(playCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .forEach(([url]) => {
+        if (url && !url.startsWith('local://') && !urls.includes(url)) {
+          urls.push(url);
+        }
+      });
+    playHistory.slice(0, 3).forEach(t => {
+      if (t.url && !t.url.startsWith('local://') && !urls.includes(t.url)) {
+        urls.push(t.url);
+      }
+    });
+    const timers = urls.map((url, idx) => 
+      setTimeout(() => {
+        invoke('prefetch_track', { url }).catch(() => {});
+      }, idx * 1500)
+    );
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [isHydrated]);
 
   const hoverPrefetchRef = useRef<string | null>(null);
   const prefetchOnHover = useCallback((url: string) => {
@@ -3626,7 +3840,7 @@ export default function Veluna() {
     setListeningHistory(prev => [{ url: track.url, playedAt: new Date().toISOString(), secs: 0 }, ...prev].slice(0, 300));
 
     if (!fromQueue) {
-      setPlayHistory(prev => [track, ...prev].slice(0, 50));
+      setPlayHistory(prev => [track, ...prev.filter(t => t.url !== track.url)].slice(0, 50));
       
       if (playlistContextRef.current) {
         const idx = playlistContextRef.current.tracks.findIndex(t => t.url === track.url);
@@ -3721,6 +3935,7 @@ export default function Veluna() {
       url: `local://${local.path}`, cover,
     };
     setCurrentTrack(synth); currentTrackRef.current = synth;
+    setPlayHistory(prev => [synth, ...prev.filter(t => t.url !== synth.url)].slice(0, 50));
 
     if (local.duration && local.duration !== '0:00') {
       const d = parseDurationToSeconds(local.duration);
@@ -3887,10 +4102,10 @@ export default function Veluna() {
   const handlePlayInContext = useCallback((track: Track, contextList: Track[]) => {
     const idx = contextList.findIndex(t => t.url === track.url);
     playlistContextRef.current = { tracks: contextList, index: Math.max(0, idx) };
-    setQueue([]); 
+    setQueue([]);
+    setPlayHistory(prev => [track, ...prev.filter(t => t.url !== track.url)].slice(0, 50));
     handlePlayTrack(track, true);
-    
-  }, [handlePlayTrack]);
+  }, [handlePlayTrack, setPlayHistory]);
 
   const togglePlayPause = useCallback(async () => {
     if (!currentTrackRef.current) return;
@@ -4288,8 +4503,7 @@ export default function Veluna() {
         return { id: i, title: title?.trim() || '', artist: cleanArtist(artist), duration: duration?.trim() || '0:00', url: `https://youtube.com/watch?v=${cleanId}`, cover: `https://i.ytimg.com/vi/${cleanId}/mqdefault.jpg` };
       });
       setTracks(parsed);
-      // Prefetch top 3 search results in background
-      parsed.slice(0, 3).forEach(track => {
+      parsed.slice(0, 5).forEach(track => {
         if (track.url) invoke('prefetch_track', { url: track.url }).catch(() => {});
       });
     } catch { setTracks([]); }
@@ -4467,7 +4681,7 @@ export default function Veluna() {
 
         .v-track{display:flex;align-items:center;gap:14px;padding:8px 12px;border-radius:10px;border:1px solid transparent;transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);cursor:pointer;}
         .v-track:hover{background:rgba(255, 255, 255, 0.015);border-color:var(--v-bdr);box-shadow:0 4px 20px rgba(0,0,0,0.15);}
-        .v-track--active{background:rgba(255, 255, 255, 0.025);border-color:var(--v-accent);box-shadow:0 4px 24px rgba(0,0,0,0.2);}
+        .v-track--active{background:rgba(255, 255, 255, 0.03);border-color:transparent;box-shadow:0 4px 24px rgba(0,0,0,0.25);}
         .v-track__num{width:30px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--v-fg4);flex-shrink:0;}
         .v-track--active .v-track__num{color:var(--v-accent);}
         .v-track__art{width:50px;height:50px;border-radius:9px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.06);}
@@ -4631,6 +4845,338 @@ export default function Veluna() {
           color: #fff !important;
           background: rgba(255, 255, 255, 0.04) !important;
         }
+        .v-new-playlist-btn {
+          padding: 8px 16px;
+          background: var(--v-accent);
+          color: #0c0b0b;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          transition: all 0.2s cubic-bezier(0.2,0,0,1);
+        }
+        .v-new-playlist-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 12px var(--v-accent);
+          opacity: 0.95;
+        }
+        .v-new-playlist-btn:active {
+          transform: translateY(0);
+        }
+        .v-pl-card {
+          position: relative;
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          border-radius: 16px;
+          padding: 16px;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+          overflow: hidden;
+        }
+        .v-pl-card:hover {
+          background: rgba(255, 255, 255, 0.035);
+          border-color: rgba(255, 255, 255, 0.08);
+          transform: translateY(-4px);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(226, 221, 217, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        .v-pl-card__cover-wrapper {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1;
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 12px;
+          transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .v-pl-card:hover .v-pl-card__cover-wrapper {
+          transform: scale(1.02);
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+        .v-library-container {
+          display: flex;
+          gap: 28px;
+          flex-direction: row;
+          align-items: flex-start;
+          width: 100%;
+        }
+        @media (max-width: 1024px) {
+          .v-library-container {
+            flex-direction: column;
+            align-items: stretch;
+          }
+        }
+        .v-library-main {
+          flex: 1;
+          min-width: 0;
+        }
+        .v-library-sidebar {
+          width: 300px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        @media (max-width: 1024px) {
+          .v-library-sidebar {
+            width: 100%;
+          }
+        }
+        .v-library-sidebar-card {
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          border-radius: 16px;
+          padding: 18px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+        .v-library-stat-item {
+          display: flex;
+          flex-direction: column;
+          background: rgba(255, 255, 255, 0.01);
+          border: 1px solid rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+          padding: 10px;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+        .v-library-stat-val {
+          font-size: 18px;
+          font-weight: 800;
+          color: #e2ddd9;
+          line-height: 1.2;
+        }
+        .v-library-stat-lbl {
+          font-size: 10px;
+          color: #5c5755;
+          margin-top: 4px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .v-library-recent-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .v-library-recent-row:hover {
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .v-library-recent-art {
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          overflow: hidden;
+          flex-shrink: 0;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .v-library-recent-art img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .v-library-recent-title {
+          font-size: 12px;
+          font-weight: 600;
+          color: #e2ddd9;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .v-library-recent-artist {
+          font-size: 10.5px;
+          color: #8a807c;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-top: 1px;
+        }
+        .v-library-recent-play {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.05);
+          color: #9e9894;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: all 0.2s;
+        }
+        .v-library-recent-row:hover .v-library-recent-play {
+          opacity: 1;
+          background: var(--v-accent);
+          color: #0c0b0b;
+        }
+        .v-library-import-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          color: #9e9894;
+          font-size: 11.5px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .v-library-import-btn:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.08);
+          color: #e2ddd9;
+          transform: translateX(2px);
+        }
+        .v-player-dock {
+          height: 96px;
+          background: var(--v-bg1);
+          border: 1px solid var(--v-bdr2);
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          padding: 0 24px;
+          position: relative;
+          z-index: 20;
+          flex-shrink: 0;
+          margin: 0 20px 20px 20px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+          gap: 0;
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+        }
+        .v-player-dock:hover {
+          border-color: var(--v-bdr);
+        }
+        .v-player-btn-play {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--v-accent) 0%, rgba(255, 255, 255, 0.85) 100%);
+          color: #0c0b0b;
+          border: none;
+          cursor: pointer;
+          flex-shrink: 0;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 8px var(--v-accent);
+          transition: transform 0.15s cubic-bezier(0.2,0,0,1), box-shadow 0.15s cubic-bezier(0.2,0,0,1), opacity 0.12s;
+        }
+        .v-player-btn-play:hover {
+          transform: scale(1.08);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 14px var(--v-accent);
+        }
+        .v-player-btn-play:active {
+          transform: scale(0.96);
+        }
+        .v-player-btn-play:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .v-player-codec-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 6px;
+          background: var(--v-bg3);
+          border: 1px solid var(--v-bdr2);
+          border-radius: 5px;
+          font-size: 9px;
+          font-weight: 700;
+          color: var(--v-fg3);
+          font-family: monospace;
+          letter-spacing: 0.05em;
+          margin-top: 3px;
+        }
+        .v-progress-container {
+          position: relative;
+          flex: 1 1 0%;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+        }
+        .v-progress-track {
+          position: relative;
+          width: 100%;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 2px;
+          transition: height 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s;
+        }
+        .v-progress-container:hover .v-progress-track {
+          height: 6px;
+          background: rgba(255, 255, 255, 0.08);
+        }
+        .v-progress-fill {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          background: linear-gradient(90deg, var(--v-accent) 0%, rgba(255, 255, 255, 0.8) 100%);
+          border-radius: 3px;
+          pointer-events: none;
+        }
+        .v-progress-thumb {
+          position: absolute;
+          right: -6px;
+          top: 50%;
+          transform: translateY(-50%) scale(0);
+          width: 12px;
+          height: 12px;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), opacity 0.15s;
+          pointer-events: none;
+        }
+        .v-progress-container:hover .v-progress-thumb,
+        .v-progress-container:active .v-progress-thumb {
+          transform: translateY(-50%) scale(1);
+          opacity: 1;
+        }
+        .v-progress-tooltip {
+          position: absolute;
+          top: -30px;
+          left: 0%;
+          transform: translateX(-50%);
+          background: var(--v-bg1);
+          border: 1px solid var(--v-bdr2);
+          border-radius: 6px;
+          padding: 3px 8px;
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--v-fg2);
+          pointer-events: none;
+          white-space: nowrap;
+          z-index: 10;
+          opacity: 0;
+          transition: opacity 0.15s;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .v-progress-container:hover .v-progress-tooltip {
+          opacity: 1;
+        }
       `}</style>
 
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
@@ -4642,7 +5188,7 @@ export default function Veluna() {
             <div style={{
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              gap: "12px",
               cursor: "pointer",
               flex: 1,
               transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -4651,10 +5197,8 @@ export default function Veluna() {
               onMouseEnter={() => setLogoHovered(true)}
               onMouseLeave={() => setLogoHovered(false)}
               onClick={() => navigateTo('home')}>
-              <svg width="30" height="30" viewBox="0 0 28 28" fill="none" style={{
-                flexShrink: 0,
-                transition: "filter 0.25s ease",
-                filter: logoHovered ? "drop-shadow(0 0 8px var(--v-accent))" : "none"
+              <svg width="38" height="38" viewBox="0 0 28 28" fill="none" style={{
+                flexShrink: 0
               }}>
                 <rect width="28" height="28" rx="6" fill="var(--v-accent)"/>
                 <polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#0e0d0d"/>
@@ -4662,8 +5206,8 @@ export default function Veluna() {
               </svg>
               <span style={{
                 letterSpacing: "0.22em",
-                fontSize: "12.5px",
-                fontWeight: 800,
+                fontSize: "19px",
+                fontWeight: 900,
                 color: "#ffffff",
                 textTransform: "uppercase"
               }}>veluna</span>
@@ -4788,8 +5332,8 @@ export default function Veluna() {
           <div key={activeNav + (openPlaylistId || '')} style={{animation:'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both',flex:'1 1 0%',display:'flex',flexDirection:'column',minHeight:0,overflow:'hidden'}}>
           {activeNav === 'home' && (
             <>
-              <div style={{padding:"16px 24px 10px",position:"relative",zIndex:30,flexShrink:0}}>
-                <div style={{position:"relative",width:"100%",display:"flex",gap:"8px"}} onClick={e=>e.stopPropagation()}>
+              <div style={{padding:"16px 24px 10px",position:"relative",zIndex:30,flexShrink:0,display:"flex",justifyContent:"center"}}>
+                <div className="v-home-search-container" onClick={e=>e.stopPropagation()}>
                   <div style={{position:"relative",flex:1}}>
                     <div style={{position:"absolute",top:0,bottom:0,left:0,paddingLeft:"14px",display:"flex",alignItems:"center",pointerEvents:"none"}}>
                       {isSearching
@@ -5035,17 +5579,13 @@ export default function Veluna() {
                             }}
                           >Clear</button>
                         </div>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(3, 1fr)',
-                          gap: '12px'
-                        }}>
-                          {quickPicks.slice(0, 9).map((track, cardIdx) => {
+                        <div className="v-home-quickpicks-grid">
+                          {quickPicks.slice(0, 12).map((track, cardIdx) => {
                             const isActive = currentTrack?.url === track.url;
                             return (
                               <div
                                 key={track.url}
-                                onClick={() => handlePlayInContext(track, quickPicks.slice(0, 9))}
+                                onClick={() => handlePlayInContext(track, quickPicks.slice(0, 12))}
                                 onContextMenu={e => openCtx(e, { type: 'quickpick', track })}
                                 style={{
                                   display: 'flex',
@@ -5162,18 +5702,8 @@ export default function Veluna() {
                         </div>
                       </div>
 
-                      <div style={{
-                        display: 'flex',
-                        gap: '32px',
-                        alignItems: 'flex-start'
-                      }}>
-                        <div style={{
-                          flex: 1.6,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '28px',
-                          minWidth: 0
-                        }}>
+                      <div className="v-home-split-layout">
+                        <div className="v-home-main-col">
                           {activeGenres.map((genre, gIdx) => {
                             const genreTracks = genreScores[genre.id].tracks.slice(0, 10);
                             return (
@@ -5406,13 +5936,7 @@ export default function Veluna() {
                           })}
                         </div>
 
-                        <div style={{
-                          flex: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '24px',
-                          minWidth: 0
-                        }}>
+                        <div className="v-home-sidebar-col">
                           {topTracks.length >= 3 && (
                             <div style={{
                               background: 'linear-gradient(135deg, rgba(226,221,217,0.01) 0%, rgba(255,255,255,0.005) 100%)',
@@ -5760,41 +6284,43 @@ export default function Veluna() {
 
                 {}
                 {(isSearching || tracks.length > 0) && (
-                  <div className="v-section-head">
-                    <h2>{isSearching ? 'Searching...' : `Results`}</h2>
-                    {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} style={{ width:"4px",borderRadius:"2px",background:"rgba(226,221,217,0.4)",height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
-                    {tracks.length > 0 && !isSearching && (
-                      <button onClick={() => playAll(tracks)} style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:'rgba(226,221,217,0.06)',border:'1px solid rgba(226,221,217,0.12)',color:'#9e9894',borderRadius:'7px',cursor:'pointer',fontSize:'11px',fontWeight:600,transition:'background .12s'}}>
-                        <Play size={11} style={{fill:'currentColor'}} /> Play All
-                      </button>
+                  <div className="v-home-search-results">
+                    <div className="v-section-head">
+                      <h2>{isSearching ? 'Searching...' : `Results`}</h2>
+                      {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} style={{ width:"4px",borderRadius:"2px",background:"rgba(226,221,217,0.4)",height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
+                      {tracks.length > 0 && !isSearching && (
+                        <button onClick={() => playAll(tracks)} style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:'rgba(226,221,217,0.06)',border:'1px solid rgba(226,221,217,0.12)',color:'#9e9894',borderRadius:'7px',cursor:'pointer',fontSize:'11px',fontWeight:600,transition:'background .12s'}}>
+                          <Play size={11} style={{fill:'currentColor'}} /> Play All
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid var(--v-bdr2)",marginBottom:"4px"}}>
+                      <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
+                      <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
+                      <div style={{width:"60px",flexShrink:0}}/>
+                      <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
+                    </div>
+
+                    {isSearching && <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>{Array.from({ length: 8 }).map((_, i) => <TrackRowSkeleton key={i} index={i} />)}</div>}
+                    {!isSearching && tracks.length > 0 && (
+                      <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>
+                        {tracks.map((track, i) => (
+                          <TrackRow key={track.id} track={track} index={i}
+                            isActive={currentTrack?.url === track.url}
+                            isHovered={hoveredTrackUrl === track.url}
+                            isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
+                            isLiked={isTrackLiked(track.url)} isDownloading={(downloadingTracks[track.url] ?? 0)}
+                            onPlay={() => handlePlayInContext(track, tracks)}
+                            onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
+                            onHoverLeave={() => setHoveredTrackUrl(null)}
+                            onLike={() => toggleLikeTrack(track)}
+                            onDownload={() => handleDownload(track)}
+                            onCtx={e => openCtx(e, { type: 'track', track })}
+                          />
+                        ))}
+                      </div>
                     )}
-                  </div>
-                )}
-                {(tracks.length > 0 || isSearching) && (
-                  <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid var(--v-bdr2)",marginBottom:"4px"}}>
-                    <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
-                    <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
-                    <div style={{width:"60px",flexShrink:0}}/>
-                    <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
-                  </div>
-                )}
-                {isSearching && <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>{Array.from({ length: 8 }).map((_, i) => <TrackRowSkeleton key={i} index={i} />)}</div>}
-                {!isSearching && tracks.length > 0 && (
-                  <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>
-                    {tracks.map((track, i) => (
-                      <TrackRow key={track.id} track={track} index={i}
-                        isActive={currentTrack?.url === track.url}
-                        isHovered={hoveredTrackUrl === track.url}
-                        isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
-                        isLiked={isTrackLiked(track.url)} isDownloading={(downloadingTracks[track.url] ?? 0)}
-                        onPlay={() => handlePlayInContext(track, tracks)}
-                        onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
-                        onHoverLeave={() => setHoveredTrackUrl(null)}
-                        onLike={() => toggleLikeTrack(track)}
-                        onDownload={() => handleDownload(track)}
-                        onCtx={e => openCtx(e, { type: 'track', track })}
-                      />
-                    ))}
                   </div>
                 )}
               </div>
@@ -6195,81 +6721,191 @@ export default function Veluna() {
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
-                  <h2 style={{fontSize:'20px',fontWeight:800,color:'#e2ddd9',margin:0}}>Playlists</h2>
-                  <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                    style={{padding:'7px 14px',background:'transparent',border:'1px solid var(--v-bdr2)',color:'#9e9894',borderRadius:'8px',cursor:'pointer',fontSize:'12px',fontWeight:600,display:'flex',alignItems:'center',gap:'7px',transition:'border-color .12s,color .12s,background .12s'}}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';(e.currentTarget as HTMLElement).style.color='#e2ddd9';}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';(e.currentTarget as HTMLElement).style.color='#9e9894';}}>
-                    <PlusCircle size={13} /> New Playlist
-                  </button>
-                </div>
-                <div style={{display:"grid",gap:"10px",gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))"}}>
-                  {playlists.map((pl, plIdx) => {
-                    const cover = getPlaylistCover(pl);
-                    const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
-                    return (
-                      <div key={pl.id}
-                        onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
-                        className={`v-pl-card${isDragTarget?' ring-2 ring-[#e2ddd9]/30':''}`}
-                        style={{ animation: `fadeUp 0.2s cubic-bezier(0.2,0,0,1) ${plIdx * 30}ms both` }}
-                        onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
-                        onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
-                        <div
-                          style={{width:"100%",aspectRatio:"1",borderRadius:"7px",overflow:"hidden",background:"var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",marginBottom:"8px",cursor:"grab"}}
-                          onMouseDown={e => {
-                            e.preventDefault();
-                            dragPlaylistCardIdx.current = plIdx;
-                            dragOverPlaylistCardIdxRef.current = plIdx;
-                            setDragOverPlaylistCardIdx(plIdx);
-                            const onUp = () => {
-                              const from = dragPlaylistCardIdx.current;
-                              const to = dragOverPlaylistCardIdxRef.current;
-                              dragPlaylistCardIdx.current = null;
-                              dragOverPlaylistCardIdxRef.current = null;
-                              setDragOverPlaylistCardIdx(null);
-                              window.removeEventListener('mouseup', onUp);
-                              if (from === null || to === null || from === to) return;
-                              setPlaylists(prev => {
-                                const arr = [...prev];
-                                const [moved] = arr.splice(from, 1);
-                                arr.splice(to, 0, moved);
-                                return arr;
-                              });
-                            };
-                            window.addEventListener('mouseup', onUp);
-                          }}>
-                          <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            {pl.id==='p1'
-                              ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(140,30,30,0.5) 0%,var(--v-bdr2) 100%)"}}><Heart size={22} style={{color:"#e05555",fill:"rgba(220,60,60,0.35)"}}/></div>
-                              : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.03)"}}><ListMusic size={24} style={{color:"#363230"}}/></div>}
+                <div className="v-library-container">
+                  <div className="v-library-main">
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
+                      <h2 style={{fontSize:'20px',fontWeight:800,color:'#e2ddd9',margin:0}}>Playlists</h2>
+                      <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
+                        className="v-new-playlist-btn">
+                        <PlusCircle size={13} /> New Playlist
+                      </button>
+                    </div>
+                    <div style={{display:"grid",gap:"20px",gridTemplateColumns:"repeat(auto-fill, minmax(170px, 1fr))"}}>
+                      {playlists.map((pl, plIdx) => {
+                        const cover = getPlaylistCover(pl);
+                        const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
+                        return (
+                          <div key={pl.id}
+                            onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
+                            className="v-pl-card"
+                            style={{ animation: `fadeUp 0.2s cubic-bezier(0.2,0,0,1) ${plIdx * 30}ms both` }}
+                            onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
+                            onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
+                            {isDragTarget && (
+                              <div style={{
+                                position: "absolute",
+                                top: 0,
+                                bottom: 0,
+                                width: "4px",
+                                background: "var(--v-accent)",
+                                borderRadius: "2px",
+                                zIndex: 20,
+                                pointerEvents: "none",
+                                left: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
+                                right: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
+                                boxShadow: "0 0 10px var(--v-accent)"
+                              }} />
+                            )}
+                            <div
+                              className="v-pl-card__cover-wrapper"
+                              style={{
+                                opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
+                                transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
+                                transition: "opacity 0.2s, transform 0.2s"
+                              }}
+                              onMouseDown={e => {
+                                e.preventDefault();
+                                dragPlaylistCardIdx.current = plIdx;
+                                dragOverPlaylistCardIdxRef.current = plIdx;
+                                setDragOverPlaylistCardIdx(plIdx);
+                                setDragPlaylistCardIdxState(plIdx);
+                                const onUp = () => {
+                                  const from = dragPlaylistCardIdx.current;
+                                  const to = dragOverPlaylistCardIdxRef.current;
+                                  dragPlaylistCardIdx.current = null;
+                                  dragOverPlaylistCardIdxRef.current = null;
+                                  setDragOverPlaylistCardIdx(null);
+                                  setDragPlaylistCardIdxState(null);
+                                  window.removeEventListener('mouseup', onUp);
+                                  if (from === null || to === null || from === to) return;
+                                  setPlaylists(prev => {
+                                    const arr = [...prev];
+                                    const [moved] = arr.splice(from, 1);
+                                    arr.splice(to, 0, moved);
+                                    return arr;
+                                  });
+                                };
+                                window.addEventListener('mouseup', onUp);
+                              }}>
+                              <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                {pl.id==='p1'
+                                  ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(140,30,30,0.4) 0%,rgba(140,30,30,0.1) 100%)"}}><Heart size={22} style={{color:"#e05555",fill:"rgba(220,60,60,0.25)"}}/></div>
+                                  : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.01) 100%)"}}><ListMusic size={24} style={{color:"#363230"}}/></div>}
+                              </div>
+                              {cover && (
+                                <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                              )}
+                              <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(2px)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
+                                <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
+                                  style={{width:"42px",height:"42px",background:"var(--v-accent)",color:"#0c0b0b",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 6px 16px rgba(0,0,0,0.5)",transition:"all 0.15s cubic-bezier(0.2,0,0,1)"}}
+                                  onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 8px 20px rgba(0,0,0,0.6), 0 0 10px var(--v-accent)";}}
+                                  onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 6px 16px rgba(0,0,0,0.5)";}}>
+                                  <Play size={16} style={{fill:"currentColor",color:"currentColor",marginLeft:"2px"}}/>
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
+                            <div style={{fontSize:"11px",color:"#8a807c",marginTop:"4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                              {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                            </div>
+                            {pl.id!=='p1'&&(
+                              <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
+                                className="pl-card-del"
+                                style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"#8a807c",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
+                                onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.2)";e.currentTarget.style.borderColor="rgba(255,96,96,0.2)";e.currentTarget.style.transform="scale(1.05)";}}
+                                onMouseLeave={e=>{e.currentTarget.style.color="#8a807c";e.currentTarget.style.background="rgba(0,0,0,0.6)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";e.currentTarget.style.transform="scale(1)";}}>
+                                <Trash2 size={12}/>
+                              </button>
+                            )}
                           </div>
-                          {cover && (
-                            <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
-                          )}
-                          <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}>
-                            <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
-                              style={{width:"36px",height:"36px",background:"#e2ddd9",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 14px rgba(0,0,0,0.6)",transition:"transform .1s"}}
-                              onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.08)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-                              <Play size={14} style={{fill:"var(--v-bg0)",color:"var(--v-bg0)",marginLeft:"2px"}}/>
-                            </button>
-                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="v-library-sidebar">
+                    <div className="v-library-sidebar-card">
+                      <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#8a807c",margin:"0 0 16px 0"}}>Library Insights</h3>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:"14px"}}>
+                        <div className="v-library-stat-item">
+                          <span className="v-library-stat-val">{playlists.length}</span>
+                          <span className="v-library-stat-lbl">Playlists</span>
                         </div>
-                        <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
-                        <div style={{fontSize:"11px",color:"#5c5755",marginTop:"2px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                          {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                        <div className="v-library-stat-item">
+                          <span className="v-library-stat-val">{playlists.reduce((acc, p) => acc + p.tracks.length, 0)}</span>
+                          <span className="v-library-stat-lbl">Total Songs</span>
                         </div>
-                        {pl.id!=='p1'&&(
-                          <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
-                            className="pl-card-del"
-                            style={{position:"absolute",top:"6px",right:"6px",opacity:0,width:"22px",height:"22px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.7)",borderRadius:"5px",border:"none",cursor:"pointer",color:"#5c5755",transition:"color .12s,opacity .12s"}}
-                            onMouseEnter={e=>(e.currentTarget.style.color="#b05555")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
-                            <Trash2 size={10}/>
+                        <div className="v-library-stat-item">
+                          <span className="v-library-stat-val">
+                            {(() => {
+                              const totalMins = Math.round(Object.values(listenSecs).reduce((s: number, n) => s + (n as number), 0) / 60);
+                              return totalMins >= 60 ? `${(totalMins / 60).toFixed(1)}h` : `${totalMins}m`;
+                            })()}
+                          </span>
+                          <span className="v-library-stat-lbl">Time Listened</span>
+                        </div>
+                        <div className="v-library-stat-item">
+                          <span className="v-library-stat-val">
+                            {Object.values(playCounts).reduce((s: number, n) => s + (n as number), 0)}
+                          </span>
+                          <span className="v-library-stat-lbl">Total Plays</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="v-library-sidebar-card" style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#8a807c",margin:0}}>Recently Played</h3>
+                        {playHistory.length > 0 && (
+                          <button onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); }}
+                            style={{background:"none",border:"none",color:"#5c5755",fontSize:"10px",fontWeight:600,cursor:"pointer",transition:"color .12s"}}
+                            onMouseEnter={e=>e.currentTarget.style.color="#8a807c"}
+                            onMouseLeave={e=>e.currentTarget.style.color="#5c5755"}>
+                            Clear
                           </button>
                         )}
                       </div>
-                    );
-                  })}
+                      {playHistory.length === 0 ? (
+                        <div style={{padding:"20px 0",textAlign:"center",color:"#363230",fontSize:"12px"}}>
+                          No recent activity
+                        </div>
+                      ) : (
+                        <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+                          {playHistory.slice(0, 4).map((track: Track, i: number) => (
+                            <div key={track.url + i}
+                              onClick={() => handlePlayInContext(track, playHistory.slice(0, 4))}
+                              className="v-library-recent-row">
+                              <div className="v-library-recent-art" style={{background: getTrackGradient(track.title, track.artist)}}>
+                                {track.cover ? <img src={track.cover} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /> : <Music size={12} style={{color:"rgba(255,255,255,0.2)"}} />}
+                              </div>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div className="v-library-recent-title">{track.title}</div>
+                                <div className="v-library-recent-artist">{track.artist}</div>
+                              </div>
+                              <div className="v-library-recent-play">
+                                <Play size={10} style={{fill:"currentColor"}} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="v-library-sidebar-card">
+                      <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#8a807c",margin:"0 0 12px 0"}}>Import Tools</h3>
+                      <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+                        <button onClick={() => setShowCsvImportModal(true)} className="v-library-import-btn">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954" style={{marginRight:"4px"}}><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                          Import from Spotify
+                        </button>
+                        <button onClick={() => setShowYtImportModal(true)} className="v-library-import-btn">
+                          <svg width="12" height="10" viewBox="0 0 18 14" fill="#ef4444" style={{marginRight:"4px"}}><path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/></svg>
+                          Import from YouTube
+                        </button>
+                        <button onClick={handleImportPlaylistM3u} className="v-library-import-btn">
+                          <FileOutput size={12} style={{marginRight:"4px",color:"#9e9894"}} />
+                          Import M3U Playlist
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )
@@ -6730,6 +7366,8 @@ export default function Veluna() {
               theme={theme} setThemeState={setThemeState}
               accentColor={accentColor} setAccentColorState={setAccentColorState}
               customBgColor={customBgColor} setCustomBgColorState={setCustomBgColorState}
+              autoCheckUpdates={autoCheckUpdates} setAutoCheckUpdates={setAutoCheckUpdates}
+              isCheckingUpdate={isCheckingUpdate} handleCheckUpdate={handleCheckUpdate}
             />
           )}
           </div>
@@ -6988,8 +7626,7 @@ export default function Veluna() {
       </div>
 
       {}
-      <div style={{height:"84px",background:"var(--v-bg1)",borderTop:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",padding:"0 20px",position:"relative",zIndex:20,flexShrink:0,gap:0}}>
-        {/* Loading bar */}
+      <div className="v-player-dock">
         {isLoadingTrack && (
           <div style={{position:"absolute",top:0,left:0,width:"100%",height:"1px",overflow:"hidden",background:"var(--v-bdr2)"}}>
             <div style={{height:"100%",background:"rgba(226,221,217,0.4)",animation:"loadbar 1.6s ease-in-out infinite",width:"35%"}}/>
@@ -6997,13 +7634,11 @@ export default function Veluna() {
         )}
         {isPlaying&&!isLoadingTrack&&<div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"rgba(226,221,217,0.06)"}}/>}
 
-        {/* ── LEFT: art + info + like ── */}
-        <div style={{display:"flex",alignItems:"center",gap:"10px",width:"240px",flexShrink:0,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:"12px",width:"240px",flexShrink:0,minWidth:0}}>
           {currentTrack ? (
             <>
-              {/* Art */}
               <div style={{
-                position:"relative",width:"52px",height:"52px",borderRadius:"9px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",
+                position:"relative",width:"56px",height:"56px",borderRadius:"12px",overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",flexShrink:0,cursor:"pointer",
                 background: getTrackGradient(currentTrack.title, currentTrack.artist),
                 display:"flex",alignItems:"center",justifyContent:"center"
               }}
@@ -7030,9 +7665,8 @@ export default function Veluna() {
                       </div>
                     : null}
               </div>
-              {/* Info */}
               <div key={currentTrack.url} style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:"1px",animation:"fadeIn 0.25s ease both"}}>
-                <div style={{fontWeight:600,color:"#e2ddd9",fontSize:"15px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:"1.3"}}>{currentTrack.title}</div>
+                <div style={{fontWeight:700,color:"#e2ddd9",fontSize:"14px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:"1.3"}}>{currentTrack.title}</div>
                 {isLoadingTrack
                   ? <div style={{display:"flex",alignItems:"center",gap:"5px"}}>
                       <div style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"10px"}}>
@@ -7040,14 +7674,15 @@ export default function Veluna() {
                       </div>
                       <span style={{fontSize:"10px",color:"rgba(226,221,217,0.5)"}}>Buffering</span>
                     </div>
-                  : <div style={{fontSize:"11px",color:"#5c5755",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist||""}</div>}
+                  : <div style={{fontSize:"12px",color:"#8a807c",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist||""}</div>}
                 {audioInfo&&!isLoadingTrack&&(
-                  <div style={{fontSize:"9.5px",color:"#363230",fontFamily:"monospace"}}>
-                    {audioInfo.codec.toUpperCase()}{audioInfo.samplerate>0?` · ${Math.round(audioInfo.samplerate/1000)}kHz`:''}
+                  <div>
+                    <div className="v-player-codec-badge">
+                      {audioInfo.codec.toUpperCase()}{audioInfo.samplerate>0?` · ${Math.round(audioInfo.samplerate/1000)}kHz`:''}
+                    </div>
                   </div>
                 )}
               </div>
-              {/* Like + Download */}
               {!currentTrack.url.startsWith('local://') && (
                 <div style={{display:"flex",alignItems:"center",gap:"2px",flexShrink:0}}>
                   <button onClick={()=>toggleLikeTrack(currentTrack)} style={{background:"none",border:"none",cursor:"pointer",padding:"5px",display:"flex",color:"#5c5755",transition:"color .12s,transform .1s"}}
@@ -7078,41 +7713,33 @@ export default function Veluna() {
           )}
         </div>
 
-        {/* ── CENTER: controls + progress ── */}
-        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"7px",padding:"0 16px",minWidth:0}}>
-          {/* Transport controls */}
-          <div style={{display:"flex",alignItems:"center",gap:"14px"}}>
-            <button onClick={toggleShuffle} title="Shuffle" style={{background:"none",border:"none",cursor:"pointer",color:shuffle?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
-              onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-              <Shuffle size={14}/>
-            </button>
-            <button onClick={handleSkipBack} title="Previous" style={{background:"none",border:"none",cursor:currentTrack?"pointer":"not-allowed",color:currentTrack?"#9e9894":"#2a2727",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
-              onMouseEnter={e=>{if(currentTrack)e.currentTarget.style.transform="scale(1.15)";}} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-              <SkipBack size={16}/>
-            </button>
-            <button onClick={togglePlayPause} disabled={!currentTrack||isLoadingTrack}
-              style={{width:"44px",height:"44px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:"#e2ddd9",color:"var(--v-bg0)",border:"none",cursor:(!currentTrack||isLoadingTrack)?"not-allowed":"pointer",flexShrink:0,opacity:(!currentTrack||isLoadingTrack)?0.4:1,boxShadow:"0 2px 10px rgba(0,0,0,0.5)",transition:"transform .1s,box-shadow .12s"}}
-              onMouseEnter={e=>{if(currentTrack&&!isLoadingTrack){e.currentTarget.style.transform="scale(1.07)";e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.6)";} }}
-              onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 2px 10px rgba(0,0,0,0.5)";}}>
-              {isLoadingTrack
-                ? <div style={{width:"14px",height:"14px",border:"2px solid #0c0b0b",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-                : isPlaying ? <Pause fill="currentColor" size={16}/> : <Play fill="currentColor" size={16} style={{marginLeft:"2px"}}/>}
-            </button>
-            <button onClick={handleSkipForward} title="Next" style={{background:"none",border:"none",cursor:(queue.length>0||playlistContextRef.current!==null)?"pointer":"not-allowed",color:(queue.length>0||playlistContextRef.current!==null)?"#9e9894":"#2a2727",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
-              onMouseEnter={e=>{if(queue.length>0||playlistContextRef.current!==null)e.currentTarget.style.transform="scale(1.15)";}} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-              <SkipForward size={16}/>
-            </button>
-            <button onClick={cycleRepeat} title={`Repeat: ${repeatMode}`} style={{background:"none",border:"none",cursor:"pointer",color:repeatMode!=='off'?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
-              onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-              {repeatMode==='one' ? <Repeat1 size={14}/> : <Repeat size={14}/>}
-            </button>
-          </div>
-
-          {/* Progress row */}
-          <div style={{width:"100%",display:"flex",alignItems:"center",gap:"7px"}}>
-            {/* Speed */}
+        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"10px",padding:"0 24px",minWidth:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:"18px"}}>
             <SpeedSelector speed={playbackSpeed} onChange={setPlaybackSpeed}/>
-            {/* A-B loop */}
+            <div style={{display:"flex",alignItems:"center",gap:"16px",marginLeft:"12px",marginRight:"12px"}}>
+              <button onClick={toggleShuffle} title="Shuffle" style={{background:"none",border:"none",cursor:"pointer",color:shuffle?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+                onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                <Shuffle size={15}/>
+              </button>
+              <button onClick={handleSkipBack} title="Previous" style={{background:"none",border:"none",cursor:currentTrack?"pointer":"not-allowed",color:currentTrack?"#9e9894":"#2a2727",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+                onMouseEnter={e=>{if(currentTrack)e.currentTarget.style.transform="scale(1.15)";}} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                <SkipBack size={17}/>
+              </button>
+              <button onClick={togglePlayPause} disabled={!currentTrack||isLoadingTrack}
+                className="v-player-btn-play">
+                {isLoadingTrack
+                  ? <div style={{width:"16px",height:"16px",border:"2px solid #0c0b0b",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                  : isPlaying ? <Pause fill="currentColor" size={18}/> : <Play fill="currentColor" size={18} style={{marginLeft:"2px"}}/>}
+              </button>
+              <button onClick={handleSkipForward} title="Next" style={{background:"none",border:"none",cursor:(queue.length>0||playlistContextRef.current!==null)?"pointer":"not-allowed",color:(queue.length>0||playlistContextRef.current!==null)?"#9e9894":"#2a2727",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+                onMouseEnter={e=>{if(queue.length>0||playlistContextRef.current!==null)e.currentTarget.style.transform="scale(1.15)";}} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                <SkipForward size={17}/>
+              </button>
+              <button onClick={cycleRepeat} title={`Repeat: ${repeatMode}`} style={{background:"none",border:"none",cursor:"pointer",color:repeatMode!=='off'?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
+                onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
+                {repeatMode==='one' ? <Repeat1 size={15}/> : <Repeat size={15}/>}
+              </button>
+            </div>
             <button
               title={abLoop.a===null?'Set A (loop start)':abLoop.b===null?'Set B (loop end)':'Clear A-B loop'}
               onClick={()=>{
@@ -7131,40 +7758,36 @@ export default function Veluna() {
               }}>
               A·B{abLoop.b!==null?" ✓":abLoop.a!==null?" …":""}
             </button>
-            {/* Time elapsed */}
-            <span style={{fontSize:"10px",color:"#363230",flexShrink:0,fontVariantNumeric:"tabular-nums",minWidth:"30px",textAlign:"right"}}>
+          </div>
+
+          <div style={{width:"100%",display:"flex",alignItems:"center",gap:"8px"}}>
+            <span style={{fontSize:"10px",color:"#5c5755",flexShrink:0,fontVariantNumeric:"tabular-nums",minWidth:"30px",textAlign:"right"}}>
               {currentTrack?formatTime(progressSeconds):'0:00'}
             </span>
-            {/* Progress track */}
-            <div ref={progressRef} className="slider-track"
-              style={{position:"relative",flex:"1 1 0%",height:"3px",background:"#232020",borderRadius:"2px",cursor:currentTrack?"pointer":"default"}}
+            <div ref={progressRef} className="v-progress-container"
               onMouseDown={e=>{if(!currentTrack)return;isDraggingProgressRef.current=true;setIsDraggingProgress(true);updateProgressFromEvent(e.clientX);}}
               onMouseMove={e=>{
                 if(!progressRef.current||!currentTrack)return;
                 const rect=progressRef.current.getBoundingClientRect();
                 const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
                 const total=trackDurationRef.current||parseDurationToSeconds(currentTrack.duration);
-                const el=progressRef.current.querySelector<HTMLElement>('.prog-tooltip');
+                const el=progressRef.current.querySelector<HTMLElement>('.v-progress-tooltip');
                 if(el){el.textContent=formatTime(total*pct);el.style.left=`${pct*100}%`;}
-              }}
-              onMouseEnter={e=>{const el=e.currentTarget.querySelector<HTMLElement>('.prog-tooltip');if(el)el.style.opacity='1';}}
-              onMouseLeave={e=>{const el=e.currentTarget.querySelector<HTMLElement>('.prog-tooltip');if(el)el.style.opacity='0';}}>
-              {/* Hover tooltip */}
-              {currentTrack&&<div className="prog-tooltip" style={{position:"absolute",top:"-26px",left:"0%",transform:"translateX(-50%)",background:"var(--v-bdr2)",border:"1px solid var(--v-bdr2)",borderRadius:"5px",padding:"2px 6px",fontSize:"10px",fontWeight:700,color:"#9e9894",pointerEvents:"none",whiteSpace:"nowrap",zIndex:10,opacity:0,transition:"opacity .15s"}}/>}
-              {waveformData.length>0&&<WaveformBar waveform={waveformData} progressPercent={calculateProgressPercent()} isDragging={isDraggingProgress}/>}
-              {/* Fill + thumb */}
-              <div style={{position:"absolute",top:0,left:0,height:"100%",background:"var(--v-accent)",borderRadius:"2px",pointerEvents:"none",width:`${calculateProgressPercent()}%`,transition:isDraggingProgress?'none':'width 0.5s linear'}}>
-                <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"11px",height:"11px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
+              }}>
+              <div className="v-progress-track">
+                {currentTrack&&<div className="v-progress-tooltip">{formatTime(progressSeconds)}</div>}
+                {waveformData.length>0&&<WaveformBar waveform={waveformData} progressPercent={calculateProgressPercent()} isDragging={isDraggingProgress}/>}
+                <div className="v-progress-fill" style={{width:`${calculateProgressPercent()}%`,transition:isDraggingProgress?'none':'width 0.5s linear'}}>
+                  <div className="v-progress-thumb"/>
+                </div>
               </div>
             </div>
-            {/* Duration */}
-            <span style={{fontSize:"10px",color:"#363230",flexShrink:0,fontVariantNumeric:"tabular-nums",minWidth:"30px"}}>
+            <span style={{fontSize:"10px",color:"#5c5755",flexShrink:0,fontVariantNumeric:"tabular-nums",minWidth:"30px"}}>
               {currentTrack?formatTime(trackDurationSeconds||parseDurationToSeconds(currentTrack.duration)):'0:00'}
             </span>
           </div>
         </div>
 
-        {/* ── RIGHT: lyrics + crossfade + mute + volume ── */}
         <div style={{width:"220px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"12px",flexShrink:0}}>
           {crossfadeSeconds>0&&(
             <span style={{fontSize:"9.5px",color:"#5c5755",fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}} title={`Crossfade: ${crossfadeSeconds}s`}>
@@ -7174,18 +7797,17 @@ export default function Veluna() {
           <button onClick={()=>{if(currentTrack)setShowLyrics(o=>!o);}} disabled={!currentTrack} title="Lyrics"
             style={{background:"none",border:"none",cursor:currentTrack?"pointer":"not-allowed",color:showLyrics?"#9e9894":"#363230",flexShrink:0,display:"flex",padding:"3px",transition:"color .12s",opacity:currentTrack?1:0.4}}
             onMouseEnter={e=>{if(currentTrack)e.currentTarget.style.color="#9e9894";}} onMouseLeave={e=>{if(!showLyrics)e.currentTarget.style.color="#363230";}}>
-            <Mic2 size={15}/>
+            <Mic2 size={16}/>
           </button>
           <button onClick={toggleMute} title={volume===0?"Unmute":"Mute"}
             style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"3px",color:"#5c5755",display:"flex",transition:"color .12s"}}
             onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
-            {volume===0 ? <VolumeX size={15}/> : <Volume2 size={15}/>}
+            {volume===0 ? <VolumeX size={16}/> : <Volume2 size={16}/>}
           </button>
-          {/* Volume + tooltip */}
           <div style={{position:"relative",display:"flex",alignItems:"center",gap:"5px",flexShrink:0}}>
             <div ref={volumeRef}
               className="slider-track"
-              style={{position:"relative",width:"64px",height:"3px",background:"#232020",borderRadius:"2px",cursor:"pointer"}}
+              style={{position:"relative",width:"72px",height:"4px",background:"#232020",borderRadius:"2px",cursor:"pointer"}}
               onMouseDown={e=>{setIsDraggingVolume(true);updateVolumeFromEvent(e.clientX);}}
               onMouseEnter={e=>{const tip=e.currentTarget.nextElementSibling as HTMLElement;if(tip)tip.style.opacity='1';}}
               onMouseLeave={e=>{const tip=e.currentTarget.nextElementSibling as HTMLElement;if(tip)tip.style.opacity='0';}}>

@@ -221,6 +221,11 @@ fn mpv_process() -> &'static Mutex<Option<std::process::Child>> {
 static PLAY_COUNTER: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
+static PREFETCH_SEMAPHORE: std::sync::OnceLock<tokio::sync::Semaphore> = std::sync::OnceLock::new();
+fn prefetch_semaphore() -> &'static tokio::sync::Semaphore {
+    PREFETCH_SEMAPHORE.get_or_init(|| tokio::sync::Semaphore::new(1))
+}
+
 fn expand_tilde(path: &str) -> String {
     if path == "~" || path.starts_with("~/") || path.starts_with("~\\") {
         let home = std::env::var("HOME")
@@ -264,9 +269,19 @@ fn safe_f64(v: f64) -> f64 {
 #[tauri::command]
 async fn search_youtube(query: String) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
+        let q_trim = query.trim();
+        let is_url = q_trim.starts_with("http://") 
+            || q_trim.starts_with("https://") 
+            || q_trim.contains("youtube.com") 
+            || q_trim.contains("youtu.be");
+        let search_arg = if is_url {
+            q_trim.to_string()
+        } else {
+            format!("ytsearch40:{}", q_trim)
+        };
         let mut child = Command::new(bin_ytdlp())
             .args([
-                &format!("ytsearch40:{}", query),
+                &search_arg,
                 "--flat-playlist",
                 "--print", "%(title)s====%(uploader)s====%(duration_string)s====%(id)s",
                 "--no-warnings",
@@ -510,6 +525,8 @@ async fn prefetch_track(url: String) -> Result<(), String> {
     if PREFETCH_CACHE.lock().unwrap().contains_key(&url) { return Ok(()); }
     let cache = Arc::clone(&PREFETCH_CACHE);
     tokio::spawn(async move {
+        let permit = prefetch_semaphore().acquire().await.ok();
+        if PREFETCH_CACHE.lock().unwrap().contains_key(&url) { return; }
         if let Some(stream_url) = extract_stream_url_async(url.clone(), None).await {
             let mut c = cache.lock().unwrap();
             let now = std::time::Instant::now();
@@ -517,6 +534,7 @@ async fn prefetch_track(url: String) -> Result<(), String> {
             if c.len() >= 200 { c.retain(|_, v| std::time::Instant::now().duration_since(v.ts) < std::time::Duration::from_secs(3600)); }
             c.insert(url, CacheEntry { url: stream_url, ts: now });
         }
+        drop(permit);
     });
     Ok(())
 }
@@ -575,6 +593,7 @@ fn ensure_mpv_running() -> bool {
         "--demuxer-max-back-bytes=5MiB".into(),
         "--demuxer-readahead-secs=5".into(),
         "--cache-pause=no".into(),
+        "--cache-pause-initial=no".into(),
         "--network-timeout=10".into(),
         "--audio-buffer=0.1".into(),
         "--demuxer-seekable-cache=yes".into(),
@@ -632,12 +651,6 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
         use std::process::{Command, Stdio};
         use std::io::Read;
 
-        let group1: &[(Option<&str>, &str)] = &[
-            (None, "android"),
-            (None, "ios"),
-            (None, "default"),
-        ];
-
         let group2: &[(Option<&str>, &str)] = &[
             (Some("chrome+basictext"),      "web"),
             (Some("firefox"),               "web"),
@@ -648,71 +661,98 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
         let mut children = Vec::new();
         let mut spawned_fallback = false;
 
-        for &(browser, client) in group1 {
-            if let Some(id) = my_id {
-                if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
-                    log_debug("extract_stream_url superseded during spawning");
-                    break;
-                }
+        let mut cmd = Command::new(bin_ytdlp());
+        cmd.env("PYTHONHASHSEED", "0");
+        cmd.env("PYTHONDONTWRITEBYTECODE", "1");
+        cmd.env("PYTHONNOUSERSITE", "1");
+        cmd.no_window();
+        cmd.args([
+            "--no-warnings", "--no-playlist", "--no-check-certificates",
+            "--socket-timeout", "6", "--retries", "0",
+            "--no-call-home",
+            "--no-check-formats",
+            "--js-runtimes", "node",
+            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "-g",
+            "--extractor-args", "youtube:player_client=android,skip=webpage",
+            "-f", "140/251/18/bestaudio",
+            "--", &youtube_url
+        ]);
+        cmd.stdout(Stdio::piped());
+        cmd.stderr(Stdio::piped());
+        cmd.stdin(Stdio::null());
+
+        log_debug("Spawning primary client (android)...");
+        match cmd.spawn() {
+            Ok(child) => {
+                children.push((child, None, "android"));
             }
-
-            let mut cmd = Command::new(bin_ytdlp());
-            cmd.no_window();
-            cmd.args([
-                "--no-warnings", "--no-playlist", "--no-check-certificates",
-                "--socket-timeout", "6", "--retries", "0",
-                "--no-call-home",
-                "--js-runtimes", "node",
-                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-                "-g",
-            ]);
-            if client != "default" {
-                cmd.args(["--extractor-args", &format!("youtube:player_client={},skip=webpage", client)]);
-            }
-            cmd.args(["-f", "140/251/18/bestaudio"]);
-
-            if let Some(ref b) = browser {
-                cmd.args(["--cookies-from-browser", b]);
-            }
-            cmd.args(["--", &youtube_url]);
-
-            cmd.stdout(Stdio::piped());
-            cmd.stderr(Stdio::piped());
-            cmd.stdin(Stdio::null());
-
-            log_debug(&format!("Spawning std::process for client: {}, browser: {:?}", client, browser));
-            match cmd.spawn() {
-                Ok(child) => {
-                    children.push((child, browser, client));
-                }
-                Err(e) => {
-                    log_debug(&format!("Failed to spawn std::process for client: {}, browser: {:?}: {}", client, browser, e));
-                }
+            Err(e) => {
+                log_debug(&format!("Failed to spawn android client: {}", e));
             }
         }
 
         let start_time = std::time::Instant::now();
         let timeout = std::time::Duration::from_millis(9500);
         let mut resolved_url = None;
+        let mut spawned_group1_fallback = false;
 
         while start_time.elapsed() < timeout && resolved_url.is_none() && (!children.is_empty() || !spawned_fallback) {
-            
-            if !spawned_fallback && (start_time.elapsed() >= std::time::Duration::from_millis(1500) || children.is_empty()) {
-                log_debug("Spawning fallback browser cookie clients...");
-                for &(browser, client) in group2 {
+            if !spawned_group1_fallback && (start_time.elapsed() >= std::time::Duration::from_millis(600) || children.is_empty()) {
+                log_debug("Spawning secondary group1 clients (ios, default)...");
+                let secondary = &[(None, "ios"), (None, "default")];
+                for &(browser, client) in secondary {
                     if let Some(id) = my_id {
                         if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
-                            log_debug("extract_stream_url superseded during spawning");
                             break;
                         }
                     }
-
                     let mut cmd = Command::new(bin_ytdlp());
+                    cmd.env("PYTHONHASHSEED", "0");
+                    cmd.env("PYTHONDONTWRITEBYTECODE", "1");
+                    cmd.env("PYTHONNOUSERSITE", "1");
                     cmd.no_window();
                     cmd.args([
                         "--no-warnings", "--no-playlist", "--no-check-certificates",
                         "--socket-timeout", "6", "--retries", "0",
                         "--no-call-home",
+                        "--no-check-formats",
+                        "--js-runtimes", "node",
+                        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                        "-g",
+                    ]);
+                    if client != "default" {
+                        cmd.args(["--extractor-args", &format!("youtube:player_client={},skip=webpage", client)]);
+                    }
+                    cmd.args(["-f", "140/251/18/bestaudio", "--", &youtube_url]);
+                    cmd.stdout(Stdio::piped());
+                    cmd.stderr(Stdio::piped());
+                    cmd.stdin(Stdio::null());
+                    if let Ok(child) = cmd.spawn() {
+                        children.push((child, browser, client));
+                    }
+                }
+                spawned_group1_fallback = true;
+            }
+
+            if !spawned_fallback && (start_time.elapsed() >= std::time::Duration::from_millis(1600) || children.is_empty()) {
+                log_debug("Spawning fallback browser cookie clients...");
+                for &(browser, client) in group2 {
+                    if let Some(id) = my_id {
+                        if PLAY_COUNTER.load(std::sync::atomic::Ordering::SeqCst) != id {
+                            break;
+                        }
+                    }
+                    let mut cmd = Command::new(bin_ytdlp());
+                    cmd.env("PYTHONHASHSEED", "0");
+                    cmd.env("PYTHONDONTWRITEBYTECODE", "1");
+                    cmd.env("PYTHONNOUSERSITE", "1");
+                    cmd.no_window();
+                    cmd.args([
+                        "--no-warnings", "--no-playlist", "--no-check-certificates",
+                        "--socket-timeout", "6", "--retries", "0",
+                        "--no-call-home",
+                        "--no-check-formats",
                         "--js-runtimes", "node",
                         "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
                         "-g",
@@ -721,24 +761,15 @@ async fn extract_stream_url_async(youtube_url: String, my_id: Option<u64>) -> Op
                         cmd.args(["--extractor-args", &format!("youtube:player_client={},skip=webpage", client)]);
                     }
                     cmd.args(["-f", "140/251/18/bestaudio"]);
-
                     if let Some(ref b) = browser {
                         cmd.args(["--cookies-from-browser", b]);
                     }
                     cmd.args(["--", &youtube_url]);
-
                     cmd.stdout(Stdio::piped());
                     cmd.stderr(Stdio::piped());
                     cmd.stdin(Stdio::null());
-
-                    log_debug(&format!("Spawning std::process for client: {}, browser: {:?}", client, browser));
-                    match cmd.spawn() {
-                        Ok(child) => {
-                            children.push((child, browser, client));
-                        }
-                        Err(e) => {
-                            log_debug(&format!("Failed to spawn std::process for client: {}, browser: {:?}: {}", client, browser, e));
-                        }
+                    if let Ok(child) = cmd.spawn() {
+                        children.push((child, browser, client));
                     }
                 }
                 spawned_fallback = true;
