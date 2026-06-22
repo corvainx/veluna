@@ -18,7 +18,7 @@ fn load_icon() -> Result<tauri::image::Image<'static>, String> {
 }
 
 fn decode_png_to_rgba() -> Result<tauri::image::Image<'static>, String> {
-    let png_bytes = include_bytes!("../icons/icon.png");
+    let png_bytes = include_bytes!("../../icons/icon.png");
     let mut decoder = png::Decoder::new(std::io::Cursor::new(png_bytes as &[u8]));
     
     decoder.set_transformations(
