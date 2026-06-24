@@ -1440,7 +1440,7 @@ function SettingsPanel({
     return false;
   };
   const [diskInfo, setDiskInfo] = useState<DiskInfo | null>(null);
-  const [switchingDevice, setSwitchingDevice] = useState(false);
+  const [, setSwitchingDevice] = useState(false);
   const [startupNav, setStartupNav] = useState(() => loadLS('vg_startupNav', 'home'));
   const [hoveredSlider, setHoveredSlider] = useState<string | null>(null);
   const handleStartupNavChange = (v: string) => {
@@ -1913,46 +1913,32 @@ function SettingsPanel({
                   <RefreshCw size={13} />
                 </button>
               </div>
-              <div style={{display:"flex",flexDirection:"column"}}>
+              <div style={{padding:"14px 16px"}}>
                 {audioDevices.length === 0 ? (
-                  <div style={{padding:"14px 16px",fontSize:"12px",color:"#6f6966"}}>No output devices found</div>
-                ) : audioDevices.map((dev, idx) => {
-                  const isDefault = dev.is_default;
+                  <div style={{fontSize:"12px",color:"#6f6966"}}>No output devices found</div>
+                ) : (() => {
+                  const activeDevice = audioDevices.find(d => d.is_default) ?? audioDevices[0];
                   return (
-                    <button key={dev.id} disabled={switchingDevice}
-                      onClick={async () => {
-                        if (isDefault) return;
+                    <ThemedSelect
+                      value={activeDevice?.id ?? ''}
+                      onChange={async (id) => {
+                        if (id === activeDevice?.id) return;
                         setSwitchingDevice(true);
                         try {
-                          await invoke('set_audio_device', { id: dev.id });
-                          setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === dev.id })));
-                          showToast(`Output switched: ${dev.name}`);
+                          await invoke('set_audio_device', { id });
+                          setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === id })));
+                          showToast(`Output switched: ${audioDevices.find(d=>d.id===id)?.name ?? id}`);
                         } catch (e) { showToast(`Switch failed: ${e}`); }
                         finally { setSwitchingDevice(false); }
                       }}
-                      style={{
-                        display:"flex",alignItems:"center",gap:"12px",padding:"11px 16px",
-                        textAlign:"left",cursor:isDefault?"default":"pointer",width:"100%",
-                        background:isDefault?"rgba(226,221,217,0.02)":"transparent",
-                        border:"none",
-                        borderBottom:idx!==audioDevices.length-1?"1px solid #141312":"none",
-                        transition:"all 0.15s ease-out",opacity:switchingDevice&&!isDefault?0.4:1
-                      }}
-                      onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(226,221,217,0.01)";}}
-                      onMouseLeave={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                      <div style={{width:"28px",height:"28px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"var(--v-accent)":"rgba(255,255,255,0.02)"}`,background:isDefault?"rgba(226,221,217,0.03)":"#121111"}}>
-                        {dev.form === 'headphones'
-                          ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? 'var(--v-accent)' : '#5c5755'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                          : <Volume2 size={13} style={{color:isDefault?"var(--v-accent)":"#5c5755"}}/>}
-                      </div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <p style={{fontSize:"13px",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isDefault?"#e2ddd9":"#8c8682"}}>{dev.name}</p>
-                        {dev.form&&<p style={{fontSize:"10px",color:"#5c5755",textTransform:"capitalize",marginTop:"2px"}}>{dev.form}</p>}
-                      </div>
-                      {isDefault&&<span style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"9px",fontWeight:700,color:"var(--v-accent)",flexShrink:0,letterSpacing:".06em"}}><span style={{width:"4px",height:"4px",borderRadius:"50%",background:"var(--v-accent)",boxShadow:"0 0 4px var(--v-accent)"}}/>ACTIVE</span>}
-                    </button>
+                      options={audioDevices.map(dev => ({
+                        value: dev.id,
+                        label: dev.name,
+                        desc: dev.form ? dev.form.charAt(0).toUpperCase() + dev.form.slice(1) : undefined,
+                      }))}
+                    />
                   );
-                })}
+                })()}
               </div>
             </div>
 
@@ -1966,60 +1952,118 @@ function SettingsPanel({
                   Reset
                 </button>
               </div>
-              <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:"14px"}}>
-                {([
-                  { label: 'Bass', key: 'bass' as const, desc: 'Low range (60–250Hz)' },
-                  { label: 'Mid', key: 'mid' as const, desc: 'Vocals & instruments (500Hz–2kHz)' },
-                  { label: 'Treble', key: 'treble' as const, desc: 'High range & air (4–16kHz)' },
-                ] as { label: string; key: 'bass' | 'mid' | 'treble'; desc: string }[]).map(({ label, key, desc }) => (
-                  <div key={key}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}}>
-                      <div style={{display:"flex",alignItems:"baseline",gap:"8px"}}>
-                        <span style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9"}}>{label}</span>
-                        <span style={{fontSize:"10.5px",color:"#5c5755"}}>{desc}</span>
-                      </div>
-                      <span style={{fontSize:"11px",fontWeight:700,fontVariantNumeric:"tabular-nums",width:"42px",textAlign:"right",color:eq[key]>0?"#e2ddd9":eq[key]<0?"#5c5755":"#363230"}}>
-                        {eq[key] > 0 ? `+${eq[key]}` : eq[key]} dB
-                      </span>
-                    </div>
-                    <div style={{position:"relative",height:"4px",background:"#1b1918",borderRadius:"2px"}}
-                      onMouseEnter={() => setHoveredSlider(key)}
-                      onMouseLeave={() => setHoveredSlider(null)}>
-                      <div style={{position:"absolute",top:0,left:"50%",width:"1px",height:"100%",background:"var(--v-bdr3)",borderRadius:"1px",pointerEvents:"none"}}/>
-                      <input type="range" min="-12" max="12" step="1" value={eq[key]}
-                        onChange={e => {
-                          const v = parseInt(e.target.value);
-                          const next = { ...eq, [key]: v };
-                          setEq(next);
-                          invoke('set_equalizer', { bass: next.bass, mid: next.mid, treble: next.treble }).catch(() => {});
+              <div style={{padding:"20px 16px 18px"}}>
+                {/* EQ band cards */}
+                <div style={{display:"flex",gap:"10px"}}>
+                  {([
+                    { label: 'Bass', key: 'bass' as const, freq: '60–250 Hz', color: 'var(--v-accent)' },
+                    { label: 'Mid', key: 'mid' as const, freq: '500 Hz–2 kHz', color: 'var(--v-accent)' },
+                    { label: 'Treble', key: 'treble' as const, freq: '4–16 kHz', color: 'var(--v-accent)' },
+                  ] as { label: string; key: 'bass' | 'mid' | 'treble'; freq: string; color: string }[]).map(({ label, key, freq, color }) => {
+                    const val = eq[key];
+                    const pct = ((val + 12) / 24) * 100;
+                    const isActive = val !== 0;
+                    return (
+                      <div key={key} style={{
+                        flex:1,borderRadius:"10px",
+                        background:"var(--v-bg2)",
+                        border:`1px solid ${isActive?'rgba(226,221,217,0.08)':'var(--v-bdr)'}`,
+                        padding:"14px 12px 12px",
+                        transition:"border-color .2s ease",
+                        display:"flex",flexDirection:"column",alignItems:"center",gap:"10px"
+                      }}>
+                        {/* Label + freq */}
+                        <div style={{textAlign:"center"}}>
+                          <div style={{fontSize:"13px",fontWeight:700,color:isActive?"#e2ddd9":"#9e9894",transition:"color .2s"}}>{label}</div>
+                          <div style={{fontSize:"9.5px",color:"#4a4644",marginTop:"2px",letterSpacing:"0.02em"}}>{freq}</div>
+                        </div>
+
+                        {/* Vertical slider track */}
+                        <div style={{
+                          position:"relative",width:"100%",height:"110px",
+                          display:"flex",alignItems:"center",justifyContent:"center",
                         }}
-                        style={{position:"absolute",inset:0,width:"100%",opacity:0,cursor:"pointer",height:"100%"}}
-                      />
-                      <div style={{
-                          position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s",
-                          left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
-                          width: `${(Math.abs(eq[key]) / 24) * 100}%`,
-                          background: 'var(--v-accent)',
-                        }} />
-                      <div style={{
-                          position: "absolute",
-                          top: "50%",
-                          transform: hoveredSlider === key ? "translateY(-50%) scale(1.15)" : "translateY(-50%) scale(1)",
-                          width: "12px",
-                          height: "12px",
-                          borderRadius: "50%",
-                          borderStyle: "solid",
-                          borderWidth: "2px",
-                          borderColor: "var(--v-accent)",
-                          background: "var(--v-bg0)",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                          pointerEvents: "none",
-                          transition: "left 0.12s ease-out, transform 0.12s ease",
-                          left: `calc(${((eq[key] + 12) / 24) * 100}% - 6px)`
-                        }} />
-                    </div>
-                  </div>
-                ))}
+                          onMouseEnter={() => setHoveredSlider(key)}
+                          onMouseLeave={() => setHoveredSlider(null)}
+                        >
+                          {/* Track background */}
+                          <div style={{
+                            position:"absolute",left:"50%",transform:"translateX(-50%)",
+                            width:"4px",height:"100%",borderRadius:"2px",
+                            background:"#1b1918",
+                          }}/>
+
+                          {/* Center zero line */}
+                          <div style={{
+                            position:"absolute",left:"calc(50% - 8px)",top:"50%",
+                            width:"20px",height:"1px",
+                            background:"rgba(226,221,217,0.12)",
+                            pointerEvents:"none"
+                          }}/>
+
+                          {/* Fill bar */}
+                          <div style={{
+                            position:"absolute",left:"50%",transform:"translateX(-50%)",
+                            width:"4px",borderRadius:"2px",
+                            pointerEvents:"none",
+                            transition:"all .15s ease",
+                            background: color,
+                            boxShadow: isActive ? `0 0 8px ${color}33` : 'none',
+                            ...(val >= 0
+                              ? { bottom: "50%", height: `${(val / 12) * 50}%` }
+                              : { top: "50%", height: `${(Math.abs(val) / 12) * 50}%` }
+                            )
+                          }}/>
+
+                          {/* Thumb */}
+                          <div style={{
+                            position:"absolute",left:"50%",
+                            transform: `translateX(-50%) ${hoveredSlider === key ? 'scale(1.2)' : 'scale(1)'}`,
+                            width:"14px",height:"14px",
+                            borderRadius:"50%",
+                            border:`2.5px solid ${isActive?color:'#5c5755'}`,
+                            background:"var(--v-bg0)",
+                            boxShadow: isActive ? `0 0 10px ${color}44, 0 2px 4px rgba(0,0,0,0.5)` : "0 2px 4px rgba(0,0,0,0.5)",
+                            pointerEvents:"none",
+                            transition:"all .15s ease",
+                            bottom: `calc(${pct}% - 7px)`,
+                          }}/>
+
+                          {/* Invisible input */}
+                          <input type="range" min="-12" max="12" step="1" value={val}
+                            onChange={e => {
+                              const v = parseInt(e.target.value);
+                              const next = { ...eq, [key]: v };
+                              setEq(next);
+                              invoke('set_equalizer', { bass: next.bass, mid: next.mid, treble: next.treble }).catch(() => {});
+                            }}
+                            style={{
+                              position:"absolute",
+                              width:"110px",height:"28px",
+                              opacity:0,cursor:"pointer",
+                              transform:"rotate(-90deg)",
+                              transformOrigin:"center center",
+                            }}
+                          />
+                        </div>
+
+                        {/* dB value */}
+                        <div style={{
+                          fontSize:"13px",fontWeight:700,
+                          fontVariantNumeric:"tabular-nums",
+                          color: val > 0 ? "#e2ddd9" : val < 0 ? "#6f6966" : "#363230",
+                          background: isActive ? "rgba(226,221,217,0.04)" : "transparent",
+                          padding:"3px 10px",borderRadius:"6px",
+                          border: isActive ? "1px solid rgba(226,221,217,0.06)" : "1px solid transparent",
+                          transition:"all .2s ease",
+                          minWidth:"52px",textAlign:"center",
+                        }}>
+                          {val > 0 ? `+${val}` : val} dB
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -4712,15 +4756,20 @@ export default function Veluna() {
         .v-section-head__action{font-size:11px;color:var(--v-fg4);cursor:pointer;background:none;border:none;padding:0;transition:color .12s;}
         .v-section-head__action:hover{color:var(--v-fg2);}
 
-        .v-nav-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;width:100%;text-align:left;font-size:14px;font-weight:500;transition:background .12s,color .12s;position:relative;}
+        .v-nav-btn{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;width:100%;text-align:left;font-size:13.5px;font-weight:500;transition:background .18s ease,color .18s ease,box-shadow .18s ease;position:relative;letter-spacing:-0.005em;}
         .v-nav-btn:hover{background:rgba(226,221,217,0.05);color:var(--v-fg2);}
-        .v-nav-btn--active{background:rgba(226,221,217,0.07);color:var(--v-fg);font-weight:600;}
-        .v-nav-btn--active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:2px;background:var(--v-accent);border-radius:0 2px 2px 0;}
+        .v-nav-btn--active{background:rgba(226,221,217,0.07);color:var(--v-fg);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+        .v-nav-btn--active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--v-accent);border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(var(--v-accent-rgb,226,221,217),0.3);}
+        .v-nav-btn .v-nav-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;transition:background .18s ease;flex-shrink:0;}
+        .v-nav-btn:hover .v-nav-icon{background:rgba(226,221,217,0.06);}
+        .v-nav-btn--active .v-nav-icon{background:rgba(226,221,217,0.08);}
 
-        .v-pl-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;width:100%;text-align:left;transition:background .1s,color .1s;}
+        .v-pl-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;width:100%;text-align:left;transition:background .15s ease,color .15s ease;}
         .v-pl-item:hover{background:rgba(226,221,217,0.04);color:var(--v-fg2);}
         .v-pl-item--active{background:rgba(226,221,217,0.06);color:var(--v-fg);}
-        .v-pl-item__art{width:30px;height:30px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;}
+        .v-pl-item__art{width:30px;height:30px;border-radius:7px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;transition:border-color .15s ease;}
+        .v-pl-item:hover .v-pl-item__art{border-color:rgba(255,255,255,0.1);}
+        .v-pl-item--active .v-pl-item__art{border-color:rgba(255,255,255,0.12);}
 
         .v-topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;flex-shrink:0;border-bottom:1px solid var(--v-bdr);z-index:20;}
         .v-topbar__back{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1px solid var(--v-bdr2);background:transparent;color:var(--v-fg3);font-size:13.5px;font-weight:500;cursor:pointer;transition:border-color .12s,color .12s;}
@@ -5182,9 +5231,9 @@ export default function Veluna() {
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
 
         {}
-        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 16px",zIndex:10,overflow:"visible",position:"relative"}}>
+        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
           {}
-          <div style={{display:"flex",alignItems:"center",marginBottom:"22px",flexShrink:0,padding:"0 2px"}}>
+          <div style={{display:"flex",alignItems:"center",marginBottom:"20px",flexShrink:0,padding:"0 4px"}}>
             <div style={{
               display: "flex",
               alignItems: "center",
@@ -5214,11 +5263,17 @@ export default function Veluna() {
             </div>
           </div>
 
-          {}
-          <div style={{position:"relative",marginBottom:"10px",flexShrink:0,overflow:"visible"}} onClick={e => e.stopPropagation()}>
+          {/* Sleep timer */}
+          <div style={{position:"relative",marginBottom:"6px",flexShrink:0,overflow:"visible",padding:"0 2px"}} onClick={e => e.stopPropagation()}>
             <div
               onClick={() => setShowSleepPopover(o => !o)}
-              style={sleepTimer>0?{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'7px',border:'1px solid rgba(226,221,217,0.12)',background:'rgba(226,221,217,0.05)',color:'#9e9894',cursor:'pointer',fontSize:'11px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#363230',cursor:'pointer',fontSize:'11px',fontWeight:500}}>
+              style={sleepTimer>0
+                ?{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',border:'1px solid rgba(226,221,217,0.1)',background:'rgba(226,221,217,0.04)',color:'#9e9894',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'all .15s ease'}
+                :{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',border:'1px solid transparent',background:'transparent',color:'#363230',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'all .15s ease'}
+              }
+              onMouseEnter={e=>{if(sleepTimer<=0){e.currentTarget.style.background='rgba(226,221,217,0.03)';e.currentTarget.style.color='#5c5755';}}}
+              onMouseLeave={e=>{if(sleepTimer<=0){e.currentTarget.style.background='transparent';e.currentTarget.style.color='#363230';}}}
+            >
               <Moon size={14} style={sleepTimer > 0 ? {color:'#9e9894',animation:'velunaPulse 2s ease-in-out infinite'} : {color:'#363230'}} />
               <span style={{flex:1}}>{sleepTimer>0?'Sleep in '+Math.ceil(sleepTimer/60)+'m':'Sleep Timer'}</span>
               {sleepTimer > 0
@@ -5237,7 +5292,10 @@ export default function Veluna() {
             )}
           </div>
 
-          <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0}}>
+          {/* Divider */}
+          <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'6px 8px 8px',flexShrink:0}}/>
+
+          <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0,padding:"0 2px"}}>
             {([
               { id: 'home', label: 'Home', icon: Home },
               { id: 'downloads', label: 'Offline', icon: HardDrive },
@@ -5246,34 +5304,41 @@ export default function Veluna() {
             ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }> }[]).map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => navigateTo(id)}
                 className={`v-nav-btn${activeNav===id?' v-nav-btn--active':''}`}>
-                <Icon size={17} style={activeNav===id?{color:'#9e9894'}:{color:'#363230'}} />
+                <span className="v-nav-icon"><Icon size={16} style={activeNav===id?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
                 <span>{label}</span>
               </button>
             ))}
             <button onClick={() => setIsQueueOpen(o => !o)}
               className={`v-nav-btn${isQueueOpen?' v-nav-btn--active':''}`}>
-              <ListOrdered size={17} style={isQueueOpen?{color:'#9e9894'}:{color:'#363230'}} />
+              <span className="v-nav-icon"><ListOrdered size={16} style={isQueueOpen?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
               <span style={{flex:1}}>Queue</span>
               {queue.length > 0 && <span key={queuePulseKey} className="queue-badge-pulse v-badge" style={{marginLeft:"auto"}}>{queue.length}</span>}
             </button>
           </nav>
 
-          {}
-          <div style={{marginTop:"14px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 8px",flexShrink:0,borderBottom:"1px solid var(--v-bdr2)"}}>
+          {/* Divider */}
+          <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'8px 8px 6px',flexShrink:0}}/>
+
+          {/* Playlists section */}
+          <div style={{marginTop:"4px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"2px 6px 10px",flexShrink:0}}>
               <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
-                style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#363230',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .12s'}}>
-                <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#363230'}}/>
-                <span style={{fontWeight:500}}>Playlists</span>
-                <ChevronRight size={14} style={{marginLeft:"auto",transition:"transform .2s",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
+                style={{display:'flex',alignItems:'center',gap:'8px',flex:1,padding:'4px 8px',borderRadius:'6px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#4a4644',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .15s ease'}}
+                onMouseEnter={e=>{if(activeNav!=='library')e.currentTarget.style.color='#5c5755';}}
+                onMouseLeave={e=>{if(activeNav!=='library')e.currentTarget.style.color='#4a4644';}}>
+                <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#4a4644'}}/>
+                <span style={{fontWeight:600,letterSpacing:'0.08em'}}>Playlists</span>
+                <ChevronRight size={14} style={{marginLeft:"auto",transition:"transform .2s ease",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
               </button>
               <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                style={{padding:"4px",border:"none",background:"transparent",cursor:"pointer",color:"#363230",borderRadius:"4px",flexShrink:0}} title="New playlist">
+                style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#363230",borderRadius:"6px",flexShrink:0,transition:'color .15s ease,background .15s ease'}} title="New playlist"
+                onMouseEnter={e=>{e.currentTarget.style.color='#9e9894';e.currentTarget.style.background='rgba(226,221,217,0.05)';}}
+                onMouseLeave={e=>{e.currentTarget.style.color='#363230';e.currentTarget.style.background='transparent';}}>
                 <PlusCircle size={15} />
               </button>
             </div>
             {sidebarPlaylistsExpanded && (
-              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"var(--v-bdr2) transparent"}}>
+              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"var(--v-bdr2) transparent",padding:"0 2px"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:"1px",paddingBottom:"8px"}}>
                   {playlists.map(pl => {
                     const isOpen = openPlaylistId === pl.id && activeNav === 'library';
@@ -5288,7 +5353,7 @@ export default function Veluna() {
                             : pl.id === 'p1' ? <Heart size={11} style={{color:'#e05555',fill:isOpen?'rgba(220,60,60,0.4)':'none'}}/>
                             : <ListMusic size={11} style={{color:isOpen?'#9e9894':'#363230'}} />}
                         </div>
-                        <span style={{fontSize:'12.5px',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>{pl.name}</span>
+                        <span style={{fontSize:'12.5px',fontWeight:isOpen?600:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1,transition:'font-weight .15s ease'}}>{pl.name}</span>
                         {pl.tracks.length > 0 && <span style={{fontSize:'10px',color:isOpen?'#5c5755':'#363230',flexShrink:0,marginLeft:'auto',fontVariantNumeric:'tabular-nums'}}>{pl.tracks.length}</span>}
                       </button>
                     );
@@ -6002,19 +6067,21 @@ export default function Veluna() {
                                         flexShrink: 0
                                       }}>
                                         <Music size={12} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
-                                        <img
-                                          src={track.cover}
-                                          alt={track.title}
-                                          style={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover'
-                                          }}
-                                          onError={e => { e.currentTarget.style.display = 'none'; }}
-                                          loading="lazy"
-                                        />
+                                        {track.cover && (
+                                          <img
+                                            src={track.cover}
+                                            alt={track.title}
+                                            style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              width: '100%',
+                                              height: '100%',
+                                              objectFit: 'cover'
+                                            }}
+                                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                                            loading="lazy"
+                                          />
+                                        )}
                                       </div>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{
@@ -6110,19 +6177,21 @@ export default function Veluna() {
                                         flexShrink: 0
                                       }}>
                                         <Music size={12} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
-                                        <img
-                                          src={track.cover}
-                                          alt=""
-                                          style={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover'
-                                          }}
-                                          onError={e => { e.currentTarget.style.display = 'none'; }}
-                                          loading="lazy"
-                                        />
+                                        {track.cover && (
+                                          <img
+                                            src={track.cover}
+                                            alt=""
+                                            style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              width: '100%',
+                                              height: '100%',
+                                              objectFit: 'cover'
+                                            }}
+                                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                                            loading="lazy"
+                                          />
+                                        )}
                                       </div>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{
@@ -8428,6 +8497,7 @@ export default function Veluna() {
           if (lines[i].time > progressSeconds) { currentIdx = Math.max(0, i - 1); break; }
         }
         const pct = trackDurationSeconds > 0 ? Math.min((progressSeconds / trackDurationSeconds) * 100, 100) : 0;
+        const remaining = trackDurationSeconds - progressSeconds;
         return (
           <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",userSelect:"none",background:"var(--v-bg0)"}}>
             {/* Base */}
@@ -8441,15 +8511,15 @@ export default function Veluna() {
                 backgroundImage: `url(${currentTrack.cover})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'blur(90px) saturate(1.6) brightness(0.75)',
-                opacity: 0.85,
+                filter: 'blur(90px) saturate(1.8) brightness(0.7)',
+                opacity: 0.9,
               }} />
             )}
             {/* Gentle overall darkening for text legibility — smooth, no banding */}
-            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(8,7,7,0.3)"}}/>
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(8,7,7,0.25)"}}/>
 
             {/* Left panel */}
-            <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"18px"}}>
+            <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"16px"}}>
               <button onClick={()=>setShowLyrics(false)}
                 style={{position:"absolute",top:"24px",left:"24px",width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(12px)",transition:"color .15s,background .15s,border-color .15s"}}
                 onMouseEnter={e=>{e.currentTarget.style.color="#fff";e.currentTarget.style.background="rgba(255,255,255,0.12)";e.currentTarget.style.borderColor="rgba(255,255,255,0.18)";}}
@@ -8458,18 +8528,21 @@ export default function Veluna() {
               </button>
 
               {/* Album art */}
-              <div style={{width:"208px",height:"208px",borderRadius:"20px",overflow:"hidden",flexShrink:0,boxShadow:"0 28px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",position:"relative"}}>
+              <div style={{width:"220px",height:"220px",borderRadius:"12px",overflow:"hidden",flexShrink:0,boxShadow:"0 28px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)",position:"relative"}}>
                 {currentTrack.cover
                   ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : <div style={{width:"100%",height:"100%",background:"var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
               </div>
 
-              <div style={{textAlign:"center",width:"100%"}}>
-                <p style={{fontSize:"19px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px",margin:0,letterSpacing:"-0.01em"}}>{currentTrack.title}</p>
-                <p style={{fontSize:"13.5px",marginTop:"5px",color:"rgba(255,255,255,0.5)",margin:"5px 0 0"}}>{currentTrack.artist}</p>
+              {/* Track info with three-dot menu */}
+              <div style={{width:"100%",display:"flex",alignItems:"center",gap:"8px"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:"17px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",margin:0,letterSpacing:"-0.01em"}}>{currentTrack.title}</p>
+                  <p style={{fontSize:"13px",marginTop:"3px",color:"rgba(255,255,255,0.55)",margin:"3px 0 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist}</p>
+                </div>
               </div>
 
-              {/* Progress bar — identical to default player bar */}
+              {/* Progress bar */}
               <div style={{width:"100%",display:"flex",flexDirection:"column",gap:"5px"}}>
                 <div className="slider-track" style={{position:"relative",width:"100%",height:"3px",borderRadius:"2px",cursor:"pointer",background:"rgba(255,255,255,0.18)"}}
                   onMouseDown={e => {
@@ -8483,18 +8556,54 @@ export default function Veluna() {
                 </div>
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",fontVariantNumeric:"tabular-nums",color:"rgba(255,255,255,0.35)"}}>
                   <span>{formatTime(progressSeconds)}</span>
-                  <span>{formatTime(trackDurationSeconds)}</span>
+                  <span>-{formatTime(Math.max(0, remaining))}</span>
                 </div>
               </div>
 
-              {/* Playback controls */}
-              <div style={{display:"flex",alignItems:"center",gap:"22px"}}>
+              {/* Playback controls — with shuffle & repeat */}
+              <div style={{display:"flex",alignItems:"center",gap:"20px"}}>
+                <button onClick={toggleShuffle} title="Shuffle"
+                  style={{color:shuffle?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)",background:"none",border:"none",cursor:"pointer",display:"flex",padding:"3px",transition:"color .12s, transform .1s"}}
+                  onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color=shuffle?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)")}>
+                  <Shuffle size={16}/>
+                </button>
                 <button onClick={handleSkipBack} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipBack size={19}/></button>
                 <button onClick={togglePlayPause}
                   style={{width:"46px",height:"46px",borderRadius:"50%",background:"#e2ddd9",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",transition:"transform .1s"}} onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.06)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
                   {isPlaying ? <Pause fill="var(--v-bg0)" size={19}/> : <Play fill="var(--v-bg0)" size={19} style={{marginLeft:"2px"}}/>}
                 </button>
                 <button onClick={handleSkipForward} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipForward size={19}/></button>
+                <button onClick={cycleRepeat} title={`Repeat: ${repeatMode}`}
+                  style={{color:repeatMode!=='off'?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)",background:"none",border:"none",cursor:"pointer",display:"flex",padding:"3px",transition:"color .12s, transform .1s"}}
+                  onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color=repeatMode!=='off'?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)")}>
+                  {repeatMode==='one' ? <Repeat1 size={16}/> : <Repeat size={16}/>}
+                </button>
+              </div>
+
+              {/* Volume slider */}
+              <div style={{width:"100%",display:"flex",alignItems:"center",gap:"8px",justifyContent:"center"}}>
+                <button onClick={toggleMute} title={volume===0?"Unmute":"Mute"}
+                  style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px",color:"rgba(255,255,255,0.45)",display:"flex",transition:"color .12s"}}
+                  onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.8)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.45)")}>
+                  {volume===0 ? <VolumeX size={14}/> : <Volume2 size={14}/>}
+                </button>
+                <div style={{position:"relative",flex:1,display:"flex",alignItems:"center"}}>
+                  <div className="slider-track" style={{position:"relative",width:"100%",height:"3px",borderRadius:"2px",cursor:"pointer",background:"rgba(255,255,255,0.18)"}}
+                    onMouseDown={e => {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      const v = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                      invoke('set_volume', { level: v / 100 }).catch(() => {});
+                      setVolume(v);
+                    }}>
+                    <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${volume}%`,background:"rgba(255,255,255,0.55)",transition:"width 0.15s ease-out"}}>
+                      <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"10px",height:"10px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={toggleMute} style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px",color:"rgba(255,255,255,0.45)",display:"flex",transition:"color .12s"}}
+                  onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.8)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.45)")}>
+                  <Volume2 size={14}/>
+                </button>
               </div>
 
               {/* Audio output — clean dropdown */}
@@ -8513,10 +8622,13 @@ export default function Veluna() {
             </div>
 
             {/* Divider */}
-            <div style={{position:"relative",zIndex:10,width:"1px",flexShrink:0,margin:"56px 0",background:"linear-gradient(to bottom,transparent,rgba(255,255,255,0.08),transparent)"}}/>
+            <div style={{position:"relative",zIndex:10,width:"1px",flexShrink:0,margin:"56px 0",background:"linear-gradient(to bottom,transparent,rgba(255,255,255,0.06),transparent)"}}/>
 
             {/* Lyrics panel */}
             <div style={{position:"relative",zIndex:10,flex:1,overflow:"hidden"}}>
+              {/* Top/bottom fade masks */}
+              <div style={{position:"absolute",top:0,left:0,right:0,height:"120px",background:"linear-gradient(to bottom,rgba(0,0,0,0.4),transparent)",zIndex:2,pointerEvents:"none"}}/>
+              <div style={{position:"absolute",bottom:0,left:0,right:0,height:"120px",background:"linear-gradient(to top,rgba(0,0,0,0.4),transparent)",zIndex:2,pointerEvents:"none"}}/>
               {lyricsLoading ? (
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"16px",height:"100%"}}>
                   <Loader2 size={26} style={{color:"rgba(255,255,255,0.35)",animation:"spin 1s linear infinite"}}/>
@@ -8524,7 +8636,7 @@ export default function Veluna() {
                 </div>
               ) : lines.length > 0 ? (
                 <div style={{position:"relative",height:"100%"}}>
-                  <div style={{height:"100%",overflowY:"auto",padding:"140px 48px",scrollbarWidth:"none"}}
+                  <div style={{height:"100%",overflowY:"auto",padding:"160px 52px",scrollbarWidth:"none"}}
                     ref={el => {
                       if (!el) return;
                       const active = el.querySelector('[data-active="true"]') as HTMLElement;
@@ -8533,21 +8645,27 @@ export default function Veluna() {
                     {lines.map((line, idx) => {
                       const isCurrent = idx === currentIdx;
                       const isPast = idx < currentIdx;
+                      const distance = Math.abs(idx - currentIdx);
+                      // Progressive fade: lines further from current get dimmer
+                      const futureOpacity = distance <= 1 ? 0.45 : distance <= 2 ? 0.35 : distance <= 3 ? 0.25 : 0.18;
+                      const pastOpacity = distance <= 1 ? 0.3 : distance <= 2 ? 0.22 : 0.15;
                       return (
                         <p key={idx}
                           data-active={isCurrent?'true':'false'}
                           onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
-                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.8)';}}
-                          onMouseLeave={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color=isPast?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.45)';}}
+                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)';(e.currentTarget as HTMLElement).style.transform='scale(1.02)';}}
+                          onMouseLeave={e=>{if(!isCurrent){(e.currentTarget as HTMLElement).style.color=isPast?`rgba(255,255,255,${pastOpacity})`:`rgba(255,255,255,${futureOpacity})`;(e.currentTarget as HTMLElement).style.transform='scale(1)';}else{(e.currentTarget as HTMLElement).style.transform='scale(1.06)';}}}
                           style={{
-                            cursor:"pointer",lineHeight:1.45,padding:"12px 0",userSelect:"none",margin:0,
-                            fontSize: '2rem',
-                            letterSpacing: '0.005em',
-                            fontWeight: isCurrent ? 800 : 600,
-                            color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.45)',
-                            transform: isCurrent ? 'scale(1.04)' : 'scale(1)',
+                            cursor:"pointer",lineHeight:1.35,padding:"14px 0",userSelect:"none",margin:0,
+                            fontSize: isCurrent ? '2.2rem' : '1.85rem',
+                            letterSpacing: '-0.01em',
+                            fontWeight: isCurrent ? 900 : 700,
+                            fontStyle: 'italic',
+                            color: isCurrent ? '#fff' : isPast ? `rgba(255,255,255,${pastOpacity})` : `rgba(255,255,255,${futureOpacity})`,
+                            transform: isCurrent ? 'scale(1.06)' : 'scale(1)',
                             transformOrigin: 'left center',
-                            transition: 'color 0.35s ease, transform 0.35s ease',
+                            transition: 'color 0.4s ease, transform 0.4s ease, font-size 0.4s ease',
+                            textShadow: isCurrent ? '0 0 40px rgba(255,255,255,0.15)' : 'none',
                           }}>
                           {line.text || '\u00A0'}
                         </p>
