@@ -45,6 +45,17 @@
         "postInstallScript": "packaging/postinst.sh",
         "preRemoveScript": null,
         "postRemoveScript": null
+      },
+      "rpm": {
+        "depends": [
+          "mpv",
+          "ffmpeg"
+        ],
+        "files": {},
+        "preInstallScript": null,
+        "postInstallScript": "packaging/postinst.sh",
+        "preRemoveScript": null,
+        "postRemoveScript": null
       }
     },
     "windows": {
