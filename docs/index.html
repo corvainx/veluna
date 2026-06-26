@@ -43,6 +43,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; font-size: 17px; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 body {
   background: var(--bg);
@@ -1011,8 +1012,67 @@ footer {
 <section id="download" class="section">
   <div class="section-inner">
     <span class="s-label reveal">Download</span>
-    <h2 class="s-head reveal d1" style="font-size:clamp(48px,8vw,96px);font-weight:300;letter-spacing:-.03em;line-height:1;">something<br><em>good</em><br><strong>is coming.</strong></h2>
-    <p class="s-sub reveal d2" style="margin-top:28px;">Veluna is being prepared for release. Follow on <a href="https://github.com/ishmweet/veluna" target="_blank" rel="noopener" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px;">GitHub</a> to know when it drops.</p>
+    <h2 class="s-head reveal d1">Choose your platform</h2>
+    <p class="s-sub reveal d2">No installation wizard, no bundled junk, no account required. Just music.</p>
+    <div class="reveal d2" style="margin-top:28px">
+      <div class="version-chip">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>
+        v0.1.0 — Latest Release
+      </div>
+    </div>
+    <div class="dl-grid reveal d3">
+      <div class="dl-card">
+        <div class="dl-card-header">
+          <div class="dl-card-header-left">
+            <div class="dl-os-icon">
+              <svg viewBox="0 0 24 24" fill="var(--fg3)"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+            </div>
+            <div>
+              <div class="dl-os-name">Windows</div>
+              <div class="dl-os-arch">x64 · EXE Installer</div>
+              <div class="dl-os-compat">Windows 10 or later</div>
+            </div>
+          </div>
+
+        </div>
+        <a href="https://github.com/ishmweet/veluna/releases/download/v0.1.0/veluna_0.1.0_x64-setup.exe" class="dl-main-btn" aria-label="Download Veluna for Windows">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download for Windows
+        </a>
+        <hr class="dl-divider">
+        <div class="dl-meta">
+          <p class="dl-note">Windows may show a SmartScreen warning on first launch.
+            <a href="https://github.com/ishmweet/veluna/wiki/Why-does-Windows-flag-Veluna-as-unsafe%3F" target="_blank" rel="noopener">Why is this?</a>
+          </p>
+        </div>
+      </div>
+      <div class="dl-card">
+        <div class="dl-card-header">
+          <div class="dl-card-header-left">
+            <div class="dl-os-icon">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg" alt="Linux" style="width:22px;height:22px;filter:grayscale(100%) brightness(1.8)">
+            </div>
+            <div>
+              <div class="dl-os-name">Linux</div>
+              <div class="dl-os-arch">DEB & RPM Installer Script</div>
+              <div class="dl-os-compat">Ubuntu, Debian, Mint, Fedora, RHEL</div>
+            </div>
+          </div>
+
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr3);border-radius:var(--r);padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--fg2);display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;">
+          <span class="no-scrollbar" style="overflow-x:auto;white-space:nowrap;user-select:all;flex:1;scrollbar-width:none;-ms-overflow-style:none;">curl -fsSL https://ishmweet.github.io/veluna/install.sh | sudo bash</span>
+          <button onclick="navigator.clipboard.writeText('curl -fsSL https://ishmweet.github.io/veluna/install.sh | sudo bash');let s=this.querySelector('.copy-txt');s.innerText='Copied!';setTimeout(()=>s.innerText='Copy',2000)" style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--fg);background:var(--bg4);border:1px solid var(--bdr2);border-radius:4px;padding:4px 8px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:inherit;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="copy-txt">Copy</span>
+          </button>
+        </div>
+        <hr class="dl-divider">
+        <div class="dl-meta">
+          <p class="dl-note">Supports both DEB (Apt) and RPM (DNF) systems. Automatically installs dependencies (mpv, ffmpeg, yt-dlp).</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1145,7 +1205,7 @@ footer {
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Do I need to install dependencies?<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></button>
-          <div class="faq-ans"><div class="faq-ans-inner">On <strong>Linux</strong>, dependencies (mpv, yt-dlp, ffmpeg) are declared in the <code>.deb</code> and install automatically via apt. On <strong>Windows</strong>, all binaries are bundled in the installer — nothing extra needed.</div></div>
+          <div class="faq-ans"><div class="faq-ans-inner">On <strong>Linux</strong>, the installer script supports both <strong>DEB</strong> (Apt) and <strong>RPM</strong> (DNF) systems, installing dependencies (mpv, ffmpeg) automatically via your system package manager. On <strong>Windows</strong>, all binaries are bundled in the installer — nothing extra needed.</div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Does it require an internet connection?<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></button>
