@@ -3947,13 +3947,40 @@ export default function Veluna() {
                                 borderRadius: "10px",
                                 background: "rgba(255,255,255,0.015)",
                                 border: "1px solid rgba(255,255,255,0.03)",
-                                cursor: "pointer",
+                                cursor: "grab",
                                 transition: "all 0.15s ease",
                                 animation: `fadeUp 0.15s cubic-bezier(0.2,0,0,1) ${plIdx * 20}ms both`,
+                                opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
+                                transform: dragPlaylistCardIdxState === plIdx ? "scale(0.98)" : "none",
+                                userSelect: "none",
+                                WebkitUserSelect: "none",
                               }}
                               onMouseLeave={e => {
                                 e.currentTarget.style.background = "rgba(255,255,255,0.015)";
                                 e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)";
+                              }}
+                              onMouseDown={() => {
+                                dragPlaylistCardIdx.current = plIdx;
+                                dragOverPlaylistCardIdxRef.current = plIdx;
+                                setDragOverPlaylistCardIdx(plIdx);
+                                setDragPlaylistCardIdxState(plIdx);
+                                const onUp = () => {
+                                  const from = dragPlaylistCardIdx.current;
+                                  const to = dragOverPlaylistCardIdxRef.current;
+                                  dragPlaylistCardIdx.current = null;
+                                  dragOverPlaylistCardIdxRef.current = null;
+                                  setDragOverPlaylistCardIdx(null);
+                                  setDragPlaylistCardIdxState(null);
+                                  window.removeEventListener('mouseup', onUp);
+                                  if (from === null || to === null || from === to) return;
+                                  setPlaylists(prev => {
+                                    const arr = [...prev];
+                                    const [moved] = arr.splice(from, 1);
+                                    arr.splice(to, 0, moved);
+                                    return arr;
+                                  });
+                                };
+                                window.addEventListener('mouseup', onUp);
                               }}
                             >
                               {isDragTarget && (
@@ -3980,34 +4007,8 @@ export default function Veluna() {
                                   flexShrink: 0,
                                   position: "relative",
                                   background: "rgba(255,255,255,0.02)",
-                                  opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
-                                  transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
-                                  transition: "opacity 0.2s, transform 0.2s"
                                 }}
-                                onMouseDown={e => {
-                                  e.preventDefault();
-                                  dragPlaylistCardIdx.current = plIdx;
-                                  dragOverPlaylistCardIdxRef.current = plIdx;
-                                  setDragOverPlaylistCardIdx(plIdx);
-                                  setDragPlaylistCardIdxState(plIdx);
-                                  const onUp = () => {
-                                    const from = dragPlaylistCardIdx.current;
-                                    const to = dragOverPlaylistCardIdxRef.current;
-                                    dragPlaylistCardIdx.current = null;
-                                    dragOverPlaylistCardIdxRef.current = null;
-                                    setDragOverPlaylistCardIdx(null);
-                                    setDragPlaylistCardIdxState(null);
-                                    window.removeEventListener('mouseup', onUp);
-                                    if (from === null || to === null || from === to) return;
-                                    setPlaylists(prev => {
-                                      const arr = [...prev];
-                                      const [moved] = arr.splice(from, 1);
-                                      arr.splice(to, 0, moved);
-                                      return arr;
-                                    });
-                                  };
-                                  window.addEventListener('mouseup', onUp);
-                                }}>
+                              >
                                 <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                   {pl.id==='p1'
                                     ? <Heart size={14} style={{color:"#e05555",fill:"rgba(220,60,60,0.25)"}}/>
@@ -4026,7 +4027,7 @@ export default function Veluna() {
                               <div style={{fontSize:"11.5px",color:"#5c5755",marginRight:"8px",fontWeight:500}}>
                                 {pl.tracks.length} track{pl.tracks.length!==1?'s':''}
                               </div>
-                              <div style={{display:"flex",alignItems:"center",gap:"8px"}} onClick={e=>e.stopPropagation()}>
+                              <div style={{display:"flex",alignItems:"center",gap:"8px"}} onClick={e=>e.stopPropagation()} onMouseDown={e=>e.stopPropagation()}>
                                 <button onClick={() => playAll(pl.tracks)}
                                   style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.03)",color:"#e2ddd9",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.15s"}}
                                   onMouseEnter={e=>{e.currentTarget.style.background="var(--v-accent)";e.currentTarget.style.color="#0c0b0b";e.currentTarget.style.transform="scale(1.08)";}}
