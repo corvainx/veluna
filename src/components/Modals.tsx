@@ -173,6 +173,7 @@ export function CsvImportModal({
   onProgress,
   onMatchingDone,
   visible = true,
+  onAbort,
 }: {
   onClose: () => void;
   onSavePlaylist: (name: string, desc: string, tracks: Track[]) => void;
@@ -180,6 +181,7 @@ export function CsvImportModal({
   onProgress?: (matched: number, total: number, label: string) => void;
   onMatchingDone?: (tracks: Track[], matched: number, failed: number) => void;
   visible?: boolean;
+  onAbort?: () => void;
 }) {
   const [phase, setPhase] = useState<'instructions' | 'matching' | 'saving' | 'done'>('instructions');
   const [results, setResults] = useState<{ title: string; artist: string; status: 'pending' | 'fetching' | 'matched' | 'failed'; url?: string; cover?: string }[]>([]);
@@ -272,11 +274,13 @@ export function CsvImportModal({
         if (cleanId === undefined) {
           const q = `${track.title} ${track.artist} audio`;
           const res: string = await invoke('search_youtube', { query: q });
+          if (abortRef.current) return;
           const lines = res.trim().split('\n').filter(Boolean).slice(0, 5);
           cleanId = pickBestMatch(lines, track.title, track.artist);
           matchCache.set(cacheKey, cleanId);
         }
 
+        if (abortRef.current) return;
         if (cleanId) {
           const t: Track = {
             id: i, title: track.title, artist: track.artist,
@@ -290,9 +294,11 @@ export function CsvImportModal({
           setResults(prev => prev.map((r, idx) => idx === i ? { ...r, status: 'failed' } : r));
         }
       } catch {
+        if (abortRef.current) return;
         failed++;
         setResults(prev => prev.map((r, idx) => idx === i ? { ...r, status: 'failed' } : r));
       }
+      if (abortRef.current) return;
       completed++;
       setStatusMsg(`Matching ${completed} / ${total}...`);
       onProgress?.(matched.length, total, `${completed}/${total} matched`);
@@ -317,6 +323,8 @@ export function CsvImportModal({
       try { await processTrack(track, i); }
       finally { semaphore.release(); }
     }));
+
+    if (abortRef.current) return;
 
     setMatchedTracks(matched);
     setFailedCount(failed);
@@ -367,7 +375,18 @@ export function CsvImportModal({
                 —
               </button>
             )}
-            <button onClick={onClose}
+            <button onClick={() => {
+              if (phase === 'matching') {
+                abortRef.current = true;
+                if (onAbort) {
+                  onAbort();
+                } else {
+                  onClose();
+                }
+              } else {
+                onClose();
+              }
+            }}
               onMouseEnter={() => setIsCloseHovered(true)}
               onMouseLeave={() => setIsCloseHovered(false)}
               style={{
@@ -378,8 +397,8 @@ export function CsvImportModal({
                 justifyContent:"center",
                 borderRadius:"50%",
                 border:"none",
-                background: isCloseHovered ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                color: isCloseHovered ? "#fff" : "#5c5755",
+                background: isCloseHovered ? (phase === 'matching' ? "rgba(255, 96, 96, 0.15)" : "rgba(255, 255, 255, 0.08)") : "transparent",
+                color: isCloseHovered ? (phase === 'matching' ? "#ff6060" : "#fff") : "#5c5755",
                 cursor:"pointer",
                 transform: isCloseHovered ? "rotate(90deg)" : "none",
                 transition:"all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"

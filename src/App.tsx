@@ -48,6 +48,7 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
+  Maximize2,
   Trash2,
   Volume2,
   VolumeX,
@@ -5291,6 +5292,11 @@ export default function Veluna() {
         <CsvImportModal
           visible={showCsvImportModal}
           onClose={() => setShowCsvImportModal(false)}
+          onAbort={() => {
+            setBgImport(null);
+            setShowCsvImportModal(false);
+            showToast('Spotify import cancelled');
+          }}
           onSavePlaylist={(name, desc, tracks) => {
             const id = `csv_${Date.now()}`;
             setPlaylists(prev => [...prev, { id, name, description: desc || 'Imported from Spotify', tracks }]);
@@ -5601,12 +5607,16 @@ export default function Veluna() {
         <div
           onClick={() => setShowCsvImportModal(true)}
           onMouseEnter={e => {
-            e.currentTarget.style.borderColor = "#3a3532";
-            e.currentTarget.style.background = "#221f1f";
+            e.currentTarget.style.borderColor = "rgba(29, 185, 84, 0.4)";
+            e.currentTarget.style.background = "rgba(28, 25, 25, 0.85)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.8), 0 0 15px rgba(29,185,84,0.15)";
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.borderColor = "var(--v-bdr2)";
-            e.currentTarget.style.background = "var(--v-bdr2)";
+            e.currentTarget.style.borderColor = "rgba(29, 185, 84, 0.15)";
+            e.currentTarget.style.background = "rgba(22, 20, 20, 0.75)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.7)";
           }}
           style={{
             position: "fixed",
@@ -5615,38 +5625,86 @@ export default function Veluna() {
             zIndex: 9998,
             display: "flex",
             alignItems: "center",
-            gap: "10px",
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: "1px solid var(--v-bdr2)",
-            background: "var(--v-bdr2)",
+            gap: "12px",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "1px solid rgba(29, 185, 84, 0.15)",
+            background: "rgba(22, 20, 20, 0.75)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
-            animation: "fadeUp 0.2s ease both",
+            animation: "fadeUp 0.25s cubic-bezier(0.2,0.8,0.2,1) both",
             cursor: "pointer",
-            transition: "all 0.15s ease"
+            transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)"
           }}
         >
-          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#9e9894",animation:"velunaPulse 1.5s ease-in-out infinite",flexShrink:0}}/>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px",minWidth:"140px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
-              <span style={{fontSize:"12px",fontWeight:600,color:"#e2ddd9"}}>Importing Spotify…</span>
-              <span style={{fontSize:"10px",color:"#5c5755",fontVariantNumeric:"tabular-nums"}}>{bgImport.matched}/{bgImport.total}</span>
+          {/* Pulsing Green Dot & Spotify Icon */}
+          <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#1db954">
+              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <div style={{position: "absolute", bottom: "-2px", right: "-2px", width:"7px", height:"7px", borderRadius:"50%", background:"#1db954", border:"1px solid #161414", animation:"velunaPulse 1.5s ease-in-out infinite"}}/>
+          </div>
+
+          <div style={{display:"flex", flexDirection:"column", gap:"5px", minWidth:"150px"}}>
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:"10px"}}>
+              <span style={{fontSize:"11.5px", fontWeight:700, color:"#e2ddd9", letterSpacing:"0.01em"}}>Importing Spotify...</span>
+              <span style={{fontSize:"10.5px", fontWeight:600, color:"#8a807c", fontVariantNumeric:"tabular-nums"}}>{bgImport.matched}/{bgImport.total}</span>
             </div>
-            <div style={{height:"2px",borderRadius:"1px",background:"#232020",overflow:"hidden"}}>
-              <div style={{height:"100%",borderRadius:"1px",background:"#9e9894",width:`${(bgImport.matched/bgImport.total)*100}%`,transition:"width .3s"}}/>
+            <div style={{height:"3px", borderRadius:"1.5px", background:"rgba(255,255,255,0.06)", overflow:"hidden", position:"relative"}}>
+              <div style={{height:"100%", borderRadius:"1.5px", background:"linear-gradient(90deg, #1db954 0%, #1ed760 100%)", width:`${(bgImport.matched/bgImport.total)*100}%`, transition:"width .3s ease", boxShadow:"0 0 6px rgba(29,185,84,0.5)"}}/>
             </div>
           </div>
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              setBgImport(null);
-            }}
-            style={{color:"#363230",background:"none",border:"none",cursor:"pointer",display:"flex",marginLeft:"4px",transition:"color .12s"}}
-            onMouseEnter={e => { e.currentTarget.style.color = "#9e9894"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "#363230"; }}
-          >
-            <X size={12}/>
-          </button>
+
+          {/* Action buttons (Expand & Cancel) */}
+          <div style={{display:"flex", alignItems:"center", gap:"4px", marginLeft:"4px"}} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowCsvImportModal(true)}
+              title="Expand import modal"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <Maximize2 size={11}/>
+            </button>
+            <button
+              onClick={() => {
+                setBgImport(null);
+                setShowCsvImportModal(false);
+                showToast('Spotify import cancelled');
+              }}
+              title="Cancel import"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#ff6060"; e.currentTarget.style.background = "rgba(255,96,96,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <X size={12}/>
+            </button>
+          </div>
         </div>
       )}
 
