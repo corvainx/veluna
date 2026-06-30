@@ -550,10 +550,16 @@ export function YtImportModal({
   onClose,
   onSavePlaylist,
   showToast,
+  visible = true,
+  onProgress,
+  onAbort,
 }: {
   onClose: () => void;
   onSavePlaylist: (name: string, desc: string, tracks: Track[]) => void;
   showToast: (m: string) => void;
+  visible?: boolean;
+  onProgress?: (progress: number | null) => void;
+  onAbort?: () => void;
 }) {
   const [phase, setPhase] = useState<'input' | 'loading' | 'done'>('input');
   const [url, setUrl] = useState('');
@@ -561,8 +567,43 @@ export function YtImportModal({
   const [isFocused, setIsFocused] = useState(false);
   const [isBtnHovered, setIsBtnHovered] = useState(false);
   const [isCloseHovered, setIsCloseHovered] = useState(false);
+  const [isMinimizeHovered, setIsMinimizeHovered] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [pulseOpacity, setPulseOpacity] = useState(0.4);
+  const abortRef = useRef(false);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    if (phase !== 'loading') {
+      setProgress(0);
+      onProgress?.(null);
+      return;
+    }
+    onProgress?.(progress);
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        const nextVal = (() => {
+          if (prev < 30) return prev + Math.floor(Math.random() * 8) + 4;
+          if (prev < 60) return prev + Math.floor(Math.random() * 4) + 2;
+          if (prev < 85) return prev + Math.floor(Math.random() * 2) + 1;
+          if (prev < 95) return prev + 0.5;
+          return prev;
+        })();
+        onProgress?.(nextVal);
+        return nextVal;
+      });
+    }, 400);
+
+    const pulseInterval = setInterval(() => {
+      setPulseOpacity(p => p === 0.4 ? 0.8 : 0.4);
+    }, 800);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(pulseInterval);
+    };
+  }, [phase]);
 
   const handleImport = async () => {
     const trimmed = url.trim();
@@ -572,8 +613,10 @@ export function YtImportModal({
       return;
     }
     setPhase('loading');
+    abortRef.current = false;
     try {
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
+      if (abortRef.current) return;
       const lines = raw.trim().split('\n').filter(Boolean);
       const parsed = lines.map(l => {
         const parts = l.split('====');
@@ -600,6 +643,7 @@ export function YtImportModal({
         };
       }).filter((t): t is NonNullable<typeof t> => t !== null && !!t.id);
 
+      if (abortRef.current) return;
       if (parsed.length === 0) { showToast('No tracks found'); setPhase('input'); return; }
 
       const playlistName = parsed[0]?.playlistTitle || 'YouTube Import';
@@ -612,6 +656,7 @@ export function YtImportModal({
       setPhase('done');
       onClose();
     } catch (e) {
+      if (abortRef.current) return;
       showToast(`Import failed: ${e}`);
       setPhase('input');
     }
@@ -621,7 +666,7 @@ export function YtImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='loading'?undefined:onClose}>
       <div className="yt-import-modal-container" style={{width:"580px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
         onClick={e => e.stopPropagation()}>
 
@@ -641,25 +686,62 @@ export function YtImportModal({
               Import YouTube Playlist
             </h2>
           </div>
-          <button onClick={onClose}
-            onMouseEnter={() => setIsCloseHovered(true)}
-            onMouseLeave={() => setIsCloseHovered(false)}
-            style={{
-              width: "28px",
-              height: "28px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "50%",
-              border: "none",
-              background: isCloseHovered ? "rgba(255, 255, 255, 0.06)" : "transparent",
-              color: isCloseHovered ? "#fff" : "#5c5755",
-              cursor: "pointer",
-              transform: isCloseHovered ? "rotate(90deg)" : "none",
-              transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
-            }}>
-            <X size={15} />
-          </button>
+          <div style={{display: "flex", alignItems: "center"}}>
+            {phase === 'loading' && (
+              <button
+                onClick={onClose}
+                title="Minimize import"
+                onMouseEnter={() => setIsMinimizeHovered(true)}
+                onMouseLeave={() => setIsMinimizeHovered(false)}
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: isMinimizeHovered ? "rgba(255, 255, 255, 0.06)" : "transparent",
+                  color: isMinimizeHovered ? "#fff" : "#5c5755",
+                  cursor: "pointer",
+                  marginRight: "4px",
+                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
+              >
+                —
+              </button>
+            )}
+            <button onClick={() => {
+              if (phase === 'loading') {
+                abortRef.current = true;
+                if (onAbort) {
+                  onAbort();
+                } else {
+                  onClose();
+                }
+              } else {
+                onClose();
+              }
+            }}
+              onMouseEnter={() => setIsCloseHovered(true)}
+              onMouseLeave={() => setIsCloseHovered(false)}
+              style={{
+                width: "28px",
+                height: "28px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                border: "none",
+                background: isCloseHovered ? (phase === 'loading' ? "rgba(255, 96, 96, 0.15)" : "rgba(255, 255, 255, 0.06)") : "transparent",
+                color: isCloseHovered ? (phase === 'loading' ? "#ff6060" : "#fff") : "#5c5755",
+                cursor: "pointer",
+                transform: isCloseHovered ? "rotate(90deg)" : "none",
+                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+              }}>
+              <X size={15} />
+            </button>
+          </div>
         </div>
 
         {phase === 'input' && (
@@ -774,11 +856,32 @@ export function YtImportModal({
             boxSizing: "border-box",
             overflow: "hidden"
           }}>
-            <div style={{display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px"}}>
-              <div style={{width: "14px", height: "14px", border: "2px solid #ff1e27", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite"}} />
-              <div style={{fontSize: "12.5px", color: "#e2ddd9", fontWeight: 600}}>
-                Fetching playlist metadata...
+            <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px"}}>
+              <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                <div style={{width: "14px", height: "14px", border: "2px solid #ff1e27", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite"}} />
+                <div style={{fontSize: "12.5px", color: "#e2ddd9", fontWeight: 700}}>
+                  {progress < 25 ? "Connecting to YouTube..." :
+                   progress < 55 ? "Fetching playlist tracks..." :
+                   progress < 80 ? "Extracting metadata..." :
+                   progress < 93 ? "Resolving artists & cover art..." :
+                                   "Finishing import..."}
+                </div>
               </div>
+              <span style={{fontSize: "12px", color: "#ff1e27", fontWeight: 700, fontVariantNumeric: "tabular-nums"}}>
+                {Math.round(progress)}%
+              </span>
+            </div>
+
+            {/* YouTube Red Progress Bar */}
+            <div style={{height: "4px", borderRadius: "2px", background: "rgba(255,255,255,0.06)", overflow: "hidden", marginBottom: "24px"}}>
+              <div style={{
+                height: "100%",
+                borderRadius: "2px",
+                background: "linear-gradient(90deg, #ff1e27 0%, #ff4b55 100%)",
+                width: `${progress}%`,
+                transition: "width 0.4s ease-out",
+                boxShadow: "0 0 8px rgba(255,30,39,0.6)"
+              }} />
             </div>
 
             <div style={{display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden"}}>
@@ -790,7 +893,9 @@ export function YtImportModal({
                   padding: "8px 12px",
                   borderRadius: "10px",
                   background: "rgba(255, 255, 255, 0.02)",
-                  border: "1px solid rgba(255, 255, 255, 0.03)"
+                  border: "1px solid rgba(255, 255, 255, 0.03)",
+                  opacity: pulseOpacity,
+                  transition: "opacity 0.8s ease-in-out"
                 }}>
                   <div style={{
                     width: "48px",

@@ -327,6 +327,7 @@ export default function Veluna() {
   const [sidebarPlaylistsExpanded, setSidebarPlaylistsExpanded] = useState(true);
   // Background Spotify import progress pill
   const [bgImport, setBgImport] = useState<{ matched: number; total: number; label: string } | null>(null);
+  const [bgYtImport, setBgYtImport] = useState<{ progress: number } | null>(null);
   // Pending spotify save — survives modal minimize so name popup appears when done
   const [pendingSpotifyImport, setPendingSpotifyImport] = useState<{ tracks: Track[]; matchedCount: number; failedCount: number } | null>(null);
   // Lyrics state
@@ -5277,13 +5278,21 @@ export default function Veluna() {
       })()}
 
       {}
-      {showYtImportModal && (
+      {(showYtImportModal || bgYtImport) && (
         <YtImportModal
+          visible={showYtImportModal}
           onClose={() => setShowYtImportModal(false)}
+          onProgress={(progress) => setBgYtImport(progress !== null ? { progress } : null)}
+          onAbort={() => {
+            setBgYtImport(null);
+            setShowYtImportModal(false);
+            showToast('YouTube import cancelled');
+          }}
           onSavePlaylist={(name, desc, tracks) => {
             const id = `yt_${Date.now()}`;
             setPlaylists(prev => [...prev, { id, name, description: desc || 'Imported from YouTube', tracks }]);
             showToast(`"${name}" saved — ${tracks.length} tracks`);
+            setBgYtImport(null);
           }}
           showToast={showToast}
         />
@@ -5707,6 +5716,111 @@ export default function Veluna() {
           </div>
         </div>
       )}
+
+      {bgYtImport && !showYtImportModal && (
+        <div
+          onClick={() => setShowYtImportModal(true)}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = "rgba(255, 30, 39, 0.4)";
+            e.currentTarget.style.background = "rgba(28, 25, 25, 0.85)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.8), 0 0 15px rgba(255,30,39,0.15)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = "rgba(255, 30, 39, 0.15)";
+            e.currentTarget.style.background = "rgba(22, 20, 20, 0.75)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.7)";
+          }}
+          style={{
+            position: "fixed",
+            bottom: bgImport ? "156px" : "84px",
+            right: "16px",
+            zIndex: 9998,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "1px solid rgba(255, 30, 39, 0.15)",
+            background: "rgba(22, 20, 20, 0.75)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
+            animation: "fadeUp 0.25s cubic-bezier(0.2,0.8,0.2,1) both",
+            cursor: "pointer",
+            transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)"
+          }}
+        >
+          <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff1e27">
+              <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.388.507 9.388.507s7.517 0 9.388-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <div style={{position: "absolute", bottom: "-2px", right: "-2px", width:"7px", height:"7px", borderRadius:"50%", background:"#ff1e27", border:"1px solid #161414", animation:"velunaPulse 1.5s ease-in-out infinite"}}/>
+          </div>
+
+          <div style={{display:"flex", flexDirection:"column", gap:"5px", minWidth:"150px"}}>
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:"10px"}}>
+              <span style={{fontSize:"11.5px", fontWeight:700, color:"#e2ddd9", letterSpacing:"0.01em"}}>Importing YouTube...</span>
+              <span style={{fontSize:"10.5px", fontWeight:600, color:"#ff1e27", fontVariantNumeric:"tabular-nums"}}>{Math.round(bgYtImport.progress)}%</span>
+            </div>
+            <div style={{height:"3px", borderRadius:"1.5px", background:"rgba(255,255,255,0.06)", overflow:"hidden", position:"relative"}}>
+              <div style={{height:"100%", borderRadius:"1.5px", background:"linear-gradient(90deg, #ff1e27 0%, #ff4b55 100%)", width:`${bgYtImport.progress}%`, transition:"width .3s ease", boxShadow:"0 0 6px rgba(255,30,39,0.5)"}}/>
+            </div>
+          </div>
+
+          <div style={{display:"flex", alignItems:"center", gap:"4px", marginLeft:"4px"}} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowYtImportModal(true)}
+              title="Expand import modal"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <Maximize2 size={11}/>
+            </button>
+            <button
+              onClick={() => {
+                setBgYtImport(null);
+                setShowYtImportModal(false);
+                showToast('YouTube import cancelled');
+              }}
+              title="Cancel import"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#ff6060"; e.currentTarget.style.background = "rgba(255,96,96,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <X size={12}/>
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Live Lyrics Modal — immersive full-screen */}
       {showLyrics && currentTrack && (() => {
