@@ -36,6 +36,7 @@ Veluna is a native desktop music application that treats `mpv` as its audio engi
 
 ### 📁 Offline Library
 - Point Veluna at any folder and it scans instantly, then enriches metadata in the background without blocking the UI
+- **Local Track Cover Art Support** — dynamically reads embedded metadata covers or cached artwork base64 strings in the background for local files
 - Filter your library in real time — zero latency, pure in-memory search
 - Drag-to-reorder tracks (disabled automatically while searching)
 - Rename any file directly from the UI — applied on disk
@@ -54,6 +55,7 @@ Veluna is a native desktop music application that treats `mpv` as its audio engi
 ### 🎵 Playlists
 - Create, name, and describe playlists; edit or delete at any time
 - Upload a custom cover image for any playlist (except Liked Songs)
+- **Enhanced View Selector** — switch between grid and list views with clear "Layout: Grid" and "Layout: List" labels, featuring smooth interactive scaling on hover
 - Drag-to-reorder playlists in the sidebar and tracks within playlists
 - **Search within a playlist** — filter tracks by title or artist in real time
 - **Liked Songs** — built-in smart playlist; heart any track anywhere in the app to add it
@@ -127,7 +129,7 @@ Available on every track in every view: Play, Add to Queue, Add to Playlist, Dow
 - **Playback** — loudnorm, stream quality, skip silence, audio output device switcher, lyrics source selector, equalizer (bass / mid / treble, real-time via mpv)
 - **Storage** — backup, restore, reset
 - **Appearance** — system tray toggle
-- **Updates** — automatic update check against GitHub Releases on startup
+- **Updates** — automatic update check against GitHub Releases on startup; queries the backend to display the verified installed tag/version in the Settings panel
 
 ### 💾 Backup & Restore
 Export all playlists, queue, play history, EQ settings, search history, Quick Picks, and preferences as a single JSON file. Restore or reset at any time.
@@ -145,6 +147,22 @@ sudo apt install ./veluna_<version>_amd64.deb
 `apt` resolves and installs all required system dependencies automatically: `mpv`, `yt-dlp`, `ffmpeg`, `ffprobe`.
 
 > For system tray support on GNOME, install `libayatana-appindicator3-1`.
+
+Launch from your application menu or run:
+
+```bash
+veluna
+```
+
+### Linux — Fedora / RedHat
+
+```bash
+sudo dnf install ./veluna_<version>_x86_64.rpm
+```
+
+`dnf` resolves and installs all required system dependencies automatically.
+
+> For system tray support on GNOME, install `libayatana-appindicator-gtk3`.
 
 Launch from your application menu or run:
 
@@ -170,10 +188,18 @@ Download and run the `.exe` installer from the [Releases](https://github.com/ish
 
 ### Linux — System Dependencies
 
+For Debian/Ubuntu/Mint (APT):
 ```bash
 sudo apt install mpv yt-dlp ffmpeg libssl-dev pkg-config \
   libwebkit2gtk-4.1-dev libgtk-3-dev \
   libayatana-appindicator3-dev librsvg2-dev
+```
+
+For Fedora/RedHat (DNF):
+```bash
+sudo dnf install -y mpv yt-dlp ffmpeg openssl-devel pkg-config \
+  webkit2gtk4.1-devel gtk3-devel glib2-devel \
+  librsvg2-devel libayatana-appindicator-gtk3-devel
 ```
 
 ### Windows — Bundled Binaries
@@ -200,6 +226,7 @@ cargo tauri build
 | Platform | Output path |
 |---|---|
 | Linux `.deb` | `src-tauri/target/release/bundle/deb/` |
+| Linux `.rpm` | `src-tauri/target/release/bundle/rpm/` |
 | Windows `.exe` | `src-tauri/target/release/bundle/nsis/` |
 
 ### Development Mode
@@ -297,7 +324,15 @@ Playlist saved to localStorage
 ```
 veluna/
 ├── src/
-│   └── App.tsx                   # Entire React UI
+│   ├── App.tsx                   # React UI main entry
+│   ├── types.ts                  # Shared TypeScript type definitions
+│   ├── utils.ts                  # Common helper utilities
+│   └── components/               # Extracted sub-components
+│       ├── TrackRow.tsx          # Renders track items and skeletons
+│       ├── SleepTimerPopover.tsx # Sleep timer popover overlay
+│       ├── Modals.tsx            # Playlist CSV/YT import & metadata edit modals
+│       ├── SettingsPanel.tsx     # Full app settings panel interface
+│       └── DownloadsPanel.tsx    # Offline library & folder downloads panel
 ├── src-tauri/
 │   ├── src/
 │   │   ├── main.rs               # Rust backend
@@ -352,3 +387,4 @@ MIT © [ishmweet](https://github.com/ishmweet)
 ---
 
 *Built with Rust, React, and a stubborn belief that music software shouldn't interrupt your listening with ads.*
+
