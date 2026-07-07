@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Moon, X } from 'lucide-react';
 
-type SleepTimerPopoverProps = {
+export type SleepTimerPopoverProps = {
   sleepTimer: number;
   onSet: (m: number) => void;
   onCancel: () => void;
@@ -9,10 +9,7 @@ type SleepTimerPopoverProps = {
 };
 
 export const SleepTimerPopover = React.memo(({
-  sleepTimer,
-  onSet,
-  onCancel,
-  onClose,
+  sleepTimer, onSet, onCancel, onClose,
 }: SleepTimerPopoverProps) => {
   const [input, setInput] = useState('');
   const presets = [5, 10, 15, 20, 30, 45, 60, 90];
@@ -81,5 +78,3 @@ export const SleepTimerPopover = React.memo(({
     </div>
   );
 });
-
-SleepTimerPopover.displayName = 'SleepTimerPopover';

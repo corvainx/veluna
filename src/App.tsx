@@ -5,47 +5,138 @@ import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
-  Home, Search, Play, Pause, SkipBack, SkipForward,
-  ListMusic, Heart, Music, Volume2, VolumeX,
-  ListPlus, Share2, Download, ExternalLink, Copy,
-  Info, X, Clock, Youtube, Hash, FileCode2, PlaySquare,
-  PlusCircle, FileBadge2, Settings,
-  Shuffle, Repeat, Repeat1, ListOrdered, Trash2, Pencil,
-  ChevronRight, ChevronLeft, ImagePlus, AlignLeft, HardDrive,
-  FileMusic, Gauge, Moon, BarChart2, FileOutput,
-  CheckCircle, ChevronDown, Loader2, Mic2
-} from 'lucide-react';
-
-import { Track, LocalTrack, ListeningEvent, Playlist, RepeatMode, CtxMenu, AudioInfo, BatchProgress } from './types';
-import { parseDurationToSeconds, lightenColor, hexToRgb, cleanArtist, getTrackGradient, formatTime, loadLS, saveLS, clampMenu } from './utils';
-import { GENRES } from './constants';
-import { SleepTimerPopover } from './components/SleepTimerPopover';
-import { SpeedSelector } from './components/SpeedSelector';
-import { TrackRow } from './components/TrackRow';
-import { WaveformBar } from './components/WaveformBar';
-import { CopyButton } from './components/CopyButton';
-import { ImportButton } from './components/ImportButton';
-import { ImportResultModal } from './components/ImportResultModal';
-import { CsvImportModal } from './components/CsvImportModal';
-import { YtImportModal } from './components/YtImportModal';
-import { MetadataEditModal } from './components/MetadataEditModal';
-import { DownloadsPanel } from './components/DownloadsPanel';
-import { SettingsPanel } from './components/SettingsPanel';
-import { LyricsAudioDropdown } from './components/LyricsAudioDropdown';
+  AlignLeft,
+  BarChart2,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Copy,
+  Download,
+  ExternalLink,
+  FileBadge2,
+  FileCode2,
+  FileMusic,
+  FileOutput,
+  Gauge,
+  HardDrive,
+  Hash,
+  Heart,
+  Home,
+  ImagePlus,
+  Info,
+  LayoutGrid,
+  List,
+  ListMusic,
+  ListOrdered,
+  ListPlus,
+  Loader2,
+  Mic2,
+  Moon,
+  Music,
+  Pause,
+  Pencil,
+  Play,
+  PlaySquare,
+  PlusCircle,
+  Repeat,
+  Repeat1,
+  Search,
+  Settings,
+  Share2,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  Maximize2,
+  Trash2,
+  Volume2,
+  VolumeX,
+  X,
+  Youtube
+} from 'lucide-react';;
 
 const __APP_VERSION__ = '0.1.0';
 
 
-const TrackRowSkeleton = ({ index }: { index: number }) => (
-  <div style={{display:'flex',alignItems:'center',gap:'12px',padding:'8px 12px',animation:`fadeUpSm 0.18s cubic-bezier(0.2,0,0,1) ${index*40}ms both`}}>
-    <div style={{width:'26px',height:'12px',background:'var(--v-bdr2)',borderRadius:'4px',flexShrink:0}} className="animate-pulse"/>
-    <div style={{width:'42px',height:'42px',borderRadius:'8px',background:'var(--v-bdr2)',flexShrink:0}} className="animate-pulse"/>
-    <div style={{flex:1,display:'flex',flexDirection:'column',gap:'6px'}}>
-      <div style={{height:'11px',background:'var(--v-bdr2)',borderRadius:'3px',width:`${55+(index*13)%35}%`}} className="animate-pulse"/>
-      <div style={{height:'9px',background:'var(--v-bdr2)',borderRadius:'3px',width:`${30+(index*7)%25}%`}} className="animate-pulse"/>
+import { Track, LocalTrack, Playlist, RepeatMode, CtxMenu, AudioInfo, BatchProgress, ListeningEvent } from './types';
+import { parseDurationToSeconds, lightenColor, hexToRgb, cleanArtist, getTrackGradient, formatTime, loadLS, saveLS, clampMenu } from './utils';
+import { TrackRow, TrackRowSkeleton } from './components/TrackRow';
+import { SleepTimerPopover } from './components/SleepTimerPopover';
+import { ImportResultModal, ImportButton, CopyButton, CsvImportModal, YtImportModal, MetadataEditModal } from './components/Modals';
+import { SettingsPanel } from './components/SettingsPanel';
+import { DownloadsPanel } from './components/DownloadsPanel';
+
+
+const GENRES: { id: string; label: string; keywords: string[] }[] = [
+  { id: 'hiphop',    label: 'Hip-Hop / Rap',    keywords: ['rap','hip hop','hip-hop','trap','drill','freestyle','cypher','bars','lil ','young ','big ','21 savage','kendrick','drake','kanye','jay-z','eminem','nicki','cardi','asap','uzi','juice','polo g','gunna','future','offset','quavo','takeoff','21savage','dababy','roddy','pooh shiesty','moneybagg'] },
+  { id: 'synthwave', label: 'Synthwave',        keywords: ['synthwave','retrowave','outrun','neon','vaporwave','dreamwave','80s','retro wave','chillwave','darksynth','perturbator','kavinsky','gunship','carpenter brut','the midnight','timecop1983','FM-84','dreamwave','miami','nightcall'] },
+  { id: 'lofi',      label: 'Lo-Fi',            keywords: ['lofi','lo-fi','lo fi','chill beats','study beats','study music','sleep music','relax beats','chillhop','cafe music','coffee','anime lofi','jazz hop','nujabes'] },
+  { id: 'pop',       label: 'Pop',              keywords: ['pop','taylor swift','ariana','billie eilish','the weeknd','olivia rodrigo','dua lipa','harry styles','justin bieber','ed sheeran','selena','shawn mendes','camila','chainsmokers','imagine dragons','maroon 5','post malone'] },
+  { id: 'rock',      label: 'Rock',             keywords: ['rock','metal','punk','grunge','alternative','linkin park','nirvana','green day','foo fighters','system of a down','metallica','acdc','ac/dc','guns n roses','queen','led zeppelin','arctic monkeys','radiohead','muse','twenty one pilots','bring me','parkway drive','bmth','slipknot'] },
+  { id: 'rnb',       label: 'R&B / Soul',       keywords: ['r&b','rnb','soul','neo soul','smooth','frank ocean','sza','daniel caesar','jorja smith','h.e.r.','bryson tiller','partynextdoor','brent faiyaz','khalid','usher','alicia keys','john legend','maxwell','erykah badu','d\'angelo'] },
+  { id: 'edm',       label: 'EDM / Dance',      keywords: ['edm','electronic','dance','techno','house','trance','dubstep','dnb','drum and bass','bass','club','rave','festival','martin garrix','david guetta','tiesto','avicii','marshmello','skrillex','deadmau5','flume','diplo','zedd','alan walker','kygo','dj'] },
+  { id: 'jazz',      label: 'Jazz',             keywords: ['jazz','blues','swing','bebop','miles davis','coltrane','bill evans','thelonious','monk','duke ellington','charlie parker','herbie hancock','wynton','louis armstrong','nina simone'] },
+  { id: 'classical', label: 'Classical',        keywords: ['classical','orchestra','symphony','beethoven','mozart','bach','chopin','debussy','brahms','schubert','vivaldi','handel','liszt','tchaikovsky','rose','piano sonata','concerto','sonata','nocturne','étude'] },
+  { id: 'kpop',      label: 'K-Pop',            keywords: ['kpop','k-pop','bts','blackpink','exo','nct','stray kids','twice','red velvet','aespa','ive','new jeans','newjeans','itzy','mamamoo','seventeen','got7','shinee','bigbang','2ne1','super junior','astro','monsta x','ateez'] },
+  { id: 'afrobeats', label: 'Afrobeats',        keywords: ['afrobeats','afrobeat','amapiano','burna boy','wizkid','davido','rema','omah lay','ckay','tems','ayra starr','afropop','naija','afro','fireboy'] },
+  { id: 'latin',     label: 'Latin',            keywords: ['latin','reggaeton','salsa','bachata','cumbia','bad bunny','j balvin','maluma','ozuna','daddy yankee','nicky jam','jhay cortez','anuel','karol g','rosalia','shakira','marc anthony','romeo santos'] },
+  { id: 'slowed',    label: 'Slowed + Reverb',  keywords: ['slowed','reverb','slowed and reverb','slowed reverb','slowed + reverb','night drive','late night','4am','3am','2am','midnight drive','sad slowed'] },
+  { id: 'phonk',     label: 'Phonk',            keywords: ['phonk','memphis','drift phonk','aggressive phonk','gym phonk','dark phonk','sakkijarven polkka','kordhell','ghostemane','bones','night lovell'] },
+];
+
+const WaveformBar = React.memo(({ waveform, progressPercent, isDragging }: { waveform: number[]; progressPercent: number; isDragging: boolean }) => {
+  if (!waveform.length) return null;
+  const max = Math.max(...waveform, 0.01);
+  return (
+    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",gap:"1px",pointerEvents:"none",overflow:"hidden"}}>
+      {waveform.map((v, i) => (
+        <div key={i} style={{
+            flex:1, borderRadius:"1px",
+            height: `${Math.max(8, (v / max) * 100)}%`,
+            background: (i / waveform.length) * 100 <= progressPercent ? 'var(--v-accent)' : '#232020',
+            transition: isDragging ? 'none' : 'background 0.3s',
+          }} />
+      ))}
     </div>
-  </div>
-);
+  );
+});
+
+const SpeedSelector = React.memo(({ speed, onChange }: { speed: number; onChange: (s: number) => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(o => !o)}
+        style={{display:"flex",alignItems:"center",gap:"5px",padding:"5px 8px",borderRadius:"7px",fontSize:"11px",fontWeight:700,border:`1px solid ${speed!==1?"rgba(226,221,217,0.2)":"rgba(255,255,255,0.12)"}`,background:speed!==1?"rgba(226,221,217,0.07)":"transparent",cursor:"pointer",color:speed!==1?"rgba(226,221,217,0.9)":"rgba(255,255,255,0.5)",transition:"all .12s"}}>
+        <Gauge size={11} />
+        {speed}x
+      </button>
+      {open && (
+        <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:"50%",transform:"translateX(-50%)",background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"10px",overflow:"hidden",boxShadow:"0 12px 36px rgba(0,0,0,0.85)",zIndex:50,minWidth:"200px",animation:"dropIn 0.12s ease-out"}}>
+          <p style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230",padding:"8px 12px 4px"}}>Speed</p>
+          {speeds.map(s => (
+            <button key={s} onClick={() => { onChange(s); setOpen(false); }}
+              style={{width:"100%",textAlign:"left",padding:"7px 12px",fontSize:"12px",fontWeight:600,border:"none",background:speed===s?"rgba(226,221,217,0.06)":"transparent",cursor:"pointer",color:speed===s?"rgba(226,221,217,0.9)":"rgba(255,255,255,0.45)",transition:"background .08s,color .08s"}}
+              onMouseEnter={e=>{if(speed!==s){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.85)";}}}
+              onMouseLeave={e=>{if(speed!==s){(e.currentTarget as HTMLElement).style.background="transparent";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";}}} >
+              {s}× {s===1&&<span style={{color:"#363230",fontSize:"10px",fontWeight:400,marginLeft:"4px"}}>normal</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
 
 
 export default function Veluna() {
@@ -109,6 +200,20 @@ export default function Veluna() {
   }, [activeNav]);
 
   const [quickPicks, setQuickPicks] = useState<Track[]>(() => loadLS('vg_quickPicks', []));
+  const [playlistViewMode, setPlaylistViewMode] = useState<'grid' | 'list'>(() => loadLS('vg_playlistViewMode', 'grid'));
+  useEffect(() => { saveLS('vg_playlistViewMode', playlistViewMode); }, [playlistViewMode]);
+  const [localTracks, setLocalTracks] = useState<LocalTrack[]>([]);
+
+  const getTrackCover = useCallback((track: Track | null | undefined) => {
+    if (!track) return '';
+    if (track.cover) return track.cover;
+    if (track.url?.startsWith('local://')) {
+      const path = track.url.slice(8);
+      const found = localTracks.find(lt => lt.path === path);
+      if (found && found.cover) return found.cover;
+    }
+    return '';
+  }, [localTracks]);
 
   const [queue, setQueue] = useState<Track[]>(() => loadLS('vg_queue', []));
   const [queuePulseKey, setQueuePulseKey] = useState(0);
@@ -222,19 +327,20 @@ export default function Veluna() {
   const [sidebarPlaylistsExpanded, setSidebarPlaylistsExpanded] = useState(true);
   // Background Spotify import progress pill
   const [bgImport, setBgImport] = useState<{ matched: number; total: number; label: string } | null>(null);
+  const [bgYtImport, setBgYtImport] = useState<{ progress: number } | null>(null);
   // Pending spotify save — survives modal minimize so name popup appears when done
   const [pendingSpotifyImport, setPendingSpotifyImport] = useState<{ tracks: Track[]; matchedCount: number; failedCount: number } | null>(null);
   // Lyrics state
   const [showLyrics, setShowLyrics] = useState(false);
   const [lyricsData, setLyricsData] = useState<{ lines: {time:number;text:string}[]; title: string; artist: string } | null>(null);
   const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [lyricsDevOpen, setLyricsDevOpen] = useState(false);
   // Artist thumbnail cache for Stats page
   const [artistThumbs, setArtistThumbs] = useState<Record<string, string>>({});
 
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
   const [infoModalTrack, setInfoModalTrack] = useState<Track | null>(null);
   const [downloadingTracks, setDownloadingTracks] = useState<Record<string, number>>({});
-  const downloadsPanelSetTracksRef = useRef<React.Dispatch<React.SetStateAction<LocalTrack[]>> | null>(null);
   const [hoveredTrackUrl, setHoveredTrackUrl] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -258,7 +364,7 @@ export default function Veluna() {
   const [autoplayEnabled, setAutoplayEnabled] = useState<boolean>(() => loadLS('vg_autoplay', true));
   const [metadataEditingTrack, setMetadataEditingTrack] = useState<Track | null>(null);
   const [audioDevices, setAudioDevices] = useState<{ id: string; name: string; form: string; is_default: boolean }[]>([]);
-  const [switchingDevice, setSwitchingDevice] = useState(false);
+
 
   useEffect(() => {
     invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices')
@@ -284,6 +390,8 @@ export default function Veluna() {
   const localTrackIndexRef = useRef(0);
   
   const playlistContextRef = useRef<{ tracks: Track[]; index: number } | null>(null);
+  const lastScrolledLyricIdxRef = useRef<number>(-1);
+  const lyricsScrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
   useEffect(() => {
@@ -351,6 +459,27 @@ export default function Veluna() {
   useEffect(() => { saveLS('vg_eq', eq); }, [eq]);
   useEffect(() => { saveLS('vg_lyricsSource', lyricsSource); }, [lyricsSource]);
   useEffect(() => { saveLS('vg_trayEnabled', trayEnabled); }, [trayEnabled]);
+
+  useEffect(() => {
+    lastScrolledLyricIdxRef.current = -1;
+  }, [currentTrack?.url, showLyrics]);
+
+  useEffect(() => {
+    if (!showLyrics || !lyricsScrollContainerRef.current) return;
+    const lines = lyricsData?.lines || [];
+    let currentIdx = lines.length > 0 ? lines.length - 1 : 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].time > progressSeconds) { currentIdx = Math.max(0, i - 1); break; }
+    }
+    if (currentIdx !== lastScrolledLyricIdxRef.current) {
+      const el = lyricsScrollContainerRef.current;
+      const active = el.querySelector('[data-active="true"]') as HTMLElement;
+      if (active) {
+        active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        lastScrolledLyricIdxRef.current = currentIdx;
+      }
+    }
+  }, [showLyrics, progressSeconds, lyricsData]);
 
   // Restore tray on startup
   useEffect(() => {
@@ -421,6 +550,10 @@ export default function Veluna() {
   }, []);
 
   useEffect(() => {
+    invoke<string>('get_app_version')
+      .then(setAppVersion)
+      .catch(() => {});
+
     const autoCheck = loadLS('vg_autoCheckUpdates', true);
     if (autoCheck) {
       invoke<string | null>('check_for_update').then(v => setUpdateAvailable(v ?? null)).catch(() => {});
@@ -828,8 +961,8 @@ export default function Veluna() {
     setTrackDurationSeconds(0); trackDurationRef.current = 0;
     setAudioInfo(null);
 
-    let cover = '';
-    if (local.has_cover) {
+    let cover = local.cover || '';
+    if (!cover && local.has_cover) {
       try {
         const coverB64 = await invoke<string | null>('get_audio_cover', { path: local.path });
         if (coverB64) {
@@ -846,6 +979,7 @@ export default function Veluna() {
     };
     setCurrentTrack(synth); currentTrackRef.current = synth;
     setPlayHistory(prev => [synth, ...prev.filter(t => t.url !== synth.url)].slice(0, 50));
+    setQuickPicks(prev => [synth, ...prev.filter(t => t.url !== synth.url)].slice(0, 20));
 
     if (local.duration && local.duration !== '0:00') {
       const d = parseDurationToSeconds(local.duration);
@@ -903,9 +1037,7 @@ export default function Veluna() {
         tracks: pl.tracks.map(t => t.url === metadataEditingTrack.url ? (updateSynthesizedTrack(t) || t) : t)
       })));
       
-      if (downloadsPanelSetTracksRef.current) {
-        downloadsPanelSetTracksRef.current(prev => prev.map(t => t.path === path ? { ...t, title, artist, path: newPath } : t));
-      }
+      setLocalTracks(prev => prev.map(t => t.path === path ? { ...t, title, artist, path: newPath } : t));
       
       showToast('Metadata updated successfully');
       setMetadataEditingTrack(null);
@@ -1544,7 +1676,7 @@ export default function Veluna() {
   }, [showToast]);
 
   const isTrackLiked = useCallback((url: string) => playlists.find(p => p.id === 'p1')?.tracks.some(t => t.url === url) || false, [playlists]);
-  const getPlaylistCover = (p: Playlist) => p.id === 'p1' ? null : (p.customCover || p.tracks[0]?.cover || null);
+  const getPlaylistCover = (p: Playlist) => p.id === 'p1' ? null : (p.customCover || (p.tracks[0] ? getTrackCover(p.tracks[0]) : null));
 
   const playAll = useCallback((list: Track[]) => {
     if (!list.length) return;
@@ -1584,13 +1716,522 @@ export default function Veluna() {
   return (
     <div style={{display:"flex",flexDirection:"column",height:"100vh",width:"100%",background:"var(--v-bg0)",color:"var(--v-fg)",overflow:"hidden",fontSize:"16px"}}
       onContextMenu={e => e.preventDefault()}>
+      <style>{`
+        html,body{background:var(--v-bg0)!important;color:var(--v-fg)!important;color-scheme:dark!important;height:100%;overflow:hidden;margin:0;padding:0;}
+        button{border-style:none;border-width:0;border-color:transparent;outline-style:none;outline-width:0;outline-color:transparent;appearance:none;-webkit-appearance:none;}
+        #root{height:100%;overflow:hidden;}
+
+        .v-track{display:flex;align-items:center;gap:14px;padding:8px 12px;border-radius:10px;border:1px solid transparent;transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);cursor:pointer;}
+        .v-track:hover{background:rgba(255, 255, 255, 0.015);border-color:var(--v-bdr);box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+        .v-track--active{background:rgba(255, 255, 255, 0.03);border-color:transparent;box-shadow:0 4px 24px rgba(0,0,0,0.25);}
+        .v-track__num{width:30px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--v-fg4);flex-shrink:0;}
+        .v-track--active .v-track__num{color:var(--v-accent);}
+        .v-track__art{width:50px;height:50px;border-radius:9px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.06);}
+        .v-track__art img{width:100%;height:100%;object-fit:cover;}
+        .v-track__info{flex:1;min-width:0;}
+        .v-track__title{font-size:14.5px;font-weight:600;color:var(--v-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;transition:color 0.2s;}
+        .v-track--active .v-track__title{color:var(--v-accent);}
+        .v-track__artist{font-size:13px;color:var(--v-fg3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-track__dur{font-size:11px;color:var(--v-fg4);font-variant-numeric:tabular-nums;flex-shrink:0;}
+        .v-track__actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .12s;flex-shrink:0;}
+        .v-track:hover .v-track__actions,.v-track--active .v-track__actions{opacity:1;}
+        .v-track__btn{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s ease;}
+        .v-track__btn:hover{background:rgba(255, 255, 255, 0.06);color:#fff;}
+
+        .v-card{flex-shrink:0;width:180px;cursor:pointer;animation:fadeUpSm .2s cubic-bezier(0.2,0,0,1) both;}
+        .v-card__art{width:180px;height:180px;border-radius:13px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);position:relative;background:var(--v-bg3);transition:transform .18s cubic-bezier(0.2,0,0,1);}
+        .v-card:hover .v-card__art{transform:scale(1.03);}
+        .v-card__art img{width:100%;height:100%;object-fit:cover;display:block;}
+        .v-card__overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;border-radius:12px;}
+        .v-card:hover .v-card__overlay,.v-card--active .v-card__overlay{opacity:1;}
+        .v-card__play{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.7);border:1px solid rgba(226,221,217,0.2);display:flex;align-items:center;justify-content:center;color:var(--v-fg);}
+        .v-card__active-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--v-accent);opacity:0.8;border-radius:0 0 12px 12px;}
+        .v-card__title{font-size:13.5px;font-weight:600;color:var(--v-fg);margin-top:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-card__artist{font-size:11px;color:var(--v-fg3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+        .v-section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+        .v-section-head h2{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--v-fg3);flex:1;margin:0;}
+        .v-section-head__action{font-size:11px;color:var(--v-fg4);cursor:pointer;background:none;border:none;padding:0;transition:color .12s;}
+        .v-section-head__action:hover{color:var(--v-fg2);}
+
+        .v-nav-btn{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;width:100%;text-align:left;font-size:13.5px;font-weight:500;transition:background .18s ease,color .18s ease,box-shadow .18s ease;position:relative;letter-spacing:-0.005em;}
+        .v-nav-btn:hover{background:rgba(226,221,217,0.05);color:var(--v-fg2);}
+        .v-nav-btn--active{background:rgba(226,221,217,0.07);color:var(--v-fg);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+        .v-nav-btn--active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--v-accent);border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(var(--v-accent-rgb,226,221,217),0.3);}
+        .v-nav-btn .v-nav-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;transition:background .18s ease;flex-shrink:0;}
+        .v-nav-btn:hover .v-nav-icon{background:rgba(226,221,217,0.06);}
+        .v-nav-btn--active .v-nav-icon{background:rgba(226,221,217,0.08);}
+
+        .v-pl-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;width:100%;text-align:left;transition:background .15s ease,color .15s ease;}
+        .v-pl-item:hover{background:rgba(226,221,217,0.04);color:var(--v-fg2);}
+        .v-pl-item--active{background:rgba(226,221,217,0.06);color:var(--v-fg);}
+        .v-pl-item__art{width:30px;height:30px;border-radius:7px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;transition:border-color .15s ease;}
+        .v-pl-item:hover .v-pl-item__art{border-color:rgba(255,255,255,0.1);}
+        .v-pl-item--active .v-pl-item__art{border-color:rgba(255,255,255,0.12);}
+
+        .v-topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;flex-shrink:0;border-bottom:1px solid var(--v-bdr);z-index:20;}
+        .v-topbar__back{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1px solid var(--v-bdr2);background:transparent;color:var(--v-fg3);font-size:13.5px;font-weight:500;cursor:pointer;transition:border-color .12s,color .12s;}
+        .v-topbar__back:hover{border-color:var(--v-bdr3);color:var(--v-fg2);}
+        .v-topbar__back:disabled{opacity:0.3;cursor:not-allowed;}
+        .v-topbar__crumb{font-size:11.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--v-fg3);}
+
+        .v-player{height:72px;background:var(--v-bg1);border-top:1px solid var(--v-bdr);display:flex;align-items:center;padding:0 18px;position:relative;z-index:20;flex-shrink:0;gap:0;}
+        .v-player__track{display:flex;align-items:center;gap:11px;width:230px;flex-shrink:0;}
+        .v-player__art{width:44px;height:44px;border-radius:7px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+        .v-player__art img{width:100%;height:100%;object-fit:cover;}
+        .v-player__title{font-size:13px;font-weight:600;color:var(--v-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-player__artist{font-size:11px;color:var(--v-fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
+        .v-player__center{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;max-width:560px;margin:0 auto;}
+        .v-player__controls{display:flex;align-items:center;gap:16px;}
+        .v-player__btn{background:none;border:none;cursor:pointer;padding:4px;color:var(--v-fg3);transition:color .12s,transform .1s;display:flex;align-items:center;justify-content:center;}
+        .v-player__btn:hover{color:var(--v-fg2);transform:scale(1.1);}
+        .v-player__btn--active{color:var(--v-fg)!important;}
+        .v-player__play{width:38px;height:38px;border-radius:50%;background:var(--v-accent);color:#0c0b0b;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s,box-shadow .12s;box-shadow:0 2px 10px rgba(0,0,0,0.5);}
+        .v-player__play:hover{transform:scale(1.07);box-shadow:0 4px 16px rgba(0,0,0,0.6);}
+        .v-player__play:active{transform:scale(0.94);}
+        .v-player__play:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
+        .v-player__progress{width:100%;display:flex;align-items:center;gap:8px;}
+        .v-player__time{font-size:10px;color:var(--v-fg4);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:28px;}
+        .v-player__right{width:220px;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
+
+        .v-ctx{background:var(--v-bg2);border-style:solid;border-width:1px;border-color:var(--v-bdr2);border-radius:12px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.85);}
+        .v-ctx__header{padding:10px 14px;border-bottom:1px solid var(--v-bdr);display:flex;align-items:center;gap:10px;}
+        .v-ctx__art{width:38px;height:38px;border-radius:7px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);}
+        .v-ctx__art img{width:100%;height:100%;object-fit:cover;}
+        .v-ctx__item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 16px;font-size:14px;font-weight:500;color:var(--v-fg2);background:none;border-style:none;border-width:0;border-color:transparent;outline-style:none;outline-width:0;outline-color:transparent;appearance:none;-webkit-appearance:none;cursor:pointer;text-align:left;transition:background .08s,color .08s;}
+        .v-ctx__item:hover{background:rgba(226,221,217,0.05);color:var(--v-fg);}
+        .v-ctx__item--danger:hover{background:rgba(160,40,40,0.1);color:#b05555;}
+        .v-ctx__sep{height:1px;background:var(--v-bdr);margin:3px 0;}
+
+        .v-pl-card{border-radius:12px;padding:14px;cursor:pointer;transition:background .12s;position:relative;}
+        .v-pl-card:hover{background:rgba(226,221,217,0.04);}
+        .v-pl-card__art{width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;margin-bottom:8px;position:relative;}
+        .v-pl-card__play-btn{position:absolute;bottom:6px;right:6px;width:32px;height:32px;border-radius:50%;background:var(--v-accent);color:#0c0b0b;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;box-shadow:0 4px 12px rgba(0,0,0,0.6);}
+        .v-pl-card:hover .v-pl-card__play-btn{opacity:1;transform:translateY(0);}
+        .v-pl-card__name{font-size:14px;font-weight:600;color:var(--v-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .v-pl-card__count{font-size:11px;color:var(--v-fg4);margin-top:2px;}
+
+        .v-stat-card{background:var(--v-bg2);border:1px solid var(--v-bdr);border-radius:12px;padding:18px 20px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.025);}
+        .v-stat-card__label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--v-fg4);margin-bottom:8px;}
+        .v-stat-card__value{font-size:34px;font-weight:800;color:var(--v-fg);line-height:1;font-variant-numeric:tabular-nums;}
+        .v-stat-card__sub{font-size:11px;color:var(--v-fg4);margin-top:4px;}
+
+        .v-badge{background:rgba(226,221,217,0.1);color:var(--v-fg2);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;font-variant-numeric:tabular-nums;}
+        .v-queue-item{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;border-radius:0;transition:background .12s;}
+        .v-queue-item:hover{background:rgba(255,255,255,0.03);}
+        .v-queue-item:hover button{opacity:1!important;}
+        .v-queue-item--active{background:rgba(226,221,217,0.04);}
+        .v-queue-item .v-queue-play-overlay{opacity:0;transition:opacity 0.15s;}
+        .v-queue-item:hover .v-queue-play-overlay{opacity:1;}
+        .v-queue-item .v-queue-duration{display:block;}
+        .v-queue-item:hover .v-queue-duration{display:none;}
+        .v-queue-item .v-queue-actions{display:none;}
+        .v-queue-item:hover .v-queue-actions{display:flex;}
+        .v-queue-item .v-queue-drag-index{display:block;}
+        .v-queue-item:hover .v-queue-drag-index{display:none;}
+        .v-queue-item .v-queue-drag-icon{display:none;}
+        .v-queue-item:hover .v-queue-drag-icon{display:block;}
+
+        ::-webkit-scrollbar{width:3px;height:3px;}
+        ::-webkit-scrollbar-track{background:transparent;}
+        ::-webkit-scrollbar-thumb{background:var(--v-bg5);border-radius:2px;}
+        ::-webkit-scrollbar-thumb:hover{background:var(--v-bdr3);}
+        .custom-scrollbar::-webkit-scrollbar{width:3px;}
+        .custom-scrollbar::-webkit-scrollbar-track{background:transparent;}
+        .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--v-bg5);border-radius:2px;}
+
+        .flex-1{flex:1 1 0%;min-height:0;min-width:0;}
+        .overflow-y-auto{overflow-y:auto;}
+        .overflow-x-auto{overflow-x:auto;}
+        .overflow-hidden{overflow:hidden;}
+        .relative{position:relative;}
+        .absolute{position:absolute;}
+        .hidden{display:none;}
+        .flex{display:flex;}
+        .w-full{width:100%;}
+        .h-full{height:100%;}
+
+        @keyframes loadbar{0%{transform:translateX(-100%)}60%{transform:translateX(200%)}100%{transform:translateX(500%)}}
+        @keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUpSm{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px) scale(0.96)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+        @keyframes barBounce{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes slideLeft{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes popIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+        @keyframes queuePulse{0%{transform:scale(1)}40%{transform:scale(1.5)}70%{transform:scale(0.88)}100%{transform:scale(1)}}
+        @keyframes velunaPulse{0%,100%{opacity:0.45}50%{opacity:0.18}}
+        .queue-badge-pulse{animation:queuePulse 0.4s cubic-bezier(0.2,0,0,1) both;}
+        .slider-track:hover .slider-thumb{opacity:1!important;transform:translateY(-50%) scale(1.2)!important;}
+        [class*="animate-pulse"]{animation:velunaPulse 2s ease-in-out infinite!important;background-color:var(--v-bg3)!important;}
+        ::selection{background:rgba(226,221,217,0.18)!important;color:var(--v-fg)!important;}
+        *{-webkit-user-select:none!important;user-select:none!important;}
+        input,textarea{-webkit-user-select:text!important;user-select:text!important;}
+        kbd{background:var(--v-bg3)!important;border-color:var(--v-bdr3)!important;color:var(--v-fg2)!important;border-radius:4px!important;padding:2px 5px!important;font-size:10px!important;}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .home-card{animation:fadeUp 0.22s cubic-bezier(0.2,0,0,1) both;}
+        .v-track__dur{font-size:11px;color:var(--v-fg4);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:36px;text-align:right;}
+        .v-pl-card:hover .pl-hover-overlay{opacity:1!important;}
+        .v-pl-card:hover .v-pl-card__art{transform:scale(1.02);}
+        .v-pl-card:hover .pl-card-del{opacity:1!important;}
+        [class*="cursor-pointer"]:hover .pl-cover-ov,.pl-cover-trigger:hover .pl-cover-ov{opacity:1!important;}
+        .playlist-card{transition:background .12s;}
+        .shelf-group:hover .shelf-nav-btn { opacity: 1 !important; }
+        .shelf-nav-btn:hover { background: rgba(226,221,217,0.15) !important; transform: translateY(-50%) scale(1.08) !important; }
+        .shelf-scroll-container::-webkit-scrollbar { display: none !important; }
+        @keyframes subtlePulse {
+          0%, 100% { transform: scale(1); opacity: 0.45; }
+          50% { transform: scale(1.15); opacity: 0.6; }
+        }
+        .banner-glow {
+          animation: subtlePulse 8s ease-in-out infinite;
+        }
+        .v-settings-row:hover .v-settings-path-capsule {
+          border-color: var(--v-accent) !important;
+          color: #fff !important;
+          background: rgba(255, 255, 255, 0.04) !important;
+        }
+        .v-new-playlist-btn {
+          padding: 8px 16px;
+          background: var(--v-accent);
+          color: #0c0b0b;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          transition: all 0.2s cubic-bezier(0.2,0,0,1);
+        }
+        .v-new-playlist-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 12px var(--v-accent);
+          opacity: 0.95;
+        }
+        .v-new-playlist-btn:active {
+          transform: translateY(0);
+        }
+        .v-pl-card {
+          position: relative;
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          border-radius: 16px;
+          padding: 16px;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+          overflow: hidden;
+        }
+        .v-pl-card:hover {
+          background: rgba(255, 255, 255, 0.035);
+          border-color: rgba(255, 255, 255, 0.08);
+          transform: translateY(-4px);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(226, 221, 217, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        .v-pl-card__cover-wrapper {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1;
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 12px;
+          transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .v-pl-card:hover .v-pl-card__cover-wrapper {
+          transform: scale(1.02);
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+        .v-library-container {
+          display: flex;
+          gap: 28px;
+          flex-direction: row;
+          align-items: flex-start;
+          width: 100%;
+        }
+        @media (max-width: 1024px) {
+          .v-library-container {
+            flex-direction: column;
+            align-items: stretch;
+          }
+        }
+        .v-library-main {
+          flex: 1;
+          min-width: 0;
+        }
+        .v-library-sidebar {
+          width: 300px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        @media (max-width: 1024px) {
+          .v-library-sidebar {
+            width: 100%;
+          }
+        }
+        .v-library-sidebar-card {
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          border-radius: 16px;
+          padding: 18px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+        .v-library-stat-item {
+          display: flex;
+          flex-direction: column;
+          background: rgba(255, 255, 255, 0.01);
+          border: 1px solid rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+          padding: 10px;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+        .v-library-stat-val {
+          font-size: 18px;
+          font-weight: 800;
+          color: #e2ddd9;
+          line-height: 1.2;
+        }
+        .v-library-stat-lbl {
+          font-size: 10px;
+          color: #5c5755;
+          margin-top: 4px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .v-library-recent-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .v-library-recent-row:hover {
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .v-library-recent-art {
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          overflow: hidden;
+          flex-shrink: 0;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .v-library-recent-art img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .v-library-recent-title {
+          font-size: 12px;
+          font-weight: 600;
+          color: #e2ddd9;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .v-library-recent-artist {
+          font-size: 10.5px;
+          color: #8a807c;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-top: 1px;
+        }
+        .v-library-recent-play {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.05);
+          color: #9e9894;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: all 0.2s;
+        }
+        .v-library-recent-row:hover .v-library-recent-play {
+          opacity: 1;
+          background: var(--v-accent);
+          color: #0c0b0b;
+        }
+        .v-library-import-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          color: #9e9894;
+          font-size: 11.5px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .v-library-import-btn:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.08);
+          color: #e2ddd9;
+          transform: translateX(2px);
+        }
+        .v-player-dock {
+          height: 96px;
+          background: var(--v-bg1);
+          border: 1px solid var(--v-bdr2);
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          padding: 0 24px;
+          position: relative;
+          z-index: 20;
+          flex-shrink: 0;
+          margin: 0 20px 20px 20px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+          gap: 0;
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+        }
+        .v-player-dock:hover {
+          border-color: var(--v-bdr);
+        }
+        .v-player-btn-play {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--v-accent) 0%, rgba(255, 255, 255, 0.85) 100%);
+          color: #0c0b0b;
+          border: none;
+          cursor: pointer;
+          flex-shrink: 0;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 8px var(--v-accent);
+          transition: transform 0.15s cubic-bezier(0.2,0,0,1), box-shadow 0.15s cubic-bezier(0.2,0,0,1), opacity 0.12s;
+        }
+        .v-player-btn-play:hover {
+          transform: scale(1.08);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 14px var(--v-accent);
+        }
+        .v-player-btn-play:active {
+          transform: scale(0.96);
+        }
+        .v-player-btn-play:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .v-player-codec-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 6px;
+          background: var(--v-bg3);
+          border: 1px solid var(--v-bdr2);
+          border-radius: 5px;
+          font-size: 9px;
+          font-weight: 700;
+          color: var(--v-fg3);
+          font-family: monospace;
+          letter-spacing: 0.05em;
+          margin-top: 3px;
+        }
+        .v-progress-container {
+          position: relative;
+          flex: 1 1 0%;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+        }
+        .v-progress-track {
+          position: relative;
+          width: 100%;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 2px;
+          transition: height 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s;
+        }
+        .v-progress-container:hover .v-progress-track {
+          height: 6px;
+          background: rgba(255, 255, 255, 0.08);
+        }
+        .v-progress-fill {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          background: linear-gradient(90deg, var(--v-accent) 0%, rgba(255, 255, 255, 0.8) 100%);
+          border-radius: 3px;
+          pointer-events: none;
+        }
+        .v-progress-thumb {
+          position: absolute;
+          right: -6px;
+          top: 50%;
+          transform: translateY(-50%) scale(0);
+          width: 12px;
+          height: 12px;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), opacity 0.15s;
+          pointer-events: none;
+        }
+        .v-progress-container:hover .v-progress-thumb,
+        .v-progress-container:active .v-progress-thumb {
+          transform: translateY(-50%) scale(1);
+          opacity: 1;
+        }
+        .v-progress-tooltip {
+          position: absolute;
+          top: -30px;
+          left: 0%;
+          transform: translateX(-50%);
+          background: var(--v-bg1);
+          border: 1px solid var(--v-bdr2);
+          border-radius: 6px;
+          padding: 3px 8px;
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--v-fg2);
+          pointer-events: none;
+          white-space: nowrap;
+          z-index: 10;
+          opacity: 0;
+          transition: opacity 0.15s;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .v-progress-container:hover .v-progress-tooltip {
+          opacity: 1;
+        }
+      `}</style>
 
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
 
         {}
-        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 16px 130px 16px",zIndex:10,overflow:"visible",position:"relative"}}>
+        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
           {}
-          <div style={{display:"flex",alignItems:"center",marginBottom:"22px",flexShrink:0,padding:"0 2px"}}>
+          <div style={{display:"flex",alignItems:"center",marginBottom:"20px",flexShrink:0,padding:"0 4px"}}>
             <div style={{
               display: "flex",
               alignItems: "center",
@@ -1620,11 +2261,17 @@ export default function Veluna() {
             </div>
           </div>
 
-          {}
-          <div style={{position:"relative",marginBottom:"10px",flexShrink:0,overflow:"visible"}} onClick={e => e.stopPropagation()}>
+          {/* Sleep timer */}
+          <div style={{position:"relative",marginBottom:"6px",flexShrink:0,overflow:"visible",padding:"0 2px"}} onClick={e => e.stopPropagation()}>
             <div
               onClick={() => setShowSleepPopover(o => !o)}
-              style={sleepTimer>0?{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'7px',border:'1px solid rgba(226,221,217,0.12)',background:'rgba(226,221,217,0.05)',color:'#9e9894',cursor:'pointer',fontSize:'11px',fontWeight:500}:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 10px',borderRadius:'7px',border:'none',background:'transparent',color:'#363230',cursor:'pointer',fontSize:'11px',fontWeight:500}}>
+              style={sleepTimer>0
+                ?{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',border:'1px solid rgba(226,221,217,0.1)',background:'rgba(226,221,217,0.04)',color:'#9e9894',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'all .15s ease'}
+                :{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',border:'1px solid transparent',background:'transparent',color:'#363230',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'all .15s ease'}
+              }
+              onMouseEnter={e=>{if(sleepTimer<=0){e.currentTarget.style.background='rgba(226,221,217,0.03)';e.currentTarget.style.color='#5c5755';}}}
+              onMouseLeave={e=>{if(sleepTimer<=0){e.currentTarget.style.background='transparent';e.currentTarget.style.color='#363230';}}}
+            >
               <Moon size={14} style={sleepTimer > 0 ? {color:'#9e9894',animation:'velunaPulse 2s ease-in-out infinite'} : {color:'#363230'}} />
               <span style={{flex:1}}>{sleepTimer>0?'Sleep in '+Math.ceil(sleepTimer/60)+'m':'Sleep Timer'}</span>
               {sleepTimer > 0
@@ -1643,7 +2290,10 @@ export default function Veluna() {
             )}
           </div>
 
-          <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0}}>
+          {/* Divider */}
+          <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'6px 8px 8px',flexShrink:0}}/>
+
+          <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0,padding:"0 2px"}}>
             {([
               { id: 'home', label: 'Home', icon: Home },
               { id: 'downloads', label: 'Offline', icon: HardDrive },
@@ -1652,34 +2302,41 @@ export default function Veluna() {
             ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }> }[]).map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => navigateTo(id)}
                 className={`v-nav-btn${activeNav===id?' v-nav-btn--active':''}`}>
-                <Icon size={17} style={activeNav===id?{color:'#9e9894'}:{color:'#363230'}} />
+                <span className="v-nav-icon"><Icon size={16} style={activeNav===id?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
                 <span>{label}</span>
               </button>
             ))}
             <button onClick={() => setIsQueueOpen(o => !o)}
               className={`v-nav-btn${isQueueOpen?' v-nav-btn--active':''}`}>
-              <ListOrdered size={17} style={isQueueOpen?{color:'#9e9894'}:{color:'#363230'}} />
+              <span className="v-nav-icon"><ListOrdered size={16} style={isQueueOpen?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
               <span style={{flex:1}}>Queue</span>
               {queue.length > 0 && <span key={queuePulseKey} className="queue-badge-pulse v-badge" style={{marginLeft:"auto"}}>{queue.length}</span>}
             </button>
           </nav>
 
-          {}
-          <div style={{marginTop:"14px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px 8px",flexShrink:0,borderBottom:"1px solid var(--v-bdr2)"}}>
+          {/* Divider */}
+          <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'8px 8px 6px',flexShrink:0}}/>
+
+          {/* Playlists section */}
+          <div style={{marginTop:"4px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"2px 6px 10px",flexShrink:0}}>
               <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
-                style={{display:'flex',alignItems:'center',gap:'7px',flex:1,padding:'4px 8px',borderRadius:'5px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#363230',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .12s'}}>
-                <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#363230'}}/>
-                <span style={{fontWeight:500}}>Playlists</span>
-                <ChevronRight size={14} style={{marginLeft:"auto",transition:"transform .2s",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
+                style={{display:'flex',alignItems:'center',gap:'8px',flex:1,padding:'4px 8px',borderRadius:'6px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#4a4644',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .15s ease'}}
+                onMouseEnter={e=>{if(activeNav!=='library')e.currentTarget.style.color='#5c5755';}}
+                onMouseLeave={e=>{if(activeNav!=='library')e.currentTarget.style.color='#4a4644';}}>
+                <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#4a4644'}}/>
+                <span style={{fontWeight:600,letterSpacing:'0.08em'}}>Playlists</span>
+                <ChevronRight size={14} style={{marginLeft:"auto",transition:"transform .2s ease",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
               </button>
               <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                style={{padding:"4px",border:"none",background:"transparent",cursor:"pointer",color:"#363230",borderRadius:"4px",flexShrink:0}} title="New playlist">
+                style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#363230",borderRadius:"6px",flexShrink:0,transition:'color .15s ease,background .15s ease'}} title="New playlist"
+                onMouseEnter={e=>{e.currentTarget.style.color='#9e9894';e.currentTarget.style.background='rgba(226,221,217,0.05)';}}
+                onMouseLeave={e=>{e.currentTarget.style.color='#363230';e.currentTarget.style.background='transparent';}}>
                 <PlusCircle size={15} />
               </button>
             </div>
             {sidebarPlaylistsExpanded && (
-              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"var(--v-bdr2) transparent"}}>
+              <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"var(--v-bdr2) transparent",padding:"0 2px"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:"1px",paddingBottom:"8px"}}>
                   {playlists.map(pl => {
                     const isOpen = openPlaylistId === pl.id && activeNav === 'library';
@@ -1694,7 +2351,7 @@ export default function Veluna() {
                             : pl.id === 'p1' ? <Heart size={11} style={{color:'#e05555',fill:isOpen?'rgba(220,60,60,0.4)':'none'}}/>
                             : <ListMusic size={11} style={{color:isOpen?'#9e9894':'#363230'}} />}
                         </div>
-                        <span style={{fontSize:'12.5px',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>{pl.name}</span>
+                        <span style={{fontSize:'12.5px',fontWeight:isOpen?600:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1,transition:'font-weight .15s ease'}}>{pl.name}</span>
                         {pl.tracks.length > 0 && <span style={{fontSize:'10px',color:isOpen?'#5c5755':'#363230',flexShrink:0,marginLeft:'auto',fontVariantNumeric:'tabular-nums'}}>{pl.tracks.length}</span>}
                       </button>
                     );
@@ -1816,9 +2473,9 @@ export default function Veluna() {
                   // --- Genre detection via keyword matching on title + artist ---
 
                   // Map local files to Track shape for genre matching
-                  const localAsTrack: Track[] = localTracksListRef.current.map((lt, i) => ({
+                  const localAsTrack: Track[] = localTracks.map((lt, i) => ({
                     id: -(i + 1), title: lt.title, artist: lt.artist || '',
-                    url: `local://${lt.path}`, cover: '', duration: lt.duration || '',
+                    url: `local://${lt.path}`, cover: lt.cover || '', duration: lt.duration || '',
                   }));
 
                   // Build the fullest possible track pool:
@@ -2032,9 +2689,9 @@ export default function Veluna() {
                                   border: '1px solid rgba(255, 255, 255, 0.04)'
                                 }}>
                                   <Music size={14} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
-                                  {track.cover && (
+                                  {getTrackCover(track) && (
                                     <img
-                                      src={track.cover}
+                                      src={getTrackCover(track)}
                                       alt={track.title}
                                       style={{
                                         position: 'absolute',
@@ -2226,9 +2883,9 @@ export default function Veluna() {
                                           marginBottom: '8px'
                                         }} className="v-card__art-container">
                                           <Music size={24} style={{ position: 'absolute', color: 'rgba(255,255,255,0.15)' }} />
-                                          {track.cover && (
+                                          {getTrackCover(track) && (
                                             <img
-                                              src={track.cover}
+                                              src={getTrackCover(track)}
                                               alt={track.title}
                                               style={{
                                                 position: 'absolute',
@@ -2376,19 +3033,21 @@ export default function Veluna() {
                                         flexShrink: 0
                                       }}>
                                         <Music size={12} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
-                                        <img
-                                          src={track.cover}
-                                          alt={track.title}
-                                          style={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover'
-                                          }}
-                                          onError={e => { e.currentTarget.style.display = 'none'; }}
-                                          loading="lazy"
-                                        />
+                                        {getTrackCover(track) && (
+                                          <img
+                                            src={getTrackCover(track)}
+                                            alt={track.title}
+                                            style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              width: '100%',
+                                              height: '100%',
+                                              objectFit: 'cover'
+                                            }}
+                                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                                            loading="lazy"
+                                          />
+                                        )}
                                       </div>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{
@@ -2480,19 +3139,21 @@ export default function Veluna() {
                                         flexShrink: 0
                                       }}>
                                         <Music size={12} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
-                                        <img
-                                          src={track.cover}
-                                          alt=""
-                                          style={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover'
-                                          }}
-                                          onError={e => { e.currentTarget.style.display = 'none'; }}
-                                          loading="lazy"
-                                        />
+                                        {getTrackCover(track) && (
+                                          <img
+                                            src={getTrackCover(track)}
+                                            alt=""
+                                            style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              width: '100%',
+                                              height: '100%',
+                                              objectFit: 'cover'
+                                            }}
+                                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                                            loading="lazy"
+                                          />
+                                        )}
                                       </div>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{
@@ -2697,9 +3358,9 @@ export default function Veluna() {
               isPlaying={isPlaying} isLoadingTrack={isLoadingTrack}
               onOpenInFileManager={handleOpenInFileManager} onExportM3u={handleExportM3u}
               onChangeFolder={handleSelectDirectory}
-              activeNav={activeNav}
               refreshNonce={localRefreshNonce}
-              setTracksRef={downloadsPanelSetTracksRef}
+              tracks={localTracks}
+              setTracks={setLocalTracks}
               onCtx={(e, localTrack) => {
                 const synth: Track = {
                   id: -1,
@@ -3021,8 +3682,9 @@ export default function Veluna() {
                             ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"110px",color:"var(--v-fg3)",gap:"7px"}}><Search size={24} strokeWidth={1} /><p style={{fontSize:"13px",color:"var(--v-fg2)"}}>No results for "{playlistSearchQ}"</p></div>
                             : filteredTracks.map((t, i) => {
                                 const origIdx = openPlaylist.tracks.indexOf(t);
+                                const enrichedTrack = { ...t, cover: getTrackCover(t) };
                                 return (
-                                  <div key={t.url + origIdx}
+                                  <div key={enrichedTrack.url + origIdx}
                                     style={{position:"relative",display:"flex",alignItems:"center",gap:"3px"}}
                                     onMouseEnter={() => { if (dragPlaylistIdx.current !== null) { dragOverPlaylistIdxRef.current = origIdx; setDragOverPlaylistIdx(origIdx); } }}>
                                     {dragOverPlaylistIdx === origIdx && dragPlaylistIdx.current !== null && dragPlaylistIdx.current !== origIdx && (
@@ -3063,14 +3725,14 @@ export default function Veluna() {
                                       </div>
                                     )}
                                     <div style={{flex:1,minWidth:0}}>
-                                      <TrackRow track={t} index={i} showRemove onRemove={() => removeFromPlaylist(openPlaylist.id, t.url)}
-                                        isActive={currentTrack?.url === t.url} isHovered={hoveredTrackUrl === t.url}
+                                      <TrackRow track={enrichedTrack} index={i} showRemove onRemove={() => removeFromPlaylist(openPlaylist.id, enrichedTrack.url)}
+                                        isActive={currentTrack?.url === enrichedTrack.url} isHovered={hoveredTrackUrl === enrichedTrack.url}
                                         isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
-                                        isLiked={isTrackLiked(t.url)} isDownloading={(downloadingTracks[t.url] ?? 0)}
-                                        onPlay={() => handlePlayInContext(t, openPlaylist.tracks)}
-                                        onHoverEnter={() => { setHoveredTrackUrl(t.url); prefetchOnHover(t.url); }} onHoverLeave={() => setHoveredTrackUrl(null)}
-                                        onLike={() => toggleLikeTrack(t)} onDownload={() => handleDownload(t)}
-                                        onCtx={e => openCtx(e, { type: 'track', track: t })} />
+                                        isLiked={isTrackLiked(enrichedTrack.url)} isDownloading={(downloadingTracks[enrichedTrack.url] ?? 0)}
+                                        onPlay={() => handlePlayInContext(enrichedTrack, openPlaylist.tracks.map(x => ({ ...x, cover: getTrackCover(x) })))}
+                                        onHoverEnter={() => { setHoveredTrackUrl(enrichedTrack.url); prefetchOnHover(enrichedTrack.url); }} onHoverLeave={() => setHoveredTrackUrl(null)}
+                                        onLike={() => toggleLikeTrack(enrichedTrack)} onDownload={() => handleDownload(enrichedTrack)}
+                                        onCtx={e => openCtx(e, { type: 'track', track: enrichedTrack })} />
                                     </div>
                                   </div>
                                 );
@@ -3086,47 +3748,176 @@ export default function Veluna() {
                 <div className="v-library-container">
                   <div className="v-library-main">
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
-                      <h2 style={{fontSize:'20px',fontWeight:800,color:'var(--v-fg)',margin:0}}>Playlists</h2>
-                      <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                        className="v-new-playlist-btn">
-                        <PlusCircle size={13} /> New Playlist
-                      </button>
-                    </div>
-                    <div style={{display:"grid",gap:"20px",gridTemplateColumns:"repeat(auto-fill, minmax(170px, 1fr))"}}>
-                      {playlists.map((pl, plIdx) => {
-                        const cover = getPlaylistCover(pl);
-                        const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
-                        return (
-                          <div key={pl.id}
-                            onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
-                            className="v-pl-card"
-                            style={{ animation: `fadeUp 0.2s cubic-bezier(0.2,0,0,1) ${plIdx * 30}ms both` }}
-                            onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
-                            onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
-                            {isDragTarget && (
-                              <div style={{
-                                position: "absolute",
-                                top: 0,
-                                bottom: 0,
-                                width: "4px",
-                                background: "var(--v-accent)",
-                                borderRadius: "2px",
-                                zIndex: 20,
-                                pointerEvents: "none",
-                                left: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
-                                right: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
-                                boxShadow: "0 0 10px var(--v-accent)"
-                              }} />
-                            )}
-                            <div
-                              className="v-pl-card__cover-wrapper"
+                      <h2 style={{fontSize:'20px',fontWeight:800,color:'#e2ddd9',margin:0}}>Playlists</h2>
+                      <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                          <span style={{fontSize:'11.5px',color:'#8a807c',fontWeight:500}}>Layout:</span>
+                          <div style={{display:'flex',alignItems:'center',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.04)',borderRadius:'8px',padding:'2px'}}>
+                            <button onClick={() => setPlaylistViewMode('grid')}
+                              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
                               style={{
-                                opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
-                                transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
-                                transition: "opacity 0.2s, transform 0.2s"
+                                background: playlistViewMode === 'grid' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                border: 'none', borderRadius: '6px', color: playlistViewMode === 'grid' ? '#fff' : '#8a807c',
+                                cursor: 'pointer', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s',
+                                fontSize: '11px', fontWeight: 600
+                              }}>
+                              <LayoutGrid size={13} />
+                              <span>Grid</span>
+                            </button>
+                            <button onClick={() => setPlaylistViewMode('list')}
+                              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+                              style={{
+                                background: playlistViewMode === 'list' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                border: 'none', borderRadius: '6px', color: playlistViewMode === 'list' ? '#fff' : '#8a807c',
+                                cursor: 'pointer', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s',
+                                fontSize: '11px', fontWeight: 600
+                              }}>
+                              <List size={13} />
+                              <span>List</span>
+                            </button>
+                          </div>
+                        </div>
+                        <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
+                          className="v-new-playlist-btn">
+                          <PlusCircle size={13} /> New Playlist
+                        </button>
+                      </div>
+                    </div>
+                    {playlistViewMode === 'grid' ? (
+                      <div style={{display:"grid",gap:"20px",gridTemplateColumns:"repeat(auto-fill, minmax(170px, 1fr))"}}>
+                        {playlists.map((pl, plIdx) => {
+                          const cover = getPlaylistCover(pl);
+                          const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
+                          return (
+                            <div key={pl.id}
+                              onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
+                              className="v-pl-card"
+                              style={{ animation: `fadeUp 0.2s cubic-bezier(0.2,0,0,1) ${plIdx * 30}ms both` }}
+                              onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
+                              onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
+                              {isDragTarget && (
+                                <div style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  bottom: 0,
+                                  width: "4px",
+                                  background: "var(--v-accent)",
+                                  borderRadius: "2px",
+                                  zIndex: 20,
+                                  pointerEvents: "none",
+                                  left: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
+                                  right: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
+                                  boxShadow: "0 0 10px var(--v-accent)"
+                                }} />
+                              )}
+                              <div
+                                className="v-pl-card__cover-wrapper"
+                                style={{
+                                  opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
+                                  transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
+                                  transition: "opacity 0.2s, transform 0.2s"
+                                }}
+                                onMouseDown={e => {
+                                  e.preventDefault();
+                                  dragPlaylistCardIdx.current = plIdx;
+                                  dragOverPlaylistCardIdxRef.current = plIdx;
+                                  setDragOverPlaylistCardIdx(plIdx);
+                                  setDragPlaylistCardIdxState(plIdx);
+                                  const onUp = () => {
+                                    const from = dragPlaylistCardIdx.current;
+                                    const to = dragOverPlaylistCardIdxRef.current;
+                                    dragPlaylistCardIdx.current = null;
+                                    dragOverPlaylistCardIdxRef.current = null;
+                                    setDragOverPlaylistCardIdx(null);
+                                    setDragPlaylistCardIdxState(null);
+                                    window.removeEventListener('mouseup', onUp);
+                                    if (from === null || to === null || from === to) return;
+                                    setPlaylists(prev => {
+                                      const arr = [...prev];
+                                      const [moved] = arr.splice(from, 1);
+                                      arr.splice(to, 0, moved);
+                                      return arr;
+                                    });
+                                  };
+                                  window.addEventListener('mouseup', onUp);
+                                }}>
+                                <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                  {pl.id==='p1'
+                                    ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(140,30,30,0.4) 0%,rgba(140,30,30,0.1) 100%)"}}><Heart size={22} style={{color:"#e05555",fill:"rgba(220,60,60,0.25)"}}/></div>
+                                    : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.01) 100%)"}}><ListMusic size={24} style={{color:"#363230"}}/></div>}
+                                </div>
+                                {cover && (
+                                  <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                                )}
+                                <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(2px)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
+                                  <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
+                                    style={{width:"42px",height:"42px",background:"var(--v-accent)",color:"#0c0b0b",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 6px 16px rgba(0,0,0,0.5)",transition:"all 0.15s cubic-bezier(0.2,0,0,1)"}}
+                                    onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 8px 20px rgba(0,0,0,0.6), 0 0 10px var(--v-accent)";}}
+                                    onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 6px 16px rgba(0,0,0,0.5)";}}>
+                                    <Play size={16} style={{fill:"currentColor",color:"currentColor",marginLeft:"2px"}}/>
+                                  </button>
+                                </div>
+                              </div>
+                              <div style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
+                              <div style={{fontSize:"11px",color:"#8a807c",marginTop:"4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                                {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                              </div>
+                              {pl.id!=='p1'&&(
+                                <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
+                                  className="pl-card-del"
+                                  style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"#8a807c",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
+                                  onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.2)";e.currentTarget.style.borderColor="rgba(255,96,96,0.2)";e.currentTarget.style.transform="scale(1.05)";}}
+                                  onMouseLeave={e=>{e.currentTarget.style.color="#8a807c";e.currentTarget.style.background="rgba(0,0,0,0.6)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";e.currentTarget.style.transform="scale(1)";}}>
+                                  <Trash2 size={12}/>
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+                        {playlists.map((pl, plIdx) => {
+                          const cover = getPlaylistCover(pl);
+                          const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
+                          return (
+                            <div key={pl.id}
+                              onMouseEnter={e => {
+                                if (dragPlaylistCardIdx.current !== null) {
+                                  dragOverPlaylistCardIdxRef.current = plIdx;
+                                  setDragOverPlaylistCardIdx(plIdx);
+                                } else {
+                                  e.currentTarget.style.background = "rgba(255,255,255,0.035)";
+                                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                                }
                               }}
-                              onMouseDown={e => {
-                                e.preventDefault();
+                              className="v-pl-list-row"
+                              onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
+                              onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}
+                              style={{
+                                position: "relative",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "14px",
+                                padding: "10px 14px",
+                                borderRadius: "10px",
+                                background: "rgba(255,255,255,0.015)",
+                                border: "1px solid rgba(255,255,255,0.03)",
+                                cursor: "grab",
+                                transition: "all 0.15s ease",
+                                animation: `fadeUp 0.15s cubic-bezier(0.2,0,0,1) ${plIdx * 20}ms both`,
+                                opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
+                                transform: dragPlaylistCardIdxState === plIdx ? "scale(0.98)" : "none",
+                                userSelect: "none",
+                                WebkitUserSelect: "none",
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = "rgba(255,255,255,0.015)";
+                                e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)";
+                              }}
+                              onMouseDown={() => {
                                 dragPlaylistCardIdx.current = plIdx;
                                 dragOverPlaylistCardIdxRef.current = plIdx;
                                 setDragOverPlaylistCardIdx(plIdx);
@@ -3148,41 +3939,77 @@ export default function Veluna() {
                                   });
                                 };
                                 window.addEventListener('mouseup', onUp);
-                              }}>
-                              <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                {pl.id==='p1'
-                                  ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.03) 100%)",border:"1px solid rgba(224,85,85,0.2)",borderRadius:"12px"}}><Heart size={32} style={{color:"#ff5e5e",fill:"rgba(255,94,94,0.1)"}}/></div>
-                                  : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,var(--v-bg3) 0%,var(--v-bg2) 100%)",borderRadius:"12px"}}><ListMusic size={32} style={{color:"var(--v-accent)",opacity:0.8}}/></div>}
-                              </div>
-                              {cover && (
-                                <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                              }}
+                            >
+                              {isDragTarget && (
+                                <div style={{
+                                  position: "absolute",
+                                  left: 0,
+                                  right: 0,
+                                  height: "3px",
+                                  background: "var(--v-accent)",
+                                  borderRadius: "2px",
+                                  zIndex: 20,
+                                  pointerEvents: "none",
+                                  top: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-6px" : "auto",
+                                  bottom: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-6px" : "auto",
+                                  boxShadow: "0 0 10px var(--v-accent)"
+                                }} />
                               )}
-                              <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(2px)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
-                                <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
-                                  style={{width:"42px",height:"42px",background:"var(--v-accent)",color:"var(--v-bg0)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 6px 16px rgba(0,0,0,0.5)",transition:"all 0.15s cubic-bezier(0.2,0,0,1)"}}
-                                  onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 8px 20px rgba(0,0,0,0.6), 0 0 10px var(--v-accent)";}}
-                                  onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 6px 16px rgba(0,0,0,0.5)";}}>
-                                  <Play size={16} style={{fill:"currentColor",color:"currentColor",marginLeft:"2px"}}/>
+                              <div
+                                style={{
+                                  width: "42px",
+                                  height: "42px",
+                                  borderRadius: "6px",
+                                  overflow: "hidden",
+                                  flexShrink: 0,
+                                  position: "relative",
+                                  background: "rgba(255,255,255,0.02)",
+                                }}
+                              >
+                                <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                  {pl.id==='p1'
+                                    ? <Heart size={14} style={{color:"#e05555",fill:"rgba(220,60,60,0.25)"}}/>
+                                    : <ListMusic size={16} style={{color:"#363230"}}/>}
+                                </div>
+                                {cover && (
+                                  <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                                )}
+                              </div>
+                              <div style={{flex: 1, minWidth: 0}}>
+                                <div style={{fontSize:"13.5px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{pl.name}</div>
+                                <div style={{fontSize:"11px",color:"#8a807c",marginTop:"2px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                                  {pl.description ? pl.description : `${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                                </div>
+                              </div>
+                              <div style={{fontSize:"11.5px",color:"#5c5755",marginRight:"8px",fontWeight:500}}>
+                                {pl.tracks.length} track{pl.tracks.length!==1?'s':''}
+                              </div>
+                              <div style={{display:"flex",alignItems:"center",gap:"8px"}} onClick={e=>e.stopPropagation()} onMouseDown={e=>e.stopPropagation()}>
+                                <button onClick={() => playAll(pl.tracks)}
+                                  style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.03)",color:"#e2ddd9",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.15s"}}
+                                  onMouseEnter={e=>{e.currentTarget.style.background="var(--v-accent)";e.currentTarget.style.color="#0c0b0b";e.currentTarget.style.transform="scale(1.08)";}}
+                                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.03)";e.currentTarget.style.color="#e2ddd9";e.currentTarget.style.transform="scale(1)";}}
+                                  title="Play playlist"
+                                >
+                                  <Play size={10} style={{fill:"currentColor",marginLeft:"1px"}}/>
                                 </button>
+                                {pl.id!=='p1'&&(
+                                  <button onClick={() => deletePlaylist(pl.id)}
+                                    style={{width:"28px",height:"28px",background:"rgba(255,255,255,0.03)",color:"#8a807c",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid rgba(255,255,255,0.05)",cursor:"pointer",transition:"all 0.15s"}}
+                                    onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.15)";e.currentTarget.style.borderColor="rgba(255,96,96,0.15)";e.currentTarget.style.transform="scale(1.05)";}}
+                                    onMouseLeave={e=>{e.currentTarget.style.color="#8a807c";e.currentTarget.style.background="rgba(255,255,255,0.03)";e.currentTarget.style.borderColor="rgba(255,255,255,0.05)";e.currentTarget.style.transform="scale(1)";}}
+                                    title="Delete playlist"
+                                  >
+                                    <Trash2 size={11}/>
+                                  </button>
+                                )}
                               </div>
                             </div>
-                            <div style={{fontSize:"14px",fontWeight:700,color:"var(--v-fg)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
-                            <div style={{fontSize:"11px",color:"var(--v-fg2)",marginTop:"4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                              {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
-                            </div>
-                            {pl.id!=='p1'&&(
-                              <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
-                                className="pl-card-del"
-                                style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"var(--v-fg3)",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
-                                onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.2)";e.currentTarget.style.borderColor="rgba(255,96,96,0.2)";e.currentTarget.style.transform="scale(1.05)";}}
-                                onMouseLeave={e=>{e.currentTarget.style.color="var(--v-fg3)";e.currentTarget.style.background="rgba(0,0,0,0.6)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";e.currentTarget.style.transform="scale(1)";}}>
-                                <Trash2 size={12}/>
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   <div className="v-library-sidebar">
                     <div className="v-library-sidebar-card">
@@ -3236,7 +4063,7 @@ export default function Veluna() {
                               onClick={() => handlePlayInContext(track, playHistory.slice(0, 4))}
                               className="v-library-recent-row">
                               <div className="v-library-recent-art" style={{background: getTrackGradient(track.title, track.artist)}}>
-                                {track.cover ? <img src={track.cover} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /> : <Music size={12} style={{color:"rgba(255,255,255,0.2)"}} />}
+                                {getTrackCover(track) ? <img src={getTrackCover(track)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /> : <Music size={12} style={{color:"rgba(255,255,255,0.2)"}} />}
                               </div>
                               <div style={{flex:1,minWidth:0}}>
                                 <div className="v-library-recent-title">{track.title}</div>
@@ -3793,7 +4620,7 @@ export default function Veluna() {
                     <div style={{fontSize:'9px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230',marginBottom:'8px'}}>Now Playing</div>
                     <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px',borderRadius:'8px',background:'rgba(226,221,217,0.04)',border:'1px solid rgba(226,221,217,0.08)'}}>
                       <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'var(--v-bdr2)',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        {currentTrack.cover ? <img src={currentTrack.cover} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" /> : <FileMusic size={16} style={{color:'#5c5755'}} />}
+                        {getTrackCover(currentTrack) ? <img src={getTrackCover(currentTrack)} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" /> : <FileMusic size={16} style={{color:'#5c5755'}} />}
                         {!isLoadingTrack && isPlaying && (
                           <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                             <div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px'}}>{[100,60,80].map((h,i)=><div key={i} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+i*0.12}s ease-in-out ${i*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>
@@ -3868,7 +4695,7 @@ export default function Veluna() {
                                   justifyContent: "center"
                                 }}>
                                   <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                                  {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
+                                  {getTrackCover(track) && <img src={getTrackCover(track)} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
                                 </div>
                                 <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
                                   <Play size={12} fill="currentColor" />
@@ -3924,7 +4751,7 @@ export default function Veluna() {
                                   justifyContent: "center"
                                 }}>
                                   <Music size={12} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                                  {track.cover && <img src={track.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
+                                  {getTrackCover(track) && <img src={getTrackCover(track)} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
                                 </div>
                                 <div className="v-queue-play-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffffff'}}>
                                   <Play size={12} fill="currentColor" />
@@ -4389,13 +5216,21 @@ export default function Veluna() {
       })()}
 
       {}
-      {showYtImportModal && (
+      {(showYtImportModal || bgYtImport) && (
         <YtImportModal
+          visible={showYtImportModal}
           onClose={() => setShowYtImportModal(false)}
+          onProgress={(progress) => setBgYtImport(progress !== null ? { progress } : null)}
+          onAbort={() => {
+            setBgYtImport(null);
+            setShowYtImportModal(false);
+            showToast('YouTube import cancelled');
+          }}
           onSavePlaylist={(name, desc, tracks) => {
             const id = `yt_${Date.now()}`;
             setPlaylists(prev => [...prev, { id, name, description: desc || 'Imported from YouTube', tracks }]);
             showToast(`"${name}" saved — ${tracks.length} tracks`);
+            setBgYtImport(null);
           }}
           showToast={showToast}
         />
@@ -4404,6 +5239,11 @@ export default function Veluna() {
         <CsvImportModal
           visible={showCsvImportModal}
           onClose={() => setShowCsvImportModal(false)}
+          onAbort={() => {
+            setBgImport(null);
+            setShowCsvImportModal(false);
+            showToast('Spotify import cancelled');
+          }}
           onSavePlaylist={(name, desc, tracks) => {
             const id = `csv_${Date.now()}`;
             setPlaylists(prev => [...prev, { id, name, description: desc || 'Imported from Spotify', tracks }]);
@@ -4474,7 +5314,7 @@ export default function Veluna() {
                           justifyContent: "center"
                         }}>
                           <Music size={13} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-                          {t.cover && <img src={t.cover} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
+                          {getTrackCover(t) && <img src={getTrackCover(t)} style={{position: 'absolute', inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>}
                         </div>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</div>
@@ -4714,12 +5554,16 @@ export default function Veluna() {
         <div
           onClick={() => setShowCsvImportModal(true)}
           onMouseEnter={e => {
-            e.currentTarget.style.borderColor = "#3a3532";
-            e.currentTarget.style.background = "#221f1f";
+            e.currentTarget.style.borderColor = "rgba(29, 185, 84, 0.4)";
+            e.currentTarget.style.background = "rgba(28, 25, 25, 0.85)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.8), 0 0 15px rgba(29,185,84,0.15)";
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.borderColor = "var(--v-bdr2)";
-            e.currentTarget.style.background = "var(--v-bdr2)";
+            e.currentTarget.style.borderColor = "rgba(29, 185, 84, 0.15)";
+            e.currentTarget.style.background = "rgba(22, 20, 20, 0.75)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.7)";
           }}
           style={{
             position: "fixed",
@@ -4728,136 +5572,359 @@ export default function Veluna() {
             zIndex: 9998,
             display: "flex",
             alignItems: "center",
-            gap: "10px",
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: "1px solid var(--v-bdr2)",
-            background: "var(--v-bdr2)",
+            gap: "12px",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "1px solid rgba(29, 185, 84, 0.15)",
+            background: "rgba(22, 20, 20, 0.75)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
-            animation: "fadeUp 0.2s ease both",
+            animation: "fadeUp 0.25s cubic-bezier(0.2,0.8,0.2,1) both",
             cursor: "pointer",
-            transition: "all 0.15s ease"
+            transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)"
           }}
         >
-          <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"#9e9894",animation:"velunaPulse 1.5s ease-in-out infinite",flexShrink:0}}/>
-          <div style={{display:"flex",flexDirection:"column",gap:"4px",minWidth:"140px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"10px"}}>
-              <span style={{fontSize:"12px",fontWeight:600,color:"#e2ddd9"}}>Importing Spotify…</span>
-              <span style={{fontSize:"10px",color:"#5c5755",fontVariantNumeric:"tabular-nums"}}>{bgImport.matched}/{bgImport.total}</span>
+          {/* Pulsing Green Dot & Spotify Icon */}
+          <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#1db954">
+              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <div style={{position: "absolute", bottom: "-2px", right: "-2px", width:"7px", height:"7px", borderRadius:"50%", background:"#1db954", border:"1px solid #161414", animation:"velunaPulse 1.5s ease-in-out infinite"}}/>
+          </div>
+
+          <div style={{display:"flex", flexDirection:"column", gap:"5px", minWidth:"150px"}}>
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:"10px"}}>
+              <span style={{fontSize:"11.5px", fontWeight:700, color:"#e2ddd9", letterSpacing:"0.01em"}}>Importing Spotify...</span>
+              <span style={{fontSize:"10.5px", fontWeight:600, color:"#8a807c", fontVariantNumeric:"tabular-nums"}}>{bgImport.matched}/{bgImport.total}</span>
             </div>
-            <div style={{height:"2px",borderRadius:"1px",background:"#232020",overflow:"hidden"}}>
-              <div style={{height:"100%",borderRadius:"1px",background:"#9e9894",width:`${(bgImport.matched/bgImport.total)*100}%`,transition:"width .3s"}}/>
+            <div style={{height:"3px", borderRadius:"1.5px", background:"rgba(255,255,255,0.06)", overflow:"hidden", position:"relative"}}>
+              <div style={{height:"100%", borderRadius:"1.5px", background:"linear-gradient(90deg, #1db954 0%, #1ed760 100%)", width:`${(bgImport.matched/bgImport.total)*100}%`, transition:"width .3s ease", boxShadow:"0 0 6px rgba(29,185,84,0.5)"}}/>
             </div>
           </div>
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              setBgImport(null);
-            }}
-            style={{color:"#363230",background:"none",border:"none",cursor:"pointer",display:"flex",marginLeft:"4px",transition:"color .12s"}}
-            onMouseEnter={e => { e.currentTarget.style.color = "#9e9894"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "#363230"; }}
-          >
-            <X size={12}/>
-          </button>
+
+          {/* Action buttons (Expand & Cancel) */}
+          <div style={{display:"flex", alignItems:"center", gap:"4px", marginLeft:"4px"}} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowCsvImportModal(true)}
+              title="Expand import modal"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <Maximize2 size={11}/>
+            </button>
+            <button
+              onClick={() => {
+                setBgImport(null);
+                setShowCsvImportModal(false);
+                showToast('Spotify import cancelled');
+              }}
+              title="Cancel import"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#ff6060"; e.currentTarget.style.background = "rgba(255,96,96,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <X size={12}/>
+            </button>
+          </div>
         </div>
       )}
+
+      {bgYtImport && !showYtImportModal && (
+        <div
+          onClick={() => setShowYtImportModal(true)}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = "rgba(255, 30, 39, 0.4)";
+            e.currentTarget.style.background = "rgba(28, 25, 25, 0.85)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.8), 0 0 15px rgba(255,30,39,0.15)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = "rgba(255, 30, 39, 0.15)";
+            e.currentTarget.style.background = "rgba(22, 20, 20, 0.75)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.7)";
+          }}
+          style={{
+            position: "fixed",
+            bottom: bgImport ? "156px" : "84px",
+            right: "16px",
+            zIndex: 9998,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "1px solid rgba(255, 30, 39, 0.15)",
+            background: "rgba(22, 20, 20, 0.75)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
+            animation: "fadeUp 0.25s cubic-bezier(0.2,0.8,0.2,1) both",
+            cursor: "pointer",
+            transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)"
+          }}
+        >
+          <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff1e27">
+              <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.388.507 9.388.507s7.517 0 9.388-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <div style={{position: "absolute", bottom: "-2px", right: "-2px", width:"7px", height:"7px", borderRadius:"50%", background:"#ff1e27", border:"1px solid #161414", animation:"velunaPulse 1.5s ease-in-out infinite"}}/>
+          </div>
+
+          <div style={{display:"flex", flexDirection:"column", gap:"5px", minWidth:"150px"}}>
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:"10px"}}>
+              <span style={{fontSize:"11.5px", fontWeight:700, color:"#e2ddd9", letterSpacing:"0.01em"}}>Importing YouTube...</span>
+              <span style={{fontSize:"10.5px", fontWeight:600, color:"#ff1e27", fontVariantNumeric:"tabular-nums"}}>{Math.round(bgYtImport.progress)}%</span>
+            </div>
+            <div style={{height:"3px", borderRadius:"1.5px", background:"rgba(255,255,255,0.06)", overflow:"hidden", position:"relative"}}>
+              <div style={{height:"100%", borderRadius:"1.5px", background:"linear-gradient(90deg, #ff1e27 0%, #ff4b55 100%)", width:`${bgYtImport.progress}%`, transition:"width .3s ease", boxShadow:"0 0 6px rgba(255,30,39,0.5)"}}/>
+            </div>
+          </div>
+
+          <div style={{display:"flex", alignItems:"center", gap:"4px", marginLeft:"4px"}} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowYtImportModal(true)}
+              title="Expand import modal"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <Maximize2 size={11}/>
+            </button>
+            <button
+              onClick={() => {
+                setBgYtImport(null);
+                setShowYtImportModal(false);
+                showToast('YouTube import cancelled');
+              }}
+              title="Cancel import"
+              style={{
+                color: "#8a807c",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                transition: "all .15s ease"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#ff6060"; e.currentTarget.style.background = "rgba(255,96,96,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#8a807c"; e.currentTarget.style.background = "none"; }}
+            >
+              <X size={12}/>
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Live Lyrics Modal — immersive full-screen */}
       {showLyrics && currentTrack && (() => {
         const lines = lyricsData?.lines || [];
-        // End glitch fix: once past last line, keep last line active (not index 0)
         let currentIdx = lines.length > 0 ? lines.length - 1 : 0;
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].time > progressSeconds) { currentIdx = Math.max(0, i - 1); break; }
         }
         const pct = trackDurationSeconds > 0 ? Math.min((progressSeconds / trackDurationSeconds) * 100, 100) : 0;
+        const remaining = trackDurationSeconds - progressSeconds;
+        const activeDevice = audioDevices.find(d => d.is_default);
         return (
           <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",userSelect:"none",background:"var(--v-bg0)"}}>
-            {/* Base */}
-            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(135deg,var(--v-bg0) 0%,var(--v-bg1) 100%)"}}/>
-            {/* Full-screen blurred cover art — the hero background */}
-            {currentTrack.cover && (
+            {/* Background layers */}
+            {getTrackCover(currentTrack) && (
               <div style={{
-                position: 'absolute',
-                pointerEvents: 'none',
-                inset: '-80px',
-                backgroundImage: `url(${currentTrack.cover})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(90px) saturate(1.6) brightness(0.75)',
-                opacity: 0.85,
+                position: 'absolute', pointerEvents: 'none', inset: '-80px',
+                backgroundImage: `url(${getTrackCover(currentTrack)})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                filter: 'blur(90px) saturate(1.8) brightness(0.65)',
+                opacity: 0.9,
               }} />
             )}
-            {/* Gentle overall darkening for text legibility — smooth, no banding */}
-            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(8,7,7,0.3)"}}/>
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(0,0,0,0.18)"}}/>
 
-            {/* Left panel */}
-            <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"18px"}}>
+            {/* Left panel — centered vertically */}
+            <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"16px"}}>
+
+              {/* Close button */}
               <button onClick={()=>setShowLyrics(false)}
-                style={{position:"absolute",top:"24px",left:"24px",width:"36px",height:"36px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(12px)",transition:"color .15s,background .15s,border-color .15s"}}
+                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(12px)",transition:"color .15s,background .15s,border-color .15s"}}
                 onMouseEnter={e=>{e.currentTarget.style.color="#fff";e.currentTarget.style.background="rgba(255,255,255,0.12)";e.currentTarget.style.borderColor="rgba(255,255,255,0.18)";}}
                 onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.6)";e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.borderColor="rgba(255,255,255,0.1)";}}>
                 <X size={16} />
               </button>
 
               {/* Album art */}
-              <div style={{width:"208px",height:"208px",borderRadius:"20px",overflow:"hidden",flexShrink:0,boxShadow:"0 28px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",position:"relative"}}>
-                {currentTrack.cover
-                  ? <img src={currentTrack.cover} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+              <div style={{width:"220px",height:"220px",borderRadius:"10px",overflow:"hidden",flexShrink:0,boxShadow:"0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",position:"relative"}}>
+                {getTrackCover(currentTrack)
+                  ? <img src={getTrackCover(currentTrack)} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : <div style={{width:"100%",height:"100%",background:"var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
               </div>
 
-              <div style={{textAlign:"center",width:"100%"}}>
-                <p style={{fontSize:"19px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px",margin:0,letterSpacing:"-0.01em"}}>{currentTrack.title}</p>
-                <p style={{fontSize:"13.5px",marginTop:"5px",color:"rgba(255,255,255,0.5)",margin:"5px 0 0"}}>{currentTrack.artist}</p>
+              {/* Track info — no three-dot menu */}
+              <div style={{width:"100%",display:"flex",flexDirection:"column",gap:"2px"}}>
+                <p style={{fontSize:"16px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",margin:0,letterSpacing:"-0.01em"}}>{currentTrack.title}</p>
+                <p style={{fontSize:"12.5px",color:"rgba(255,255,255,0.5)",margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist}</p>
               </div>
 
-              {/* Progress bar — identical to default player bar */}
+              {/* Progress bar */}
               <div style={{width:"100%",display:"flex",flexDirection:"column",gap:"5px"}}>
-                <div className="slider-track" style={{position:"relative",width:"100%",height:"3px",borderRadius:"2px",cursor:"pointer",background:"rgba(255,255,255,0.18)"}}
+                <div className="slider-track" style={{position:"relative",width:"100%",height:"4px",borderRadius:"2px",cursor:"pointer",background:"rgba(255,255,255,0.18)"}}
                   onMouseDown={e => {
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                     const t = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * (trackDurationSeconds || 0);
                     invoke('seek_audio', { time: t }).catch(() => {});
                   }}>
-                  <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${pct}%`,background:"#e2ddd9",transition:"width 0.5s linear"}}>
+                  <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${pct}%`,background:"#fff",transition:"width 0.5s linear"}}>
                     <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"11px",height:"11px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
                   </div>
                 </div>
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px",fontVariantNumeric:"tabular-nums",color:"rgba(255,255,255,0.35)"}}>
                   <span>{formatTime(progressSeconds)}</span>
-                  <span>{formatTime(trackDurationSeconds)}</span>
+                  <span>-{formatTime(Math.max(0, remaining))}</span>
                 </div>
               </div>
 
               {/* Playback controls */}
-              <div style={{display:"flex",alignItems:"center",gap:"22px"}}>
-                <button onClick={handleSkipBack} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipBack size={19}/></button>
-                <button onClick={togglePlayPause}
-                  style={{width:"46px",height:"46px",borderRadius:"50%",background:"#e2ddd9",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",transition:"transform .1s"}} onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.06)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
-                  {isPlaying ? <Pause fill="var(--v-bg0)" size={19}/> : <Play fill="var(--v-bg0)" size={19} style={{marginLeft:"2px"}}/>}
+              <div style={{display:"flex",alignItems:"center",gap:"20px"}}>
+                <button onClick={toggleShuffle} title="Shuffle"
+                  style={{color:shuffle?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)",background:"none",border:"none",cursor:"pointer",display:"flex",padding:"3px",transition:"color .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color=shuffle?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)"}>
+                  <Shuffle size={16}/>
                 </button>
-                <button onClick={handleSkipForward} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}><SkipForward size={19}/></button>
+                <button onClick={handleSkipBack} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.6)"}>
+                  <SkipBack size={20} fill="currentColor"/>
+                </button>
+                <button onClick={togglePlayPause}
+                  style={{width:"44px",height:"44px",borderRadius:"50%",background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",transition:"transform .1s"}}
+                  onMouseEnter={e=>e.currentTarget.style.transform="scale(1.06)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+                  {isPlaying ? <Pause fill="#000" stroke="#000" size={18}/> : <Play fill="#000" stroke="#000" size={18} style={{marginLeft:"2px"}}/>}
+                </button>
+                <button onClick={handleSkipForward} style={{color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",display:"flex",transition:"color .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.6)"}>
+                  <SkipForward size={20} fill="currentColor"/>
+                </button>
+                <button onClick={cycleRepeat} title={`Repeat: ${repeatMode}`}
+                  style={{color:repeatMode!=='off'?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)",background:"none",border:"none",cursor:"pointer",display:"flex",padding:"3px",transition:"color .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color=repeatMode!=='off'?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.35)"}>
+                  {repeatMode==='one' ? <Repeat1 size={16}/> : <Repeat size={16}/>}
+                </button>
               </div>
 
-              {/* Audio output — clean dropdown */}
+              {/* Volume slider — with drag support */}
+              <div style={{width:"100%",display:"flex",alignItems:"center",gap:"8px"}}>
+                <button onClick={toggleMute} title={volume===0?"Unmute":"Mute"}
+                  style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px",color:"rgba(255,255,255,0.45)",display:"flex",transition:"color .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.8)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.45)"}>
+                  {volume===0 ? <VolumeX size={14}/> : <Volume2 size={14}/>}
+                </button>
+                <div style={{flex:1}}>
+                  <div className="slider-track" style={{position:"relative",width:"100%",height:"3px",borderRadius:"2px",cursor:"pointer",background:"rgba(255,255,255,0.18)"}}
+                    onMouseDown={e => {
+                      const track = e.currentTarget as HTMLElement;
+                      const update = (clientX: number) => {
+                        const rect = track.getBoundingClientRect();
+                        const v = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+                        setVolume(v);
+                        invoke('set_volume', { volume: v }).catch(() => {});
+                      };
+                      update(e.clientX);
+                      const onMove = (ev: MouseEvent) => update(ev.clientX);
+                      const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+                      document.addEventListener('mousemove', onMove);
+                      document.addEventListener('mouseup', onUp);
+                    }}>
+                    <div style={{position:"absolute",top:0,left:0,height:"100%",borderRadius:"2px",pointerEvents:"none",width:`${volume}%`,background:"rgba(255,255,255,0.55)",transition:"none"}}>
+                      <div className="slider-thumb" style={{position:"absolute",right:"-5px",top:"50%",transform:"translateY(-50%)",width:"10px",height:"10px",background:"#fff",borderRadius:"50%",opacity:0,pointerEvents:"none",transition:"opacity .12s"}}/>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={toggleMute} style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"2px",color:"rgba(255,255,255,0.45)",display:"flex",transition:"color .12s"}}
+                  onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.8)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.45)"}>
+                  <Volume2 size={14}/>
+                </button>
+              </div>
+
+              {/* Audio device selector */}
               {audioDevices.length > 0 && (
-                <LyricsAudioDropdown
-                  devices={audioDevices}
-                  switching={switchingDevice}
-                  onSwitch={async (id) => {
-                    setSwitchingDevice(true);
-                    try { await invoke('set_audio_device', { id }); setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === id }))); showToast(`Output: ${audioDevices.find(d=>d.id===id)?.name ?? id}`); }
-                    catch (e) { showToast(`Switch failed: ${e}`); }
-                    finally { setSwitchingDevice(false); }
-                  }}
-                />
+                  <div style={{width:"100%",position:"relative"}}>
+                    <button onClick={() => setLyricsDevOpen(o => !o)}
+                      style={{width:"100%",display:"flex",alignItems:"center",gap:"8px",padding:"7px 10px",borderRadius:"8px",textAlign:"left",border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.06)",cursor:"pointer",transition:"background .12s"}}
+                      onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.1)"} onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)"}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                      <span style={{fontSize:"11px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,textAlign:"left",color:"rgba(255,255,255,0.6)"}}>{activeDevice?.name ?? 'No device'}</span>
+                      <ChevronDown size={11} style={{color:"rgba(255,255,255,0.3)",transform:lyricsDevOpen?"rotate(180deg)":"none",transition:"transform 0.2s",flexShrink:0}}/>
+                    </button>
+                    {lyricsDevOpen && (
+                      <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:0,right:0,borderRadius:"10px",overflow:"hidden",zIndex:20,background:"var(--v-bg2)",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 16px 40px rgba(0,0,0,0.9)"}}>
+                        <div style={{padding:"7px 10px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                          <span style={{fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)"}}>Output Device</span>
+                        </div>
+                        {audioDevices.map(dev => (
+                          <button key={dev.id}
+                            onClick={async () => {
+                              if (!dev.is_default) {
+                                try { await invoke('set_audio_device', { id: dev.id }); setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === dev.id }))); showToast(`Output: ${dev.name}`); }
+                                catch (e) { showToast(`Switch failed: ${e}`); }
+                              }
+                              setLyricsDevOpen(false);
+                            }}
+                            style={{width:"100%",display:"flex",alignItems:"center",gap:"9px",padding:"9px 12px",textAlign:"left",border:"none",background:dev.is_default?"rgba(255,255,255,0.05)":"transparent",cursor:dev.is_default?"default":"pointer",transition:"background .1s"}}
+                            onMouseEnter={e=>{if(!dev.is_default)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";}}
+                            onMouseLeave={e=>{if(!dev.is_default)(e.currentTarget as HTMLElement).style.background="transparent";}}>
+                            <div style={{width:"6px",height:"6px",borderRadius:"50%",flexShrink:0,background:dev.is_default?"#9e9894":"rgba(255,255,255,0.15)"}}/>
+                            <span style={{fontSize:"12px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:dev.is_default?"#fff":"rgba(255,255,255,0.5)",flex:1,textAlign:"left"}}>{dev.name}</span>
+                            {dev.is_default && <span style={{fontSize:"9px",fontWeight:700,color:"#9e9894",flexShrink:0,letterSpacing:".05em"}}>ACTIVE</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
               )}
             </div>
 
-            {/* Divider */}
-            <div style={{position:"relative",zIndex:10,width:"1px",flexShrink:0,margin:"56px 0",background:"linear-gradient(to bottom,transparent,rgba(255,255,255,0.08),transparent)"}}/>
 
             {/* Lyrics panel */}
             <div style={{position:"relative",zIndex:10,flex:1,overflow:"hidden"}}>
@@ -4868,30 +5935,31 @@ export default function Veluna() {
                 </div>
               ) : lines.length > 0 ? (
                 <div style={{position:"relative",height:"100%"}}>
-                  <div style={{height:"100%",overflowY:"auto",padding:"140px 48px",scrollbarWidth:"none"}}
-                    ref={el => {
-                      if (!el) return;
-                      const active = el.querySelector('[data-active="true"]') as HTMLElement;
-                      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }}>
+                  <div style={{height:"100%",overflowY:"auto",padding:"160px 52px",scrollbarWidth:"none"}}
+                    ref={lyricsScrollContainerRef}>
                     {lines.map((line, idx) => {
                       const isCurrent = idx === currentIdx;
                       const isPast = idx < currentIdx;
+                      const distance = Math.abs(idx - currentIdx);
+                      const futureOpacity = distance <= 1 ? 0.45 : distance <= 2 ? 0.35 : distance <= 3 ? 0.25 : 0.18;
+                      const pastOpacity = distance <= 1 ? 0.3 : distance <= 2 ? 0.22 : 0.15;
                       return (
                         <p key={idx}
                           data-active={isCurrent?'true':'false'}
                           onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
-                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.8)';}}
-                          onMouseLeave={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color=isPast?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.45)';}}
+                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)';(e.currentTarget as HTMLElement).style.transform='scale(1.02)';}}
+                          onMouseLeave={e=>{if(!isCurrent){(e.currentTarget as HTMLElement).style.color=isPast?`rgba(255,255,255,${pastOpacity})`:`rgba(255,255,255,${futureOpacity})`;(e.currentTarget as HTMLElement).style.transform='scale(1)';}else{(e.currentTarget as HTMLElement).style.transform='scale(1.18)';}}}
                           style={{
-                            cursor:"pointer",lineHeight:1.45,padding:"12px 0",userSelect:"none",margin:0,
-                            fontSize: '2rem',
-                            letterSpacing: '0.005em',
-                            fontWeight: isCurrent ? 800 : 600,
-                            color: isCurrent ? '#fff' : isPast ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.45)',
-                            transform: isCurrent ? 'scale(1.04)' : 'scale(1)',
+                            cursor:"pointer",lineHeight:1.35,padding:"14px 0",userSelect:"none",margin:0,
+                            fontSize: '1.85rem',
+                            letterSpacing: '-0.01em',
+                            fontWeight: 800,
+                            fontStyle: 'italic',
+                            color: isCurrent ? '#fff' : isPast ? `rgba(255,255,255,${pastOpacity})` : `rgba(255,255,255,${futureOpacity})`,
+                            transform: isCurrent ? 'scale(1.18)' : 'scale(1)',
                             transformOrigin: 'left center',
-                            transition: 'color 0.35s ease, transform 0.35s ease',
+                            transition: 'color 0.4s ease, transform 0.4s ease',
+                            textShadow: isCurrent ? '0 0 40px rgba(255,255,255,0.12)' : 'none',
                           }}>
                           {line.text || '\u00A0'}
                         </p>
@@ -4917,3 +5985,4 @@ export default function Veluna() {
     </div>
   );
 }
+

@@ -35,33 +35,13 @@ export type Playlist = {
 export type RepeatMode = 'off' | 'all' | 'one';
 
 export type CtxMenu = {
-  x: number;
-  y: number;
+  x: number; y: number;
   type: 'track' | 'playlist' | 'sidebar-playlist' | 'queue-track' | 'quickpick';
   track?: Track;
   playlist?: Playlist;
 };
 
-export type AudioInfo = {
-  codec: string;
-  bitrate: number;
-  samplerate: number;
-  channels: string;
-  format: string;
-  url: string;
-};
-
-export type DiskInfo = {
-  used_bytes: number;
-  track_count: number;
-};
-
-export type BatchProgress = {
-  index: number;
-  total: number;
-  title: string;
-  success: boolean;
-  error?: string;
-};
-
+export type AudioInfo = { codec: string; bitrate: number; samplerate: number; channels: string; format: string; url: string };
+export type DiskInfo = { used_bytes: number; track_count: number };
+export type BatchProgress = { index: number; total: number; title: string; success: boolean; error?: string };
 export type SettingsTab = 'updates' | 'downloads' | 'playback' | 'storage' | 'appearance' | 'integrations';

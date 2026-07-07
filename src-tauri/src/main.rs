@@ -2013,6 +2013,11 @@ async fn search_yt_music(query: String, search_type: String) -> Result<String, S
 fn ping() -> String { "pong".to_string() }
 
 #[tauri::command]
+fn get_app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
 async fn check_for_update() -> Result<Option<String>, String> {
     let current = env!("CARGO_PKG_VERSION");
     let client = reqwest::Client::builder()
@@ -2291,7 +2296,41 @@ fn clear_discord_rpc() {
     });
 }
 
+#[cfg(target_os = "linux")]
+fn silence_ayatana_warnings() {
+    use std::os::raw::{c_char, c_void};
+
+    #[link(name = "glib-2.0")]
+    extern "C" {
+        fn g_log_set_handler(
+            log_domain: *const c_char,
+            log_level: i32,
+            log_func: unsafe extern "C" fn(*const c_char, i32, *const c_char, *mut c_void),
+            user_data: *mut c_void,
+        ) -> u32;
+    }
+
+    unsafe extern "C" fn dummy_log_handler(
+        _log_domain: *const c_char,
+        _log_level: i32,
+        _message: *const c_char,
+        _user_data: *mut c_void,
+    ) {}
+
+    unsafe {
+        let mask = 0xFFFFFFFCu32 as i32;
+        g_log_set_handler(
+            b"libayatana-appindicator\0".as_ptr() as *const c_char,
+            mask,
+            dummy_log_handler,
+            std::ptr::null_mut(),
+        );
+    }
+}
+
 fn main() {
+    #[cfg(target_os = "linux")]
+    silence_ayatana_warnings();
     
     init_bin_paths();
 
@@ -2313,6 +2352,7 @@ fn main() {
 
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_icon(tauri::include_image!("icons/128x128.png"));
+                let _ = window.set_zoom(1.10);
             }
 
             let shortcuts = [
@@ -2337,6 +2377,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             ping,
+            get_app_version,
             check_for_update,
             set_mpris_metadata,
             update_mpris_playback,

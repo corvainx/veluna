@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Veluna",
+  "productName": "veluna",
   "version": "0.1.0",
   "identifier": "com.veluna.player",
   "build": {
@@ -26,7 +26,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "nsis"],
+    "targets": ["deb", "rpm", "nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,6 +36,17 @@
     ],
     "linux": {
       "deb": {
+        "depends": [
+          "mpv",
+          "ffmpeg"
+        ],
+        "files": {},
+        "preInstallScript": null,
+        "postInstallScript": "packaging/postinst.sh",
+        "preRemoveScript": null,
+        "postRemoveScript": null
+      },
+      "rpm": {
         "depends": [
           "mpv",
           "ffmpeg"

@@ -1,24 +1,14 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from '@tauri-apps/api/core';
 import {
-  FileMusic,
-  HardDrive,
-  FolderOpen,
-  FileOutput,
-  RefreshCw,
-  X,
-  AlertCircle,
-  Play,
-  Pencil,
-  Trash2,
-  Search
+  HardDrive, FolderOpen, FileOutput, RefreshCw, Search, X,
+  AlertCircle, FileMusic, Play, Pencil, Trash2
 } from 'lucide-react';
-
 import { LocalTrack, DiskInfo } from '../types';
 import { cleanArtist, formatBytes } from '../utils';
 
-const LocalTrackCover = React.memo(({ path, hasCover, cover, isActive }: { path: string; hasCover?: boolean; cover?: string; isActive: boolean }) => {
+export const LocalTrackCover = React.memo(({ path, hasCover, cover, isActive }: { path: string; hasCover?: boolean; cover?: string; isActive: boolean }) => {
   const [coverUrl, setCoverUrl] = useState<string | null>(cover || null);
 
   useEffect(() => {
@@ -60,50 +50,25 @@ const LocalTrackCover = React.memo(({ path, hasCover, cover, isActive }: { path:
   return <FileMusic size={16} style={{ color: isActive ? "#9e9894" : "#363230" }} />;
 });
 
-LocalTrackCover.displayName = 'LocalTrackCover';
-
-type DownloadsPanelProps = {
-  downloadPath: string;
-  onPlayLocalTrack: (t: LocalTrack, list?: LocalTrack[], idx?: number) => void;
-  onDeleteLocalTrack: (t: LocalTrack) => void;
-  currentTrackPath: string | null;
-  isPlaying: boolean;
-  isLoadingTrack: boolean;
-  onOpenInFileManager: (p: string) => void;
-  onExportM3u: (ts: LocalTrack[]) => void;
-  onChangeFolder: () => void;
-  activeNav: string;
-  refreshNonce?: number;
-  onCtx?: (e: React.MouseEvent, t: LocalTrack) => void;
-  setTracksRef?: React.RefObject<React.Dispatch<React.SetStateAction<LocalTrack[]>> | null>;
-};
-
 export function DownloadsPanel({
-  downloadPath,
-  onPlayLocalTrack,
-  onDeleteLocalTrack,
-  currentTrackPath,
-  isPlaying,
-  isLoadingTrack,
-  onOpenInFileManager,
-  onExportM3u,
-  onChangeFolder,
-  activeNav,
+  downloadPath, onPlayLocalTrack, onDeleteLocalTrack,
+  currentTrackPath, isPlaying, isLoadingTrack,
+  onOpenInFileManager, onExportM3u, onChangeFolder,
   refreshNonce = 0,
   onCtx,
-  setTracksRef,
-}: DownloadsPanelProps) {
-  const [tracks, setTracks] = useState<LocalTrack[]>([]);
-  useEffect(() => {
-    if (setTracksRef) {
-      (setTracksRef as any).current = setTracks;
-    }
-    return () => {
-      if (setTracksRef) {
-        (setTracksRef as any).current = null;
-      }
-    };
-  }, [setTracksRef]);
+  tracks,
+  setTracks,
+}: {
+  downloadPath: string; onPlayLocalTrack: (t: LocalTrack, list?: LocalTrack[], idx?: number) => void;
+  onDeleteLocalTrack: (t: LocalTrack) => void; currentTrackPath: string | null;
+  isPlaying: boolean; isLoadingTrack: boolean;
+  onOpenInFileManager: (p: string) => void; onExportM3u: (ts: LocalTrack[]) => void;
+  onChangeFolder: () => void;
+  refreshNonce?: number;
+  onCtx?: (e: React.MouseEvent, t: LocalTrack) => void;
+  tracks: LocalTrack[];
+  setTracks: React.Dispatch<React.SetStateAction<LocalTrack[]>>;
+}) {
   const tracksRef = useRef(tracks);
   useEffect(() => { tracksRef.current = tracks; }, [tracks]);
   const [scanning, setScanning] = useState(false);
@@ -185,10 +150,8 @@ export function DownloadsPanel({
   }, [downloadPath]);
 
   useEffect(() => {
-    if (activeNav === 'downloads' || refreshNonce > 0) {
-      scan();
-    }
-  }, [activeNav, scan, refreshNonce]);
+    scan();
+  }, [scan, refreshNonce]);
 
   const confirmRename = async () => {
     if (!renaming || !renameVal.trim()) return;
@@ -201,7 +164,7 @@ export function DownloadsPanel({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px",zIndex:10}}>
+    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
       <div style={{
         display: "flex",
         alignItems: "center",

@@ -1,56 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { invoke } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import {
-  Zap,
-  FolderDown,
-  Globe,
-  Moon,
-  Database,
-  ArrowUpCircle,
-  Search,
-  X,
-  CheckCircle,
-  ExternalLink,
-  RefreshCw,
-  FolderOpen,
-  Image,
-  Volume2,
-  BarChart2,
-  ArchiveRestore,
-  Trash2,
-  Upload
+  Search, X, ArrowUpCircle, CheckCircle, ExternalLink, RefreshCw,
+  FolderDown, FolderOpen, Image, Zap, Volume2, BarChart2, Globe,
+  Moon, Database, Upload, ArchiveRestore, Trash2, ChevronDown
 } from 'lucide-react';
-
 import { SettingsTab, DiskInfo } from '../types';
-import { loadLS, saveLS, lightenColor, formatBytes } from '../utils';
-import { ThemedSelect } from './ThemedSelect';
-
-function validateSettingsChange(
-  key: string,
-  newVal: unknown,
-  current: {
-    loudnormEnabled: boolean; skipSilence: boolean;
-    eq: { bass: number; mid: number; treble: number };
-  }
-): string | null {
-  const { loudnormEnabled, skipSilence, eq } = current;
-  const hasEq = eq.bass !== 0 || eq.mid !== 0 || eq.treble !== 0;
-
-  if (key === 'loudnormEnabled' && newVal === true && skipSilence) {
-    return 'Loudnorm + Skip Silence together can cause audio distortion on short tracks. Consider disabling one.';
-  }
-  if (key === 'skipSilence' && newVal === true && loudnormEnabled) {
-    return 'Loudnorm + Skip Silence together can cause audio distortion on short tracks. Consider disabling one.';
-  }
-  if (key === 'loudnormEnabled' && newVal === true && hasEq) {
-    const extreme = Math.max(Math.abs(eq.bass), Math.abs(eq.mid), Math.abs(eq.treble));
-    if (extreme >= 10) {
-      return `Loudnorm with high EQ values (${extreme}dB) may clip audio. Reduce EQ or disable Loudnorm.`;
-    }
-  }
-  return null; 
-}
+import { loadLS, saveLS, lightenColor, validateSettingsChange, formatBytes } from '../utils';
+import { invoke } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 const SettingsSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => {
   const [hovered, setHovered] = useState(false);
@@ -77,22 +35,184 @@ const SettingsSwitch = ({ checked, onChange }: { checked: boolean; onChange: () 
       <span
         style={{
           position: "absolute",
-          top: "2px",
-          width: "18px",
-          height: "18px",
+          top: "3px",
+          left: checked ? "21px" : "3px",
+          width: "16px",
+          height: "16px",
           borderRadius: "50%",
+          background: checked ? "#000000" : "#5c5755",
           transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-          background: checked ? "var(--v-bg0)" : "#5c5755",
-          left: checked ? "20px" : "2px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-          transform: hovered ? "scale(1.05)" : "scale(1)"
+          boxShadow: "0 1px 3px rgba(0,0,0,0.4)"
         }}
       />
     </button>
   );
 };
 
-type SettingsPanelProps = {
+const ThemedSelect = ({ value, options, onChange }: {
+  value: string;
+  options: { label: string; value: string; desc?: string }[];
+  onChange: (v: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+  const current = options.find(o => o.value === value);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || dropRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      if (!btnRef.current) return;
+      const r = btnRef.current.getBoundingClientRect();
+      const dropW = Math.max(r.width, 220);
+      const left = Math.min(r.left, window.innerWidth - dropW - 8);
+      const dropH = dropRef.current ? dropRef.current.offsetHeight : (options.length * 56 + 10);
+      const spaceBelow = window.innerHeight - r.bottom - 8;
+      const spaceAbove = r.top - 8;
+      let top = r.bottom + 4;
+      if (spaceBelow < dropH && spaceAbove > spaceBelow) {
+        top = r.top - dropH - 4;
+      }
+      setDropPos({ top, left: Math.max(8, left), width: dropW });
+    };
+    update();
+    const timer = setTimeout(update, 0);
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open, options.length]);
+
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const dropW = Math.max(r.width, 220);
+      const left = Math.min(r.left, window.innerWidth - dropW - 8);
+      const dropH = options.length * 56 + 10;
+      const spaceBelow = window.innerHeight - r.bottom - 8;
+      const spaceAbove = r.top - 8;
+      let top = r.bottom + 4;
+      if (spaceBelow < dropH && spaceAbove > spaceBelow) {
+        top = r.top - dropH - 4;
+      }
+      setDropPos({ top, left: Math.max(8, left), width: dropW });
+    }
+    setOpen(o => !o);
+  };
+
+  const dropdown = open ? (
+    <div
+      ref={dropRef}
+      style={{
+        position: 'fixed',
+        top: dropPos.top,
+        left: dropPos.left,
+        minWidth: dropPos.width,
+        zIndex: 999999,
+        animation: 'dropIn 0.15s ease-out',
+        background: 'var(--v-bg2)',
+        borderStyle: 'solid',
+        borderWidth: '1px',
+        borderColor: 'var(--v-bdr2)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+      }}>
+      {options.map((opt, i) => (
+        <button key={opt.value}
+          onMouseDown={e => { e.preventDefault(); onChange(opt.value); setOpen(false); }}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            width: '100%',
+            padding: '9px 14px',
+            textAlign: 'left',
+            cursor: 'pointer',
+            background: value === opt.value ? 'rgba(226,221,217,0.06)' : 'transparent',
+            color: value === opt.value ? 'var(--v-accent)' : '#9e9894',
+            transition: 'background 0.1s',
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            outlineStyle: 'none',
+            outlineWidth: 0,
+            outlineColor: 'transparent',
+            borderLeftStyle: 'none',
+            borderLeftWidth: 0,
+            borderLeftColor: 'transparent',
+            borderRightStyle: 'none',
+            borderRightWidth: 0,
+            borderRightColor: 'transparent',
+            borderBottomStyle: 'none',
+            borderBottomWidth: 0,
+            borderBottomColor: 'transparent',
+            borderTopStyle: i !== 0 ? 'solid' : 'none',
+            borderTopWidth: i !== 0 ? 1 : 0,
+            borderTopColor: i !== 0 ? 'var(--v-bdr2)' : 'transparent',
+          }}
+          onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(226,221,217,0.04)'; }}
+          onMouseLeave={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        >
+          <span style={{ fontSize: '13.5px', fontWeight: 600 }}>{opt.label}</span>
+          {opt.desc && <span style={{ fontSize: '12px', color: '#5c5755', marginTop: '3px' }}>{opt.desc}</span>}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button ref={btnRef}
+        onClick={handleOpen}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '7px 12px',
+          borderRadius: '8px',
+          fontSize: '13px',
+          fontWeight: 500,
+          borderStyle: 'solid',
+          borderWidth: '1px',
+          borderColor: open ? 'var(--v-bdr3)' : 'var(--v-bdr2)',
+          outlineStyle: 'none',
+          outlineWidth: 0,
+          outlineColor: 'transparent',
+          background: open ? 'rgba(226,221,217,0.05)' : 'var(--v-bg2)',
+          color: open ? '#e2ddd9' : '#9e9894',
+          cursor: 'pointer',
+          minWidth: '130px',
+          transition: 'border-color .12s,color .12s,background .12s',
+        }}
+        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr3)'; (e.currentTarget as HTMLElement).style.color = '#e2ddd9'; } }}
+        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr2)'; (e.currentTarget as HTMLElement).style.color = '#9e9894'; } }}
+      >
+        <span style={{ flex: 1, textAlign: "left" }}>{current?.label}</span>
+        <ChevronDown size={14} style={{ transition: "transform .2s", transform: open ? "rotate(180deg)" : "none" }} />
+      </button>
+      {typeof document !== 'undefined' && dropdown
+        ? ReactDOM.createPortal(dropdown, document.body)
+        : null}
+    </div>
+  );
+};
+
+export type SettingsPanelProps = {
   downloadQuality: string; setDownloadQuality: (q: string) => void;
   downloadPath: string; handleSelectDirectory: () => void;
   downloadFormat: string; setDownloadFormat: (f: string) => void;
@@ -169,8 +289,9 @@ export function SettingsPanel({
     if (matchesSearch(["Appearance", "System Tray", "Enable Tray Icon", "Default Startup Page", "Startup View", "Theme", "Accent Color", "Custom Theme"])) return true;
     return false;
   };
+
   const [diskInfo, setDiskInfo] = useState<DiskInfo | null>(null);
-  const [switchingDevice, setSwitchingDevice] = useState(false);
+  const [, setSwitchingDevice] = useState(false);
   const [startupNav, setStartupNav] = useState(() => loadLS('vg_startupNav', 'home'));
   const [hoveredSlider, setHoveredSlider] = useState<string | null>(null);
   const handleStartupNavChange = (v: string) => {
@@ -307,7 +428,7 @@ export function SettingsPanel({
         )}
       </div>
 
-      <div style={{flex:1,overflowY:"auto",padding:"20px 24px 140px"}} className="custom-scrollbar">
+      <div style={{flex:1,overflowY:"auto",padding:"20px 24px"} } className="custom-scrollbar">
         {searchQuery && (
           <div style={{ marginBottom: "20px" }}>
             <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#e2ddd9", margin: "0 0 3px" }}>Search Results</h2>
@@ -635,55 +756,39 @@ export function SettingsPanel({
               </div>
             </div>
 
-            <div style={{borderRadius:"12px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",overflow:"hidden"}}>
-              <div style={{padding:"12px 16px",borderBottom:"1px solid var(--v-bdr)",background:"rgba(226,221,217,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0,display:"flex",alignItems:"center",gap:"8px"}}><Volume2 size={14} style={{color:"#8c8682"}} /> Audio Output Device</h3>
-                <button onClick={() => invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices').then(setAudioDevices).catch(() => {})}
-                  style={{padding:"4px",background:"none",border:"none",cursor:"pointer",color:"#5c5755",borderRadius:"6px",display:"flex",transition:"color .12s"}} title="Refresh devices" onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
-                  <RefreshCw size={13} />
-                </button>
-              </div>
-              <div style={{display:"flex",flexDirection:"column"}}>
+            <div style={{borderRadius:"12px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",padding:"12px 16px",display:"flex",alignItems:"center",gap:"12px"}}>
+              <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0,display:"flex",alignItems:"center",gap:"8px",whiteSpace:"nowrap",flexShrink:0}}><Volume2 size={14} style={{color:"#8c8682"}} /> Audio Output Device</h3>
+              <div style={{flex:1,minWidth:0}}>
                 {audioDevices.length === 0 ? (
-                  <div style={{padding:"14px 16px",fontSize:"12px",color:"#6f6966"}}>No output devices found</div>
-                ) : audioDevices.map((dev, idx) => {
-                  const isDefault = dev.is_default;
+                  <div style={{fontSize:"12px",color:"#6f6966"}}>No output devices found</div>
+                ) : (() => {
+                  const activeDevice = audioDevices.find(d => d.is_default) ?? audioDevices[0];
                   return (
-                    <button key={dev.id} disabled={switchingDevice}
-                      onClick={async () => {
-                        if (isDefault) return;
+                    <ThemedSelect
+                      value={activeDevice?.id ?? ''}
+                      onChange={async (id) => {
+                        if (id === activeDevice?.id) return;
                         setSwitchingDevice(true);
                         try {
-                          await invoke('set_audio_device', { id: dev.id });
-                          setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === dev.id })));
-                          showToast(`Output switched: ${dev.name}`);
+                          await invoke('set_audio_device', { id });
+                          setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === id })));
+                          showToast(`Output switched: ${audioDevices.find(d=>d.id===id)?.name ?? id}`);
                         } catch (e) { showToast(`Switch failed: ${e}`); }
                         finally { setSwitchingDevice(false); }
                       }}
-                      style={{
-                        display:"flex",alignItems:"center",gap:"12px",padding:"11px 16px",
-                        textAlign:"left",cursor:isDefault?"default":"pointer",width:"100%",
-                        background:isDefault?"rgba(226,221,217,0.02)":"transparent",
-                        border:"none",
-                        borderBottom:idx!==audioDevices.length-1?"1px solid #141312":"none",
-                        transition:"all 0.15s ease-out",opacity:switchingDevice&&!isDefault?0.4:1
-                      }}
-                      onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(226,221,217,0.01)";}}
-                      onMouseLeave={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                      <div style={{width:"28px",height:"28px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"var(--v-accent)":"rgba(255,255,255,0.02)"}`,background:isDefault?"rgba(226,221,217,0.03)":"#121111"}}>
-                        {dev.form === 'headphones'
-                          ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? 'var(--v-accent)' : '#5c5755'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                          : <Volume2 size={13} style={{color:isDefault?"var(--v-accent)":"#5c5755"}}/>}
-                      </div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <p style={{fontSize:"13px",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isDefault?"#e2ddd9":"#8c8682"}}>{dev.name}</p>
-                        {dev.form&&<p style={{fontSize:"10px",color:"#5c5755",textTransform:"capitalize",marginTop:"2px"}}>{dev.form}</p>}
-                      </div>
-                      {isDefault&&<span style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"9px",fontWeight:700,color:"var(--v-accent)",flexShrink:0,letterSpacing:".06em"}}><span style={{width:"4px",height:"4px",borderRadius:"50%",background:"var(--v-accent)",boxShadow:"0 0 4px var(--v-accent)"}}/>ACTIVE</span>}
-                    </button>
+                      options={audioDevices.map(dev => ({
+                        value: dev.id,
+                        label: dev.name,
+                        desc: dev.form ? dev.form.charAt(0).toUpperCase() + dev.form.slice(1) : undefined,
+                      }))}
+                    />
                   );
-                })}
+                })()}
               </div>
+              <button onClick={(e) => { const icon = e.currentTarget.querySelector('svg')!; icon.style.transition='transform .5s ease'; icon.style.transform='rotate(360deg)'; setTimeout(()=>{icon.style.transition='none';icon.style.transform='rotate(0deg)';},520); invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices').then(setAudioDevices).catch(() => {}); }}
+                style={{padding:"4px",background:"none",border:"none",cursor:"pointer",color:"#5c5755",borderRadius:"6px",display:"flex",flexShrink:0,transition:"color .12s"}} title="Refresh devices" onMouseEnter={e=>e.currentTarget.style.color="#e2ddd9"} onMouseLeave={e=>e.currentTarget.style.color="#5c5755"}>
+                <RefreshCw size={13} />
+              </button>
             </div>
 
             <div style={{borderRadius:"12px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",overflow:"hidden"}}>
@@ -696,60 +801,82 @@ export function SettingsPanel({
                   Reset
                 </button>
               </div>
-              <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:"14px"}}>
+              <div style={{padding:"18px 16px",display:"flex",flexDirection:"column",gap:"16px"}}>
                 {([
-                  { label: 'Bass', key: 'bass' as const, desc: 'Low range (60–250Hz)' },
-                  { label: 'Mid', key: 'mid' as const, desc: 'Vocals & instruments (500Hz–2kHz)' },
-                  { label: 'Treble', key: 'treble' as const, desc: 'High range & air (4–16kHz)' },
-                ] as { label: string; key: 'bass' | 'mid' | 'treble'; desc: string }[]).map(({ label, key, desc }) => (
-                  <div key={key}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}}>
-                      <div style={{display:"flex",alignItems:"baseline",gap:"8px"}}>
-                        <span style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9"}}>{label}</span>
-                        <span style={{fontSize:"10.5px",color:"#5c5755"}}>{desc}</span>
+                  { label: 'Bass', key: 'bass' as const, freq: '60–250 Hz' },
+                  { label: 'Mid', key: 'mid' as const, freq: '500 Hz–2 kHz' },
+                  { label: 'Treble', key: 'treble' as const, freq: '4–16 kHz' },
+                ] as { label: string; key: 'bass' | 'mid' | 'treble'; freq: string }[]).map(({ label, key, freq }) => {
+                  const val = eq[key];
+                  const isActive = val !== 0;
+                  return (
+                    <div key={key} style={{
+                      borderRadius:"10px",
+                      background:"var(--v-bg2)",
+                      border:`1px solid ${isActive?'rgba(226,221,217,0.08)':'var(--v-bdr)'}`,
+                      padding:"12px 14px",
+                      transition:"border-color .2s ease",
+                    }}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10px"}}>
+                        <div style={{display:"flex",alignItems:"baseline",gap:"8px"}}>
+                          <span style={{fontSize:"13px",fontWeight:700,color:isActive?"#e2ddd9":"#9e9894",transition:"color .2s"}}>{label}</span>
+                          <span style={{fontSize:"10px",color:"#4a4644",letterSpacing:"0.02em"}}>{freq}</span>
+                        </div>
+                        <div style={{
+                          fontSize:"12px",fontWeight:700,
+                          fontVariantNumeric:"tabular-nums",
+                          color: val > 0 ? "#e2ddd9" : val < 0 ? "#6f6966" : "#363230",
+                          background: isActive ? "rgba(226,221,217,0.04)" : "transparent",
+                          padding:"2px 8px",borderRadius:"5px",
+                          border: isActive ? "1px solid rgba(226,221,217,0.06)" : "1px solid transparent",
+                          transition:"all .2s ease",
+                          minWidth:"44px",textAlign:"center",
+                        }}>
+                          {val > 0 ? `+${val}` : val} dB
+                        </div>
                       </div>
-                      <span style={{fontSize:"11px",fontWeight:700,fontVariantNumeric:"tabular-nums",width:"42px",textAlign:"right",color:eq[key]>0?"#e2ddd9":eq[key]<0?"#5c5755":"#363230"}}>
-                        {eq[key] > 0 ? `+${eq[key]}` : eq[key]} dB
-                      </span>
+
+                      <div style={{position:"relative",height:"6px",background:"#1b1918",borderRadius:"3px"}}
+                        onMouseEnter={() => setHoveredSlider(key)}
+                        onMouseLeave={() => setHoveredSlider(null)}>
+                        <div style={{position:"absolute",left:"50%",top:"-3px",width:"1px",height:"12px",background:"rgba(226,221,217,0.15)",borderRadius:"1px",pointerEvents:"none"}}/>
+
+                        <div style={{
+                          position:"absolute",top:0,height:"100%",borderRadius:"3px",pointerEvents:"none",
+                          transition:"all .15s ease",
+                          background:'var(--v-accent)',
+                          boxShadow: isActive ? '0 0 8px rgba(226,221,217,0.15)' : 'none',
+                          left: val >= 0 ? '50%' : `${((val + 12) / 24) * 100}%`,
+                          width: `${(Math.abs(val) / 24) * 100}%`,
+                        }}/>
+
+                        <div style={{
+                          position:"absolute",
+                          top:"50%",
+                          transform: hoveredSlider === key ? "translateY(-50%) scale(1.25)" : "translateY(-50%) scale(1)",
+                          width:"14px",height:"14px",
+                          borderRadius:"50%",
+                          border:`2.5px solid ${isActive?'var(--v-accent)':'#5c5755'}`,
+                          background:"var(--v-bg0)",
+                          boxShadow: isActive ? "0 0 10px rgba(226,221,217,0.2), 0 2px 4px rgba(0,0,0,0.5)" : "0 2px 4px rgba(0,0,0,0.5)",
+                          pointerEvents:"none",
+                          transition:"left 0.12s ease-out, transform 0.15s ease, border-color .2s ease",
+                          left: `calc(${((val + 12) / 24) * 100}% - 7px)`
+                        }}/>
+
+                        <input type="range" min="-12" max="12" step="1" value={val}
+                          onChange={e => {
+                            const v = parseInt(e.target.value);
+                            const next = { ...eq, [key]: v };
+                            setEq(next);
+                            invoke('set_equalizer', { bass: next.bass, mid: next.mid, treble: next.treble }).catch(() => {});
+                          }}
+                          style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0,cursor:"pointer",margin:0}}
+                        />
+                      </div>
                     </div>
-                    <div style={{position:"relative",height:"4px",background:"#1b1918",borderRadius:"2px"}}
-                      onMouseEnter={() => setHoveredSlider(key)}
-                      onMouseLeave={() => setHoveredSlider(null)}>
-                      <div style={{position:"absolute",top:0,left:"50%",width:"1px",height:"100%",background:"var(--v-bdr3)",borderRadius:"1px",pointerEvents:"none"}}/>
-                      <input type="range" min="-12" max="12" step="1" value={eq[key]}
-                        onChange={e => {
-                          const v = parseInt(e.target.value);
-                          const next = { ...eq, [key]: v };
-                          setEq(next);
-                          invoke('set_equalizer', { bass: next.bass, mid: next.mid, treble: next.treble }).catch(() => {});
-                        }}
-                        style={{position:"absolute",inset:0,width:"100%",opacity:0,cursor:"pointer",height:"100%"}}
-                      />
-                      <div style={{
-                          position:"absolute",top:0,height:"100%",borderRadius:"2px",pointerEvents:"none",transition:"all .15s",
-                          left: eq[key] >= 0 ? '50%' : `${((eq[key] + 12) / 24) * 100}%`,
-                          width: `${(Math.abs(eq[key]) / 24) * 100}%`,
-                          background: 'var(--v-accent)',
-                        }} />
-                      <div style={{
-                          position: "absolute",
-                          top: "50%",
-                          transform: hoveredSlider === key ? "translateY(-50%) scale(1.15)" : "translateY(-50%) scale(1)",
-                          width: "12px",
-                          height: "12px",
-                          borderRadius: "50%",
-                          borderStyle: "solid",
-                          borderWidth: "2px",
-                          borderColor: "var(--v-accent)",
-                          background: "var(--v-bg0)",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                          pointerEvents: "none",
-                          transition: "left 0.12s ease-out, transform 0.12s ease",
-                          left: `calc(${((eq[key] + 12) / 24) * 100}% - 6px)`
-                        }} />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
