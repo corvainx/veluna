@@ -2450,7 +2450,7 @@ export default function Veluna() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 30px",zIndex:10}} onClick={()=>setShowHistory(false)}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px",zIndex:10}} onClick={()=>setShowHistory(false)}>
                 {}
                 {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:"280px",gap:"20px"}}>
@@ -2548,8 +2548,9 @@ export default function Veluna() {
                         overflow: 'hidden',
                         borderRadius: '16px',
                         padding: '24px 28px',
-                        background: 'linear-gradient(135deg, rgba(226,221,217,0.04) 0%, rgba(226,221,217,0.01) 100%)',
-                        border: '1px solid rgba(226,221,217,0.05)',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        backdropFilter: 'blur(12px)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -2564,7 +2565,7 @@ export default function Veluna() {
                             width: '200px',
                             height: '200px',
                             borderRadius: '50%',
-                            background: 'radial-gradient(circle, rgba(226,221,217,0.08) 0%, transparent 70%)',
+                            background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
                             pointerEvents: 'none',
                             zIndex: 0
                           }}
@@ -2573,13 +2574,13 @@ export default function Veluna() {
                           <h1 style={{
                             fontSize: '24px',
                             fontWeight: 700,
-                            color: '#e2ddd9',
+                            color: 'var(--v-fg)',
                             letterSpacing: '-0.02em',
                             margin: 0
                           }}>{greeting}</h1>
                           <p style={{
-                            fontSize: '13px',
-                            color: '#9e9894',
+                            fontSize: '13.5px',
+                            color: 'var(--v-fg2)',
                             marginTop: '4px',
                             margin: '4px 0 0'
                           }}>Ready to discover and play your favorite tracks?</p>
@@ -2595,8 +2596,8 @@ export default function Veluna() {
                             flexDirection: 'column',
                             alignItems: 'flex-end'
                           }}>
-                            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#5c5755' }}>Library Status</span>
-                            <span style={{ fontSize: '15px', fontWeight: 600, color: '#e2ddd9', marginTop: '2px' }}>
+                            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--v-fg3)' }}>Library Status</span>
+                            <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--v-fg)', marginTop: '2px' }}>
                               {localAsTrack.length + playlists.reduce((acc, p) => acc + p.tracks.length, 0)} Tracks
                             </span>
                           </div>
@@ -2613,7 +2614,7 @@ export default function Veluna() {
                           <h2 style={{
                             fontSize: '16px',
                             fontWeight: 700,
-                            color: '#e2ddd9',
+                            color: 'var(--v-fg)',
                             letterSpacing: '-0.01em',
                             margin: 0
                           }}>Recently Played</h2>
@@ -2621,7 +2622,7 @@ export default function Veluna() {
                             onClick={() => setQuickPicks([])}
                             style={{
                               background: 'transparent',
-                              color: '#5c5755',
+                              color: 'var(--v-fg3)',
                               fontSize: '11px',
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -2631,12 +2632,12 @@ export default function Veluna() {
                               transition: 'color .12s, border-color .12s'
                             }}
                             onMouseEnter={e => {
-                              e.currentTarget.style.color = '#9e9894';
+                              e.currentTarget.style.color = 'var(--v-fg2)';
                               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
                               e.currentTarget.style.background = 'rgba(255,255,255,0.01)';
                             }}
                             onMouseLeave={e => {
-                              e.currentTarget.style.color = '#5c5755';
+                              e.currentTarget.style.color = 'var(--v-fg3)';
                               e.currentTarget.style.borderColor = 'transparent';
                               e.currentTarget.style.background = 'transparent';
                             }}
@@ -2657,30 +2658,26 @@ export default function Veluna() {
                                   padding: '10px 12px',
                                   borderRadius: '12px',
                                   cursor: 'pointer',
-                                  background: isActive ? 'rgba(226,221,217,0.06)' : 'rgba(255,255,255,0.02)',
-                                  border: `1px solid ${isActive ? 'rgba(226,221,217,0.12)' : 'rgba(255,255,255,0.04)'}`,
+                                  background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.015)',
+                                  border: `1px solid ${isActive ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)'}`,
                                   transition: 'background .18s, border-color .18s, transform .18s',
                                   animation: `fadeUpSm .18s cubic-bezier(0.2,0,0,1) ${cardIdx * 25}ms both`,
                                 }}
                                 onMouseEnter={e => {
                                   prefetchOnHover(track.url);
                                   e.currentTarget.style.transform = 'translateY(-1px)';
-                                  if (!isActive) {
-                                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                                  }
+                                  e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.03)';
+                                  e.currentTarget.style.borderColor = isActive ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.06)';
                                 }}
                                 onMouseLeave={e => {
                                   e.currentTarget.style.transform = 'none';
-                                  if (!isActive) {
-                                    e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
-                                  }
+                                  e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.015)';
+                                  e.currentTarget.style.borderColor = isActive ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
                                 }}
                               >
                                 <div style={{
-                                  width: '44px',
-                                  height: '44px',
+                                  width: '48px',
+                                  height: '48px',
                                   borderRadius: '8px',
                                   overflow: 'hidden',
                                   flexShrink: 0,
@@ -2688,7 +2685,8 @@ export default function Veluna() {
                                   background: getTrackGradient(track.title, track.artist),
                                   display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
+                                  border: '1px solid rgba(255, 255, 255, 0.04)'
                                 }}>
                                   <Music size={14} style={{ position: 'absolute', color: 'rgba(255,255,255,0.2)' }} />
                                   {getTrackCover(track) && (
@@ -2701,7 +2699,7 @@ export default function Veluna() {
                                         width: '100%',
                                         height: '100%',
                                         objectFit: 'cover'
-                                      }}
+                                        }}
                                       onError={e => { e.currentTarget.style.display = 'none'; }}
                                       loading="lazy"
                                     />
@@ -2726,7 +2724,7 @@ export default function Veluna() {
                                             key={i}
                                             style={{
                                               width: '2px',
-                                              background: '#e2ddd9',
+                                              background: 'var(--v-accent)',
                                               borderRadius: '1px',
                                               height: `${h}%`,
                                               animation: `barBounce ${0.7 + i * 0.12}s ease-in-out ${i * 110}ms infinite`,
@@ -2740,9 +2738,9 @@ export default function Veluna() {
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{
-                                    fontSize: '13px',
+                                    fontSize: '13.5px',
                                     fontWeight: 600,
-                                    color: isActive ? '#e2ddd9' : '#c8c4c0',
+                                    color: isActive ? 'var(--v-accent)' : 'var(--v-fg)',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
@@ -2750,8 +2748,8 @@ export default function Veluna() {
                                   }}>{track.title}</div>
                                   {cleanArtist(track.artist) && (
                                     <div style={{
-                                      fontSize: '11px',
-                                      color: '#5c5755',
+                                      fontSize: '11.5px',
+                                      color: 'var(--v-fg2)',
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
                                       whiteSpace: 'nowrap',
@@ -2782,13 +2780,13 @@ export default function Veluna() {
                                   <h2 style={{
                                     fontSize: '16px',
                                     fontWeight: 700,
-                                    color: '#e2ddd9',
+                                    color: 'var(--v-fg)',
                                     letterSpacing: '-0.01em',
                                     margin: 0
                                   }}>{genre.label}</h2>
                                   <span style={{
                                     fontSize: '10px',
-                                    color: '#5c5755',
+                                    color: 'var(--v-fg2)',
                                     background: 'rgba(255,255,255,0.03)',
                                     padding: '2px 6px',
                                     borderRadius: '10px',
@@ -2807,12 +2805,12 @@ export default function Veluna() {
                                     width: '30px',
                                     height: '30px',
                                     borderRadius: '50%',
-                                    background: 'rgba(22, 20, 20, 0.9)',
+                                    background: 'rgba(var(--v-bg2-rgb), 0.92)',
                                     border: '1px solid rgba(255,255,255,0.08)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: '#e2ddd9',
+                                    color: 'var(--v-fg)',
                                     cursor: 'pointer',
                                     opacity: 0,
                                     transition: 'opacity 0.2s, background 0.2s, transform 0.2s',
@@ -2833,12 +2831,12 @@ export default function Veluna() {
                                     width: '30px',
                                     height: '30px',
                                     borderRadius: '50%',
-                                    background: 'rgba(22, 20, 20, 0.9)',
+                                    background: 'rgba(var(--v-bg2-rgb), 0.92)',
                                     border: '1px solid rgba(255,255,255,0.08)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: '#e2ddd9',
+                                    color: 'var(--v-fg)',
                                     cursor: 'pointer',
                                     opacity: 0,
                                     transition: 'opacity 0.2s, background 0.2s, transform 0.2s',
@@ -2868,25 +2866,9 @@ export default function Veluna() {
                                         style={{
                                           animationDelay: `${tIdx * 25 + gIdx * 60}ms`,
                                           flexShrink: 0,
-                                          width: '120px',
-                                          cursor: 'pointer',
-                                          background: 'rgba(255,255,255,0.02)',
-                                          border: '1px solid rgba(255,255,255,0.04)',
-                                          borderRadius: '12px',
-                                          padding: '10px',
-                                          transition: 'background .2s, border-color .2s, transform .2s',
+                                          width: '160px',
                                         }}
-                                        onMouseEnter={e => {
-                                          prefetchOnHover(track.url);
-                                          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                                          e.currentTarget.style.transform = 'translateY(-2px)';
-                                        }}
-                                        onMouseLeave={e => {
-                                          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
-                                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
-                                          e.currentTarget.style.transform = 'none';
-                                        }}
+                                        onMouseEnter={() => prefetchOnHover(track.url)}
                                       >
                                         <div style={{
                                           position: 'relative',
@@ -2899,7 +2881,7 @@ export default function Veluna() {
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                           marginBottom: '8px'
-                                        }}>
+                                        }} className="v-card__art-container">
                                           <Music size={24} style={{ position: 'absolute', color: 'rgba(255,255,255,0.15)' }} />
                                           {getTrackCover(track) && (
                                             <img
@@ -2931,7 +2913,7 @@ export default function Veluna() {
                                                     key={j}
                                                     style={{
                                                       width: '2px',
-                                                      background: '#e2ddd9',
+                                                      background: 'var(--v-accent)',
                                                       borderRadius: '1px',
                                                       height: `${h}%`,
                                                       animation: `barBounce ${0.7 + j * 0.12}s ease-in-out ${j * 110}ms infinite`,
@@ -2943,52 +2925,42 @@ export default function Veluna() {
                                             </div>
                                           ) : (
                                             <div
+                                              className="v-card__hover-overlay"
                                               style={{
                                                 position: 'absolute',
                                                 inset: 0,
-                                                background: 'rgba(0,0,0,0.4)',
-                                                opacity: 0,
+                                                background: 'rgba(0,0,0,0.45)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                transition: 'opacity 0.2s'
+                                                transition: 'opacity 0.2s ease',
+                                                opacity: 0,
+                                                zIndex: 5
                                               }}
-                                              onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
-                                              onMouseLeave={e => { e.currentTarget.style.opacity = '0'; }}
                                             >
                                               <div style={{
-                                                width: '28px',
-                                                height: '28px',
+                                                width: '32px',
+                                                height: '32px',
                                                 borderRadius: '50%',
-                                                background: '#e2ddd9',
+                                                background: 'var(--v-accent)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                color: '#0c0b0b'
+                                                color: '#0c0b0b',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                                transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
                                               }}>
-                                                <Play size={12} style={{ fill: 'currentColor', marginLeft: '1px' }} />
+                                                <Play size={14} style={{ fill: 'currentColor', marginLeft: '1px' }} />
                                               </div>
                                             </div>
                                           )}
                                         </div>
-                                        <div style={{
-                                          fontSize: '12px',
-                                          fontWeight: 600,
-                                          color: isActive ? '#e2ddd9' : '#c8c4c0',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap',
+                                        <div className="v-card__title" style={{
+                                          color: isActive ? 'var(--v-accent)' : 'var(--v-fg)',
                                           lineHeight: 1.3
                                         }}>{track.title}</div>
                                         {cleanArtist(track.artist) && (
-                                          <div style={{
-                                            fontSize: '10.5px',
-                                            color: '#5c5755',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                            marginTop: '2px'
-                                          }}>{cleanArtist(track.artist)}</div>
+                                          <div className="v-card__artist">{cleanArtist(track.artist)}</div>
                                         )}
                                       </div>
                                     );
@@ -3001,17 +2973,13 @@ export default function Veluna() {
 
                         <div className="v-home-sidebar-col">
                           {topTracks.length >= 3 && (
-                            <div style={{
-                              background: 'linear-gradient(135deg, rgba(226,221,217,0.01) 0%, rgba(255,255,255,0.005) 100%)',
-                              border: '1px solid rgba(226,221,217,0.04)',
-                              borderRadius: '16px',
-                              padding: '16px',
+                            <div className="v-library-sidebar-card" style={{
                               animation: 'fadeUp 0.22s cubic-bezier(0.2,0,0,1) 200ms both'
                             }}>
                               <h2 style={{
                                 fontSize: '15px',
                                 fontWeight: 700,
-                                color: '#e2ddd9',
+                                color: 'var(--v-fg)',
                                 letterSpacing: '-0.01em',
                                 marginBottom: '14px',
                                 margin: '0 0 14px'
@@ -3033,7 +3001,7 @@ export default function Veluna() {
                                         padding: '6px 8px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
-                                        background: isActive ? 'rgba(226,221,217,0.04)' : 'transparent',
+                                        background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent',
                                         transition: 'background 0.15s'
                                       }}
                                       onMouseEnter={e => {
@@ -3047,7 +3015,7 @@ export default function Veluna() {
                                       <div style={{
                                         fontSize: '11px',
                                         fontWeight: 700,
-                                        color: i === 0 ? '#d4af37' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : '#5c5755',
+                                        color: i === 0 ? '#d4af37' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : 'var(--v-fg2)',
                                         width: '18px',
                                         textAlign: 'center',
                                         flexShrink: 0
@@ -3085,7 +3053,7 @@ export default function Veluna() {
                                         <div style={{
                                           fontSize: '12px',
                                           fontWeight: 600,
-                                          color: isActive ? '#e2ddd9' : '#c8c4c0',
+                                          color: isActive ? 'var(--v-accent)' : 'var(--v-fg)',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis',
                                           whiteSpace: 'nowrap'
@@ -3094,13 +3062,13 @@ export default function Veluna() {
                                           <div style={{
                                             flex: 1,
                                             height: '2px',
-                                            background: '#1a1817',
+                                            background: 'var(--v-bdr2)',
                                             borderRadius: '1px',
                                             overflow: 'hidden'
                                           }}>
                                             <div style={{
                                               height: '100%',
-                                              background: 'rgba(226,221,217,0.3)',
+                                              background: 'var(--v-accent)',
                                               borderRadius: '1px',
                                               width: `${(count / maxCount) * 100}%`,
                                               transition: 'width .5s'
@@ -3108,7 +3076,7 @@ export default function Veluna() {
                                           </div>
                                           <span style={{
                                             fontSize: '9.5px',
-                                            color: '#5c5755',
+                                            color: 'var(--v-fg2)',
                                             fontVariantNumeric: 'tabular-nums',
                                             flexShrink: 0
                                           }}>{count}×</span>
@@ -3122,17 +3090,13 @@ export default function Veluna() {
                           )}
 
                           {recentHistory.length >= 3 && (
-                            <div style={{
-                              background: 'linear-gradient(135deg, rgba(226,221,217,0.01) 0%, rgba(255,255,255,0.005) 100%)',
-                              border: '1px solid rgba(226,221,217,0.04)',
-                              borderRadius: '16px',
-                              padding: '16px',
+                            <div className="v-library-sidebar-card" style={{
                               animation: 'fadeUp 0.22s cubic-bezier(0.2,0,0,1) 250ms both'
                             }}>
                               <h2 style={{
                                 fontSize: '15px',
                                 fontWeight: 700,
-                                color: '#e2ddd9',
+                                color: 'var(--v-fg)',
                                 letterSpacing: '-0.01em',
                                 marginBottom: '14px',
                                 margin: '0 0 14px'
@@ -3152,7 +3116,7 @@ export default function Veluna() {
                                         padding: '6px 8px',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
-                                        background: isActive ? 'rgba(226,221,217,0.04)' : 'transparent',
+                                        background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent',
                                         transition: 'background 0.15s'
                                       }}
                                       onMouseEnter={e => {
@@ -3195,7 +3159,7 @@ export default function Veluna() {
                                         <div style={{
                                           fontSize: '12px',
                                           fontWeight: 600,
-                                          color: isActive ? '#e2ddd9' : '#c8c4c0',
+                                          color: isActive ? 'var(--v-accent)' : 'var(--v-fg)',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis',
                                           whiteSpace: 'nowrap'
@@ -3203,7 +3167,7 @@ export default function Veluna() {
                                         {cleanArtist(track.artist) && (
                                           <div style={{
                                             fontSize: '10.5px',
-                                            color: '#5c5755',
+                                            color: 'var(--v-fg2)',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
@@ -3218,7 +3182,7 @@ export default function Veluna() {
                                               key={j}
                                               style={{
                                                 width: '2px',
-                                                background: '#e2ddd9',
+                                                background: 'var(--v-accent)',
                                                 borderRadius: '1px',
                                                 height: `${h}%`,
                                                 animation: `barBounce ${0.7 + j * 0.12}s ease-in-out ${j * 110}ms infinite`,
@@ -3236,17 +3200,13 @@ export default function Veluna() {
                           )}
 
                           {activeGenres.length > 0 && (
-                            <div style={{
-                              background: 'linear-gradient(135deg, rgba(226,221,217,0.01) 0%, rgba(255,255,255,0.005) 100%)',
-                              border: '1px solid rgba(226,221,217,0.04)',
-                              borderRadius: '16px',
-                              padding: '16px',
+                            <div className="v-library-sidebar-card" style={{
                               animation: 'fadeUp 0.22s cubic-bezier(0.2,0,0,1) 280ms both'
                             }}>
                               <h2 style={{
                                 fontSize: '15px',
                                 fontWeight: 700,
-                                color: '#e2ddd9',
+                                color: 'var(--v-fg)',
                                 letterSpacing: '-0.01em',
                                 marginBottom: '14px',
                                 margin: '0 0 14px'
@@ -3259,11 +3219,11 @@ export default function Veluna() {
                                   return (
                                     <div key={genre.id}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', marginBottom: '4px' }}>
-                                        <span style={{ color: '#c8c4c0', fontWeight: 500 }}>{genre.label}</span>
-                                        <span style={{ color: '#5c5755', fontVariantNumeric: 'tabular-nums' }}>{score} pts</span>
+                                        <span style={{ color: 'var(--v-fg)', fontWeight: 500 }}>{genre.label}</span>
+                                        <span style={{ color: 'var(--v-fg2)', fontVariantNumeric: 'tabular-nums' }}>{score} pts</span>
                                       </div>
                                       <div style={{ height: '3px', background: 'var(--v-bdr2)', borderRadius: '1.5px', overflow: 'hidden' }}>
-                                        <div style={{ height: '100%', background: 'rgba(226,221,217,0.4)', width: `${percent}%`, borderRadius: '1.5px' }} />
+                                        <div style={{ height: '100%', background: 'var(--v-accent)', width: `${percent}%`, borderRadius: '1.5px' }} />
                                       </div>
                                     </div>
                                   );
@@ -3272,17 +3232,13 @@ export default function Veluna() {
                             </div>
                           )}
 
-                          <div style={{
-                            background: 'linear-gradient(135deg, rgba(226,221,217,0.01) 0%, rgba(255,255,255,0.005) 100%)',
-                            border: '1px solid rgba(226,221,217,0.04)',
-                            borderRadius: '16px',
-                            padding: '16px',
+                          <div className="v-library-sidebar-card" style={{
                             animation: 'fadeUp 0.22s cubic-bezier(0.2,0,0,1) 320ms both'
                           }}>
                             <h2 style={{
                               fontSize: '15px',
                               fontWeight: 700,
-                              color: '#e2ddd9',
+                              color: 'var(--v-fg)',
                               letterSpacing: '-0.01em',
                               marginBottom: '14px',
                               margin: '0 0 14px'
@@ -3321,23 +3277,23 @@ export default function Veluna() {
                                       {isLiked ? (
                                         <Heart size={14} style={{ color: '#e05555', fill: 'rgba(220,60,60,0.1)' }} />
                                       ) : (
-                                        <ListMusic size={14} style={{ color: '#9e9894' }} />
+                                        <ListMusic size={14} style={{ color: 'var(--v-fg2)' }} />
                                       )}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                       <div style={{
                                         fontSize: '12px',
                                         fontWeight: 600,
-                                        color: '#c8c4c0',
+                                        color: 'var(--v-fg)',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap'
                                       }}>{pl.name}</div>
-                                      <div style={{ fontSize: '10px', color: '#5c5755', marginTop: '1px' }}>
+                                      <div style={{ fontSize: '10px', color: 'var(--v-fg2)', marginTop: '1px' }}>
                                         {pl.tracks.length} tracks
                                       </div>
                                     </div>
-                                    <ChevronRight size={14} style={{ color: '#363230' }} />
+                                    <ChevronRight size={14} style={{ color: 'var(--v-fg3)' }} />
                                   </div>
                                 );
                               })}
@@ -3422,7 +3378,7 @@ export default function Veluna() {
           {}
           {activeNav === 'library' && (
             openPlaylist ? (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10,position:"relative"}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px",zIndex:10,position:"relative"}}>
                 {getPlaylistCover(openPlaylist) ? (
                   <div style={{
                     position: "absolute",
@@ -3461,24 +3417,24 @@ export default function Veluna() {
                     width:"36px",
                     height:"36px",
                     borderRadius:"50%",
-                    color:"#9e9894",
-                    background:"rgba(255,255,255,0.03)",
-                    border:"1px solid rgba(255,255,255,0.05)",
+                    color:"var(--v-fg2)",
+                    background:"var(--v-bg3)",
+                    border:"1px solid var(--v-bdr3)",
                     cursor:"pointer",
                     marginBottom:"24px",
                     padding:0,
                     transition:"all .2s cubic-bezier(0.2,0,0,1)"
                   }}
                   onMouseEnter={e=>{
-                    e.currentTarget.style.color="#e2ddd9";
-                    e.currentTarget.style.background="rgba(255,255,255,0.08)";
-                    e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";
+                    e.currentTarget.style.color="var(--v-fg)";
+                    e.currentTarget.style.background="var(--v-bg4)";
+                    e.currentTarget.style.borderColor="var(--v-bdr2)";
                     e.currentTarget.style.transform="scale(1.05)";
                   }}
                   onMouseLeave={e=>{
-                    e.currentTarget.style.color="#9e9894";
-                    e.currentTarget.style.background="rgba(255,255,255,0.03)";
-                    e.currentTarget.style.borderColor="rgba(255,255,255,0.05)";
+                    e.currentTarget.style.color="var(--v-fg2)";
+                    e.currentTarget.style.background="var(--v-bg3)";
+                    e.currentTarget.style.borderColor="var(--v-bdr3)";
                     e.currentTarget.style.transform="scale(1)";
                   }}>
                   <ChevronLeft size={20} style={{flexShrink:0}}/>
@@ -3488,8 +3444,8 @@ export default function Veluna() {
                     width:"140px",
                     height:"140px",
                     borderRadius:"16px",
-                    background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.02) 100%)":"rgba(255,255,255,0.02)",
-                    border:"1px solid rgba(255,255,255,0.06)",
+                    background:openPlaylist.id==="p1"?"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.02) 100%)":"var(--v-bg3)",
+                    border:"1px solid var(--v-bdr3)",
                     boxShadow:"0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02)",
                     display:"flex",
                     alignItems:"center",
@@ -3512,12 +3468,12 @@ export default function Veluna() {
                       if(ov)ov.style.opacity='0';
                     }}>
                     <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                      {openPlaylist.id==='p1'?<Heart size={56} style={{color:'#e05555',fill:'rgba(224,85,85,0.15)'}}/>:<ListMusic size={56} style={{color:'rgba(255,255,255,0.12)'}}/>}
+                      {openPlaylist.id==='p1'?<Heart size={56} style={{color:'#e05555',fill:'rgba(224,85,85,0.15)'}}/>:<ListMusic size={56} style={{color:'var(--v-fg3)'}}/>}
                     </div>
                     {getPlaylistCover(openPlaylist) && (
                       <img src={getPlaylistCover(openPlaylist)!} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.currentTarget.style.display='none';}} alt=""/>
                     )}
-                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}><ImagePlus size={24} style={{color:"#e2ddd9"}}/></div>}
+                    {openPlaylist.id !== 'p1' && <div className="pl-cover-ov" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"opacity .15s",zIndex:5}}><ImagePlus size={24} style={{color:"var(--v-fg)"}}/></div>}
                   </div>
                   <div style={{flex:1,minWidth:0,paddingBottom:"4px"}}>
                     <span style={{
@@ -3525,7 +3481,7 @@ export default function Veluna() {
                       fontWeight:700,
                       letterSpacing:".18em",
                       textTransform:"uppercase",
-                      color:openPlaylist.id==='p1'?'#ff5e5e':'#8a807c',
+                      color:openPlaylist.id==='p1'?'#ff5e5e':'var(--v-fg2)',
                       display:"block",
                       marginBottom:"6px"
                     }}>
@@ -3534,7 +3490,7 @@ export default function Veluna() {
                     <h2 style={{
                       fontSize:"32px",
                       fontWeight:900,
-                      color:"#e2ddd9",
+                      color:"var(--v-fg)",
                       overflow:"hidden",
                       textOverflow:"ellipsis",
                       whiteSpace:"nowrap",
@@ -3546,7 +3502,7 @@ export default function Veluna() {
                     {openPlaylist.description && openPlaylist.description.trim() && (
                       <p style={{
                         fontSize:"13px",
-                        color:"#8a807c",
+                        color:"var(--v-fg2)",
                         marginTop:"6px",
                         marginBottom:0,
                         lineHeight:"1.4",
@@ -3561,10 +3517,10 @@ export default function Veluna() {
                       alignItems:"center",
                       gap:"6px",
                       fontSize:"12px",
-                      color:"#5c5755",
+                      color:"var(--v-fg3)",
                       marginTop:"8px"
                     }}>
-                      <span style={{fontWeight:600,color:"#8a807c"}}>{openPlaylist.tracks.length} {openPlaylist.tracks.length===1?'song':'songs'}</span>
+                      <span style={{fontWeight:600,color:"var(--v-fg2)"}}>{openPlaylist.tracks.length} {openPlaylist.tracks.length===1?'song':'songs'}</span>
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:"10px",marginTop:"18px"}}>
                       <button onClick={()=>playAll(openPlaylist.tracks)} disabled={!openPlaylist.tracks.length}
@@ -3573,7 +3529,7 @@ export default function Veluna() {
                           alignItems:"center",
                           gap:"8px",
                           padding:"9px 20px",
-                          background:"linear-gradient(135deg,#e2ddd9 0%,#c8beba 100%)",
+                          background:"var(--v-accent)",
                           color:"var(--v-bg0)",
                           fontWeight:800,
                           borderRadius:"10px",
@@ -3581,18 +3537,18 @@ export default function Veluna() {
                           cursor:"pointer",
                           fontSize:"13px",
                           opacity:openPlaylist.tracks.length?1:0.4,
-                          boxShadow:"0 4px 15px rgba(226,221,217,0.15)",
+                          boxShadow:"0 4px 15px rgba(0, 0, 0, 0.25)",
                           transition:"all 0.2s cubic-bezier(0.2,0,0,1)"
                         }}
                         onMouseEnter={e=>{
                           if(openPlaylist.tracks.length){
                             e.currentTarget.style.transform="translateY(-1px)";
-                            e.currentTarget.style.boxShadow="0 6px 20px rgba(226,221,217,0.25)";
+                            e.currentTarget.style.boxShadow="0 6px 20px rgba(0, 0, 0, 0.4)";
                           }
                         }}
                         onMouseLeave={e=>{
                           e.currentTarget.style.transform="translateY(0)";
-                          e.currentTarget.style.boxShadow="0 4px 15px rgba(226,221,217,0.15)";
+                          e.currentTarget.style.boxShadow="0 4px 15px rgba(0, 0, 0, 0.25)";
                         }}>
                         <Play size={16} fill="currentColor"/> Play All
                       </button>
@@ -3602,23 +3558,23 @@ export default function Veluna() {
                           alignItems:"center",
                           gap:"6px",
                           padding:"9px 14px",
-                          color:"#e2ddd9",
+                          color:"var(--v-fg)",
                           borderRadius:"10px",
-                          background:"rgba(255,255,255,0.03)",
-                          border:"1px solid rgba(255,255,255,0.06)",
+                          background:"var(--v-bg3)",
+                          border:"1px solid var(--v-bdr3)",
                           fontSize:"13px",
                           fontWeight:600,
                           cursor:"pointer",
                           transition:"all .2s cubic-bezier(0.2,0,0,1)"
                         }}
                         onMouseEnter={e=>{
-                          e.currentTarget.style.background="rgba(255,255,255,0.08)";
-                          e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";
+                          e.currentTarget.style.background="var(--v-bg4)";
+                          e.currentTarget.style.borderColor="var(--v-bdr2)";
                           e.currentTarget.style.transform="translateY(-1px)";
                         }}
                         onMouseLeave={e=>{
-                          e.currentTarget.style.background="rgba(255,255,255,0.03)";
-                          e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";
+                          e.currentTarget.style.background="var(--v-bg3)";
+                          e.currentTarget.style.borderColor="var(--v-bdr3)";
                           e.currentTarget.style.transform="translateY(0)";
                         }}>
                         <Pencil size={14}/> Edit
@@ -3656,7 +3612,7 @@ export default function Veluna() {
                   </div>
                 </div>
                 {openPlaylist.tracks.length === 0
-                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"#363230",gap:"10px",position:"relative",zIndex:1}}><Music size={28} strokeWidth={1}/><p style={{fontSize:"13px"}}>No tracks yet.</p></div>
+                  ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"140px",color:"var(--v-fg3)",gap:"10px",position:"relative",zIndex:1}}><Music size={28} strokeWidth={1}/><p style={{fontSize:"13px",color:"var(--v-fg2)"}}>No tracks yet.</p></div>
                   : (() => {
                       const q = playlistSearchQ.trim().toLowerCase();
                       const filteredTracks = q
@@ -3669,7 +3625,7 @@ export default function Veluna() {
                       return (
                         <div style={{display:"flex",flexDirection:"column",gap:"4px",position:"relative",zIndex:1}}>
                           <div style={{position:"relative",marginBottom:"18px"}}>
-                            <Search size={15} style={{position:"absolute",left:"12px",top:"50%",transform:"translateY(-50%)",color:"#5c5755",pointerEvents:"none"}} />
+                            <Search size={15} style={{position:"absolute",left:"12px",top:"50%",transform:"translateY(-50%)",color:"var(--v-fg3)",pointerEvents:"none"}} />
                             <input
                               type="text"
                               value={playlistSearchQ}
@@ -3677,29 +3633,29 @@ export default function Veluna() {
                               placeholder="Search in playlist..."
                               style={{
                                 width:"100%",
-                                background:"rgba(255,255,255,0.02)",
-                                border:"1px solid rgba(255,255,255,0.05)",
+                                background:"var(--v-bg2)",
+                                border:"1px solid var(--v-bdr2)",
                                 borderRadius:"21px",
                                 padding:"10px 38px",
                                 fontSize:"14px",
-                                color:"#e2ddd9",
+                                color:"var(--v-fg)",
                                 outline:"none",
                                 boxSizing:"border-box",
                                 transition:"all 0.2s cubic-bezier(0.2,0,0,1)"
                               }}
                               onFocus={e => {
-                                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                                e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                                e.currentTarget.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.1)";
+                                e.currentTarget.style.background = "var(--v-bg3)";
+                                e.currentTarget.style.borderColor = "var(--v-bdr3)";
+                                e.currentTarget.style.boxShadow = "none";
                               }}
                               onBlur={e => {
-                                e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                                e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
+                                e.currentTarget.style.background = "var(--v-bg2)";
+                                e.currentTarget.style.borderColor = "var(--v-bdr2)";
                                 e.currentTarget.style.boxShadow = "none";
                               }}
                             />
                             {playlistSearchQ && (
-                              <button onClick={() => setPlaylistSearchQ('')} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#5c5755",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
+                              <button onClick={() => setPlaylistSearchQ('')} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"var(--v-fg3)",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
                                 <X size={15} />
                               </button>
                             )}
@@ -3708,12 +3664,12 @@ export default function Veluna() {
                             display:"flex",
                             alignItems:"center",
                             padding:"8px 12px",
-                            color:"#5c5755",
+                            color:"var(--v-fg3)",
                             fontSize:"11px",
                             fontWeight:700,
                             letterSpacing:"0.1em",
                             textTransform:"uppercase",
-                            borderBottom:"1px solid rgba(255,255,255,0.03)",
+                            borderBottom:"1px solid var(--v-bdr2)",
                             marginBottom:"6px"
                           }}>
                             {!playlistSearchQ && <div style={{ width: "22px", flexShrink: 0 }} />}
@@ -3723,7 +3679,7 @@ export default function Veluna() {
                             <div style={{ width: "150px", textAlign: "right", paddingRight: "12px" }}>Duration</div>
                           </div>
                           {filteredTracks.length === 0
-                            ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"110px",color:"#363230",gap:"7px"}}><Search size={24} strokeWidth={1} /><p style={{fontSize:"13px",color:"#5c5755"}}>No results for "{playlistSearchQ}"</p></div>
+                            ? <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"110px",color:"var(--v-fg3)",gap:"7px"}}><Search size={24} strokeWidth={1} /><p style={{fontSize:"13px",color:"var(--v-fg2)"}}>No results for "{playlistSearchQ}"</p></div>
                             : filteredTracks.map((t, i) => {
                                 const origIdx = openPlaylist.tracks.indexOf(t);
                                 const enrichedTrack = { ...t, cover: getTrackCover(t) };
@@ -3732,7 +3688,7 @@ export default function Veluna() {
                                     style={{position:"relative",display:"flex",alignItems:"center",gap:"3px"}}
                                     onMouseEnter={() => { if (dragPlaylistIdx.current !== null) { dragOverPlaylistIdxRef.current = origIdx; setDragOverPlaylistIdx(origIdx); } }}>
                                     {dragOverPlaylistIdx === origIdx && dragPlaylistIdx.current !== null && dragPlaylistIdx.current !== origIdx && (
-                                      <div style={{position:"absolute",top:0,left:"32px",right:0,height:"2px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}}/>
+                                      <div style={{position:"absolute",top:0,left:"32px",right:0,height:"2px",background:"var(--v-accent)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}}/>
                                     )}
                                     {!playlistSearchQ && (
                                       <div
@@ -3761,7 +3717,7 @@ export default function Veluna() {
                                           };
                                           window.addEventListener('mouseup', onUp);
                                         }}>
-                                        <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" style={{color:"#5c5755"}}>
+                                        <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" style={{color:"var(--v-fg3)"}}>
                                           <circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/>
                                           <circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/>
                                           <circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/>
@@ -3788,7 +3744,7 @@ export default function Veluna() {
                 }
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px",zIndex:10}}>
                 <div className="v-library-container">
                   <div className="v-library-main">
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
@@ -4057,7 +4013,7 @@ export default function Veluna() {
                   </div>
                   <div className="v-library-sidebar">
                     <div className="v-library-sidebar-card">
-                      <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#8a807c",margin:"0 0 16px 0"}}>Library Insights</h3>
+                      <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"var(--v-fg2)",margin:"0 0 16px 0"}}>Library Insights</h3>
                       <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:"14px"}}>
                         <div className="v-library-stat-item">
                           <span className="v-library-stat-val">{playlists.length}</span>
@@ -4086,18 +4042,18 @@ export default function Veluna() {
                     </div>
                     <div className="v-library-sidebar-card" style={{display:"flex",flexDirection:"column",gap:"12px"}}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#8a807c",margin:0}}>Recently Played</h3>
+                        <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"var(--v-fg2)",margin:0}}>Recently Played</h3>
                         {playHistory.length > 0 && (
                           <button onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); }}
-                            style={{background:"none",border:"none",color:"#5c5755",fontSize:"10px",fontWeight:600,cursor:"pointer",transition:"color .12s"}}
-                            onMouseEnter={e=>e.currentTarget.style.color="#8a807c"}
-                            onMouseLeave={e=>e.currentTarget.style.color="#5c5755"}>
+                            style={{background:"none",border:"none",color:"var(--v-fg3)",fontSize:"10px",fontWeight:600,cursor:"pointer",transition:"color .12s"}}
+                            onMouseEnter={e=>e.currentTarget.style.color="var(--v-fg2)"}
+                            onMouseLeave={e=>e.currentTarget.style.color="var(--v-fg3)"}>
                             Clear
                           </button>
                         )}
                       </div>
                       {playHistory.length === 0 ? (
-                        <div style={{padding:"20px 0",textAlign:"center",color:"#363230",fontSize:"12px"}}>
+                        <div style={{padding:"20px 0",textAlign:"center",color:"var(--v-fg3)",fontSize:"12px"}}>
                           No recent activity
                         </div>
                       ) : (
@@ -4122,7 +4078,7 @@ export default function Veluna() {
                       )}
                     </div>
                     <div className="v-library-sidebar-card">
-                      <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"#8a807c",margin:"0 0 12px 0"}}>Import Tools</h3>
+                      <h3 style={{fontSize:"11px",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",color:"var(--v-fg2)",margin:"0 0 12px 0"}}>Import Tools</h3>
                       <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
                         <button onClick={() => setShowCsvImportModal(true)} className="v-library-import-btn">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954" style={{marginRight:"4px"}}><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
@@ -4133,7 +4089,7 @@ export default function Veluna() {
                           Import from YouTube
                         </button>
                         <button onClick={handleImportPlaylistM3u} className="v-library-import-btn">
-                          <FileOutput size={12} style={{marginRight:"4px",color:"#9e9894"}} />
+                          <FileOutput size={12} style={{marginRight:"4px",color:"var(--v-fg3)"}} />
                           Import M3U Playlist
                         </button>
                       </div>
@@ -4276,26 +4232,26 @@ export default function Veluna() {
             if (!hasAnyStats) {
               return (
                 <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"12px"}}>
-                  <BarChart2 size={36} style={{color:"#363230"}} strokeWidth={1}/>
-                  <p style={{fontSize:"12px",color:"#5c5755"}}>Play something to start tracking stats</p>
+                  <BarChart2 size={36} style={{color:"var(--v-fg3)"}} strokeWidth={1}/>
+                  <p style={{fontSize:"12px",color:"var(--v-fg2)"}}>Play something to start tracking stats</p>
                 </div>
               );
             }
 
             const icons = {
-              'Time Listened': <Clock size={16} style={{color: 'rgba(255,255,255,0.2)'}} />,
-              'Tracks Played': <Play size={16} style={{color: 'rgba(255,255,255,0.2)'}} />,
-              'Unique Tracks': <ListMusic size={16} style={{color: 'rgba(255,255,255,0.2)'}} />
+              'Time Listened': <Clock size={16} style={{color: 'var(--v-fg3)'}} />,
+              'Tracks Played': <Play size={16} style={{color: 'var(--v-fg3)'}} />,
+              'Unique Tracks': <ListMusic size={16} style={{color: 'var(--v-fg3)'}} />
             };
 
             return (
-              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px"}}>
+              <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"18px"}}>
-                  <h1 style={{fontSize:"18px",fontWeight:800,color:"#e2ddd9",margin:0}}>Stats</h1>
+                  <h1 style={{fontSize:"18px",fontWeight:800,color:"var(--v-fg)",margin:0}}>Stats</h1>
                   <button onClick={resetStats}
-                    style={{fontSize:"11px",color:"#363230",cursor:"pointer",padding:"5px 10px",borderRadius:"7px",border:"1px solid var(--v-bdr2)",background:"transparent",transition:"color .12s,border-color .12s"}}
+                    style={{fontSize:"11px",color:"var(--v-fg2)",cursor:"pointer",padding:"5px 10px",borderRadius:"7px",border:"1px solid var(--v-bdr2)",background:"transparent",transition:"color .12s,border-color .12s"}}
                     onMouseEnter={e=>{e.currentTarget.style.color="#b05555";e.currentTarget.style.borderColor="rgba(180,40,40,0.3)"}}
-                    onMouseLeave={e=>{e.currentTarget.style.color="#363230";e.currentTarget.style.borderColor="var(--v-bdr2)"}}>
+                    onMouseLeave={e=>{e.currentTarget.style.color="var(--v-fg2)";e.currentTarget.style.borderColor="var(--v-bdr2)"}}>
                     Reset
                   </button>
                 </div>
@@ -4309,16 +4265,16 @@ export default function Veluna() {
                         style={{
                           padding: "6px 12px",
                           borderRadius: "7px",
-                          border: active ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
-                          background: active ? "rgba(255,255,255,0.06)" : "transparent",
-                          color: active ? "#e2ddd9" : "#5c5755",
+                          border: active ? "1px solid var(--v-bdr3)" : "1px solid transparent",
+                          background: active ? "var(--v-bg3)" : "transparent",
+                          color: active ? "var(--v-fg)" : "var(--v-fg3)",
                           fontSize: "11px",
                           fontWeight: 600,
                           cursor: "pointer",
                           transition: "all .12s"
                         }}
-                        onMouseEnter={e => { if(!active) e.currentTarget.style.color = "#9e9894"; }}
-                        onMouseLeave={e => { if(!active) e.currentTarget.style.color = "#5c5755"; }}
+                        onMouseEnter={e => { if(!active) e.currentTarget.style.color = "var(--v-fg2)"; }}
+                        onMouseLeave={e => { if(!active) e.currentTarget.style.color = "var(--v-fg3)"; }}
                       >
                         {label}
                       </button>
@@ -4332,30 +4288,12 @@ export default function Veluna() {
                     { label: 'Tracks Played', value: currentTotalPlays.toLocaleString(), sub: statsTimeRange === 'all' ? 'total' : 'in range' },
                     { label: 'Unique Tracks', value: Object.keys(currentPlayCounts).length.toLocaleString(), sub: statsTimeRange === 'all' ? 'total' : 'in range' },
                   ] as { label: string; value: string; sub: string }[]).map(({ label, value, sub }) => (
-                    <div key={label} className="v-stat-card" style={{
-                      position: 'relative',
-                      overflow: 'hidden',
-                      background: 'rgba(var(--v-bg2-rgb), 0.6)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      transition: 'all 0.2s ease',
-                    }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                        e.currentTarget.style.transform = 'none';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
+                    <div key={label} className="v-stat-card">
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                         <div className="v-stat-card__label">{label}</div>
                         {icons[label as keyof typeof icons]}
                       </div>
-                      <div className="v-stat-card__value" style={{marginTop: '4px'}}>{value}</div>
+                      <div className="v-stat-card__value">{value}</div>
                       <div className="v-stat-card__sub">{sub}</div>
                     </div>
                   ))}
@@ -4364,9 +4302,9 @@ export default function Veluna() {
                 <div style={{marginBottom:"20px"}}>
                   <div className="v-section-head">
                     <h2>{chartDaysCount === 7 ? 'Last 7 Days' : 'Last 30 Days'}</h2>
-                    <span style={{fontSize:"11px",color:"#363230",marginLeft:"auto"}}>{days.reduce((s,d)=>s+d.count,0)} plays</span>
+                    <span style={{fontSize:"11px",color:"var(--v-fg3)",marginLeft:"auto"}}>{days.reduce((s,d)=>s+d.count,0)} plays</span>
                   </div>
-                  <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"12px",padding:"16px 16px 24px 16px"}}>
+                  <div style={{background:"rgba(255, 255, 255, 0.015)",border:"1px solid rgba(255, 255, 255, 0.03)",borderRadius:"16px",padding:"20px 20px 24px 20px",boxShadow:"0 4px 20px rgba(0, 0, 0, 0.15)"}}>
                     <div style={{display:"flex",alignItems:"flex-end",gap:chartDaysCount === 30 ? "4px" : "8px",height:"130px"}}>
                       {days.map(({ label, count }, di) => {
                         const isToday = di === days.length - 1;
@@ -4396,11 +4334,11 @@ export default function Veluna() {
                               bottom: `${barH + 24}px`,
                               fontSize: "11px",
                               fontWeight: 700,
-                              background: 'var(--v-bdr2)',
-                              border: '1px solid rgba(255,255,255,0.1)',
+                              background: 'var(--v-bg3)',
+                              border: '1px solid var(--v-bdr3)',
                               padding: '2px 6px',
                               borderRadius: '4px',
-                              color: '#e2ddd9',
+                              color: 'var(--v-fg)',
                               opacity: 0,
                               pointerEvents: 'none',
                               transition: 'all 0.15s ease',
@@ -4412,11 +4350,12 @@ export default function Veluna() {
                             </span>
                             <div className="chart-bar" style={{
                                 width:'100%',height:`${barH}px`,borderRadius:'6px 6px 0 0',
-                                background:count===0?'rgba(255,255,255,0.04)':isToday?'linear-gradient(180deg,rgba(226,221,217,0.9),rgba(226,221,217,0.4))':'rgba(226,221,217,0.22)',
-                                transition:'height .5s cubic-bezier(0.2,0,0,1), filter .15s ease',
+                                background:count===0?'rgba(255,255,255,0.02)':'var(--v-accent)',
+                                opacity:count===0?0.4:isToday?1:0.25,
+                                transition:'height .5s cubic-bezier(0.2,0,0,1), filter .15s ease, opacity .15s ease',
                               }} />
-                            <span style={{fontSize:chartDaysCount === 30 ? "8.5px" : "10px",fontWeight:600,color:isToday?"#9e9894":"#363230"}}>{label}</span>
-                            {isToday && chartDaysCount === 7 && <span style={{position:'absolute',bottom:'-14px',fontSize:'8px',color:'rgba(226,221,217,0.4)',fontWeight:700,whiteSpace:'nowrap'}}>TODAY</span>}
+                            <span style={{fontSize:chartDaysCount === 30 ? "8.5px" : "10px",fontWeight:600,color:isToday?"var(--v-fg2)":"var(--v-fg3)"}}>{label}</span>
+                            {isToday && chartDaysCount === 7 && <span style={{position:'absolute',bottom:'-14px',fontSize:'8px',color:'var(--v-accent)',opacity:0.5,fontWeight:700,whiteSpace:'nowrap'}}>TODAY</span>}
                           </div>
                         );
                       })}
@@ -4424,24 +4363,21 @@ export default function Veluna() {
                   </div>
                 </div>
 
-                <div style={{
-                  background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"12px",padding:"16px",
-                  display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px",marginBottom:"20px"
-                }}>
-                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-                    <span style={{fontSize:"10px",color:"#363230",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase"}}>Favorite Time</span>
-                    <span style={{fontSize:"14px",fontWeight:800,color:"#e2ddd9"}}>{timeOfDay}</span>
-                    <span style={{fontSize:"11px",color:"#5c5755"}}>Peak listening hour: {maxHour}:00</span>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px",marginBottom:"20px"}}>
+                  <div className="v-stat-card" style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                    <span className="v-stat-card__label">Favorite Time</span>
+                    <span className="v-stat-card__value" style={{fontSize:"18px", marginTop: "4px"}}>{timeOfDay}</span>
+                    <span className="v-stat-card__sub" style={{marginTop: "2px"}}>Peak listening hour: {maxHour}:00</span>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-                    <span style={{fontSize:"10px",color:"#363230",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase"}}>Unique Artists</span>
-                    <span style={{fontSize:"14px",fontWeight:800,color:"#e2ddd9"}}>{uniqueArtists.size}</span>
-                    <span style={{fontSize:"11px",color:"#5c5755"}}>{statsTimeRange === 'all' ? 'Explored in history' : 'Explored in range'}</span>
+                  <div className="v-stat-card" style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                    <span className="v-stat-card__label">Unique Artists</span>
+                    <span className="v-stat-card__value" style={{fontSize:"18px", marginTop: "4px"}}>{uniqueArtists.size}</span>
+                    <span className="v-stat-card__sub" style={{marginTop: "2px"}}>{statsTimeRange === 'all' ? 'Explored in history' : 'Explored in range'}</span>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
-                    <span style={{fontSize:"10px",color:"#363230",fontWeight:700,letterSpacing:".08em",textTransform:"uppercase"}}>Loyalty Index</span>
-                    <span style={{fontSize:"14px",fontWeight:800,color:"#e2ddd9"}}>{loyaltyIndex}×</span>
-                    <span style={{fontSize:"11px",color:"#5c5755"}}>{statsTimeRange === 'all' ? 'Avg plays per track' : 'Avg plays per track in range'}</span>
+                  <div className="v-stat-card" style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                    <span className="v-stat-card__label">Loyalty Index</span>
+                    <span className="v-stat-card__value" style={{fontSize:"18px", marginTop: "4px"}}>{loyaltyIndex}×</span>
+                    <span className="v-stat-card__sub" style={{marginTop: "2px"}}>{statsTimeRange === 'all' ? 'Avg plays per track' : 'Avg plays per track in range'}</span>
                   </div>
                 </div>
 
@@ -4470,10 +4406,10 @@ export default function Veluna() {
                             <div className="v-track__info">
                               <div className="v-track__title">{track.title}</div>
                               <div style={{display:'flex',alignItems:'center',gap:'8px',marginTop:'3px'}}>
-                                <div style={{flex:1,height:'2px',background:'#232020',borderRadius:'1px',overflow:'hidden'}}>
-                                  <div style={{height:'100%',background:'rgba(226,221,217,0.35)',borderRadius:'1px',width:`${(count/(topTracks[0]?.count||1))*100}%`}}/>
+                                <div style={{flex:1,height:'2px',background:'var(--v-bg3)',borderRadius:'1px',overflow:'hidden'}}>
+                                  <div style={{height:'100%',background:'var(--v-accent)',borderRadius:'1px',width:`${(count/(topTracks[0]?.count||1))*100}%`}}/>
                                 </div>
-                                <span style={{fontSize:'10px',color:'#363230',fontVariantNumeric:'tabular-nums',flexShrink:0}}>{count}×</span>
+                                <span style={{fontSize:'10px',color:'var(--v-fg2)',fontVariantNumeric:'tabular-nums',flexShrink:0}}>{count}×</span>
                               </div>
                             </div>
                           </div>
@@ -4494,16 +4430,16 @@ export default function Veluna() {
                             <div key={artist} className="v-track"
                               onClick={() => { setSearchQuery(artist); searchMusic(artist); setActiveNav('home'); }}>
                               <div className="v-track__num">{i+1}</div>
-                              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--v-bdr2)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
-                                {thumb ? <img src={thumb} alt={artist} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:"11px",fontWeight:700,color:"#5c5755"}}>{artist.slice(0,2).toUpperCase()}</span>}
+                              <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--v-bg3)",border:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+                                {thumb ? <img src={thumb} alt={artist} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:"11px",fontWeight:700,color:"var(--v-fg2)"}}>{artist.slice(0,2).toUpperCase()}</span>}
                               </div>
                               <div className="v-track__info">
                                 <div className="v-track__title">{artist}</div>
                                 <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"3px"}}>
-                                  <div style={{flex:1,height:"2px",background:"#232020",borderRadius:"1px",overflow:"hidden"}}>
-                                    <div style={{height:"100%",background:"rgba(226,221,217,0.3)",borderRadius:"1px",width:`${(count/(topArtists[0]?.[1]||1))*100}%`}}/>
+                                  <div style={{flex:1,height:"2px",background:"var(--v-bg3)",borderRadius:"1px",overflow:"hidden"}}>
+                                    <div style={{height:"100%",background:"var(--v-accent)",borderRadius:"1px",width:`${(count/(topArtists[0]?.[1]||1))*100}%`}}/>
                                   </div>
-                                  <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{count}×</span>
+                                  <span style={{fontSize:"10px",color:"var(--v-fg2)",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{count}×</span>
                                 </div>
                               </div>
                             </div>
@@ -4526,10 +4462,10 @@ export default function Veluna() {
                             <div className="v-track__info" style={{paddingLeft:"4px"}}>
                               <div className="v-track__title">{label}</div>
                               <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"3px"}}>
-                                <div style={{flex:1,height:"2px",background:"#232020",borderRadius:"1px",overflow:"hidden"}}>
-                                  <div style={{height:"100%",background:"rgba(226,221,217,0.3)",borderRadius:"1px",width:`${(score/(topGenres[0]?.score||1))*100}%`}}/>
+                                <div style={{flex:1,height:"2px",background:"var(--v-bg3)",borderRadius:"1px",overflow:"hidden"}}>
+                                  <div style={{height:"100%",background:"var(--v-accent)",borderRadius:"1px",width:`${(score/(topGenres[0]?.score||1))*100}%`}}/>
                                 </div>
-                                <span style={{fontSize:"10px",color:"#363230",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{score} plays</span>
+                                <span style={{fontSize:"10px",color:"var(--v-fg2)",fontVariantNumeric:"tabular-nums",flexShrink:0}}>{score} plays</span>
                               </div>
                             </div>
                           </div>
@@ -4544,7 +4480,9 @@ export default function Veluna() {
                     <div className="v-section-head">
                       <h2>Recent Plays</h2>
                       <button onClick={() => { setPlayHistory([]); saveLS('vg_playHistory', []); }}
-                        style={{marginLeft:"auto",fontSize:"11px",color:"#363230",background:"none",border:"none",cursor:"pointer",transition:"color .12s"}} onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#363230")}>Clear</button>
+                        style={{marginLeft:"auto",fontSize:"11px",color:"var(--v-fg3)",background:"none",border:"none",cursor:"pointer",transition:"color .12s"}}
+                        onMouseEnter={e=>(e.currentTarget.style.color="var(--v-fg2)")}
+                        onMouseLeave={e=>(e.currentTarget.style.color="var(--v-fg3)")}>Clear</button>
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
                       {playHistory.slice(0, 8).map((track: Track, i: number) => (
@@ -4565,7 +4503,7 @@ export default function Veluna() {
                             <div className="v-track__title">{track.title}</div>
                             {cleanArtist(track.artist) && <div className="v-track__artist">{cleanArtist(track.artist)}</div>}
                           </div>
-                          <Play size={12} style={{color:'#363230',flexShrink:0}}/>
+                          <Play size={12} style={{color:'var(--v-accent)',flexShrink:0}}/>
                         </div>
                       ))}
                     </div>
@@ -4697,7 +4635,7 @@ export default function Veluna() {
                   </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-y-auto custom-scrollbar" style={{paddingBottom:"140px"}}>
                   {queue.length === 0 && contextualTracks.length === 0 ? (
                     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"180px",color:"#363230",gap:"8px"}}>
                       <ListOrdered size={26} strokeWidth={1} />
