@@ -643,46 +643,37 @@ export function SettingsPanel({
                   <RefreshCw size={13} />
                 </button>
               </div>
-              <div style={{display:"flex",flexDirection:"column"}}>
+              <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{flex:1,minWidth:0,marginRight:"16px"}}>
+                  <p style={{fontSize:"13px",fontWeight:500,color:"#e2ddd9"}}>Output Destination</p>
+                  <p style={{fontSize:"11px",color:"#6f6966",marginTop:"4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {switchingDevice ? 'Switching audio output...' : (audioDevices.find(d => d.is_default)?.name || 'Default audio device')}
+                  </p>
+                </div>
                 {audioDevices.length === 0 ? (
-                  <div style={{padding:"14px 16px",fontSize:"12px",color:"#6f6966"}}>No output devices found</div>
-                ) : audioDevices.map((dev, idx) => {
-                  const isDefault = dev.is_default;
-                  return (
-                    <button key={dev.id} disabled={switchingDevice}
-                      onClick={async () => {
-                        if (isDefault) return;
-                        setSwitchingDevice(true);
-                        try {
-                          await invoke('set_audio_device', { id: dev.id });
-                          setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === dev.id })));
-                          showToast(`Output switched: ${dev.name}`);
-                        } catch (e) { showToast(`Switch failed: ${e}`); }
-                        finally { setSwitchingDevice(false); }
-                      }}
-                      style={{
-                        display:"flex",alignItems:"center",gap:"12px",padding:"11px 16px",
-                        textAlign:"left",cursor:isDefault?"default":"pointer",width:"100%",
-                        background:isDefault?"rgba(226,221,217,0.02)":"transparent",
-                        border:"none",
-                        borderBottom:idx!==audioDevices.length-1?"1px solid #141312":"none",
-                        transition:"all 0.15s ease-out",opacity:switchingDevice&&!isDefault?0.4:1
-                      }}
-                      onMouseEnter={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="rgba(226,221,217,0.01)";}}
-                      onMouseLeave={e=>{if(!isDefault)(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                      <div style={{width:"28px",height:"28px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${isDefault?"var(--v-accent)":"rgba(255,255,255,0.02)"}`,background:isDefault?"rgba(226,221,217,0.03)":"#121111"}}>
-                        {dev.form === 'headphones'
-                          ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDefault ? 'var(--v-accent)' : '#5c5755'} strokeWidth="2" strokeLinecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                          : <Volume2 size={13} style={{color:isDefault?"var(--v-accent)":"#5c5755"}}/>}
-                      </div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <p style={{fontSize:"13px",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isDefault?"#e2ddd9":"#8c8682"}}>{dev.name}</p>
-                        {dev.form&&<p style={{fontSize:"10px",color:"#5c5755",textTransform:"capitalize",marginTop:"2px"}}>{dev.form}</p>}
-                      </div>
-                      {isDefault&&<span style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"9px",fontWeight:700,color:"var(--v-accent)",flexShrink:0,letterSpacing:".06em"}}><span style={{width:"4px",height:"4px",borderRadius:"50%",background:"var(--v-accent)",boxShadow:"0 0 4px var(--v-accent)"}}/>ACTIVE</span>}
-                    </button>
-                  );
-                })}
+                  <span style={{fontSize:"12px",color:"#6f6966"}}>No output devices found</span>
+                ) : (
+                  <ThemedSelect
+                    value={audioDevices.find(d => d.is_default)?.id || ''}
+                    onChange={async (id) => {
+                      if (switchingDevice) return;
+                      const dev = audioDevices.find(d => d.id === id);
+                      if (!dev || dev.is_default) return;
+                      setSwitchingDevice(true);
+                      try {
+                        await invoke('set_audio_device', { id: dev.id });
+                        setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === dev.id })));
+                        showToast(`Output switched: ${dev.name}`);
+                      } catch (e) { showToast(`Switch failed: ${e}`); }
+                      finally { setSwitchingDevice(false); }
+                    }}
+                    options={audioDevices.map(dev => ({
+                      value: dev.id,
+                      label: dev.name,
+                      desc: dev.form ? dev.form.charAt(0).toUpperCase() + dev.form.slice(1) : 'Internal'
+                    }))}
+                  />
+                )}
               </div>
             </div>
 

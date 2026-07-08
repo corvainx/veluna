@@ -1257,3 +1257,127 @@ kbd {
   margin: 24px auto 0;
   width: 100%;
 }
+
+/* ➕ Premium New Playlist Button */
+.v-new-playlist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--v-bg2);
+  border: 1px solid var(--v-bdr2);
+  color: var(--v-fg);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v-new-playlist-btn:hover {
+  background: var(--v-accent);
+  color: var(--v-bg0);
+  border-color: var(--v-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 10px var(--v-accent);
+}
+.v-new-playlist-btn:active {
+  transform: translateY(0);
+}
+
+/* 📋 Playlist List Layout */
+.v-pl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.v-pl-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: var(--v-bg3);
+  border: 1px solid var(--v-bdr3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v-pl-row:hover {
+  background: var(--v-bg4);
+  border-color: var(--v-bdr2);
+  transform: translateX(2px);
+}
+.v-pl-row__cover-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--v-bg2);
+  border: 1px solid var(--v-bdr2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v-pl-row__cover-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.v-pl-row__info {
+  flex: 1;
+  min-width: 0;
+}
+.v-pl-row__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--v-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.v-pl-row__desc {
+  font-size: 12px;
+  color: var(--v-fg2);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.v-pl-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.v-pl-row:hover .v-pl-row__actions {
+  opacity: 1;
+}
+.v-pl-row__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--v-bg2);
+  border: 1px solid var(--v-bdr2);
+  color: var(--v-fg2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.v-pl-row__btn:hover {
+  background: var(--v-accent);
+  color: var(--v-bg0);
+  border-color: var(--v-accent);
+  transform: scale(1.05);
+}
+.v-pl-row__btn--danger:hover {
+  background: rgba(220, 60, 60, 0.2) !important;
+  color: #ff6060 !important;
+  border-color: rgba(255, 96, 96, 0.2) !important;
+}

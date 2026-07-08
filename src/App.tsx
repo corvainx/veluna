@@ -9,7 +9,7 @@ import {
   ListMusic, Heart, Music, Volume2, VolumeX,
   ListPlus, Share2, Download, ExternalLink, Copy,
   Info, X, Clock, Youtube, Hash, FileCode2, PlaySquare,
-  PlusCircle, FileBadge2, Settings,
+  PlusCircle, FileBadge2, Settings, LayoutGrid, List,
   Shuffle, Repeat, Repeat1, ListOrdered, Trash2, Pencil,
   ChevronRight, ChevronLeft, ImagePlus, AlignLeft, HardDrive,
   FileMusic, Gauge, Moon, BarChart2, FileOutput,
@@ -73,6 +73,7 @@ export default function Veluna() {
 
   const [isLoadingTrack, setIsLoadingTrack] = useState(false);
   const [activeNav, setActiveNav] = useState(() => loadLS('vg_startupNav', 'home'));
+  const [playlistViewMode, setPlaylistViewMode] = useState<'grid' | 'list'>(() => loadLS('vg_playlistViewMode', 'grid'));
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState(__APP_VERSION__);
   useEffect(() => {
@@ -3085,104 +3086,245 @@ export default function Veluna() {
               <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px",zIndex:10}}>
                 <div className="v-library-container">
                   <div className="v-library-main">
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px',flexWrap:'wrap',gap:'12px'}}>
                       <h2 style={{fontSize:'20px',fontWeight:800,color:'var(--v-fg)',margin:0}}>Playlists</h2>
-                      <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                        className="v-new-playlist-btn">
-                        <PlusCircle size={13} /> New Playlist
-                      </button>
+                      <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                        <div style={{
+                          display:'flex',
+                          alignItems:'center',
+                          background:'var(--v-bg2)',
+                          border:'1px solid var(--v-bdr2)',
+                          borderRadius:'10px',
+                          padding:'3px',
+                          gap:'2px'
+                        }}>
+                          <button
+                            onClick={() => { setPlaylistViewMode('grid'); saveLS('vg_playlistViewMode', 'grid'); }}
+                            style={{
+                              border:'none',
+                              background: playlistViewMode === 'grid' ? 'var(--v-bg4)' : 'transparent',
+                              color: playlistViewMode === 'grid' ? 'var(--v-accent)' : 'var(--v-fg3)',
+                              borderRadius:'8px',
+                              width:'30px',
+                              height:'30px',
+                              display:'flex',
+                              alignItems:'center',
+                              justifyContent:'center',
+                              cursor:'pointer',
+                              transition:'all 0.15s ease'
+                            }}
+                            title="Grid View"
+                          >
+                            <LayoutGrid size={15} />
+                          </button>
+                          <button
+                            onClick={() => { setPlaylistViewMode('list'); saveLS('vg_playlistViewMode', 'list'); }}
+                            style={{
+                              border:'none',
+                              background: playlistViewMode === 'list' ? 'var(--v-bg4)' : 'transparent',
+                              color: playlistViewMode === 'list' ? 'var(--v-accent)' : 'var(--v-fg3)',
+                              borderRadius:'8px',
+                              width:'30px',
+                              height:'30px',
+                              display:'flex',
+                              alignItems:'center',
+                              justifyContent:'center',
+                              cursor:'pointer',
+                              transition:'all 0.15s ease'
+                            }}
+                            title="List View"
+                          >
+                            <List size={15} />
+                          </button>
+                        </div>
+                        <button onClick={() => { setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
+                          className="v-new-playlist-btn">
+                          <PlusCircle size={14} /> New Playlist
+                        </button>
+                      </div>
                     </div>
-                    <div style={{display:"grid",gap:"20px",gridTemplateColumns:"repeat(auto-fill, minmax(170px, 1fr))"}}>
-                      {playlists.map((pl, plIdx) => {
-                        const cover = getPlaylistCover(pl);
-                        const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
-                        return (
-                          <div key={pl.id}
-                            onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
-                            className="v-pl-card"
-                            style={{ animation: `fadeUp 0.2s cubic-bezier(0.2,0,0,1) ${plIdx * 30}ms both` }}
-                            onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
-                            onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
-                            {isDragTarget && (
-                              <div style={{
-                                position: "absolute",
-                                top: 0,
-                                bottom: 0,
-                                width: "4px",
-                                background: "var(--v-accent)",
-                                borderRadius: "2px",
-                                zIndex: 20,
-                                pointerEvents: "none",
-                                left: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
-                                right: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
-                                boxShadow: "0 0 10px var(--v-accent)"
-                              }} />
-                            )}
-                            <div
-                              className="v-pl-card__cover-wrapper"
-                              style={{
-                                opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
-                                transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
-                                transition: "opacity 0.2s, transform 0.2s"
-                              }}
-                              onMouseDown={e => {
-                                e.preventDefault();
-                                dragPlaylistCardIdx.current = plIdx;
-                                dragOverPlaylistCardIdxRef.current = plIdx;
-                                setDragOverPlaylistCardIdx(plIdx);
-                                setDragPlaylistCardIdxState(plIdx);
-                                const onUp = () => {
-                                  const from = dragPlaylistCardIdx.current;
-                                  const to = dragOverPlaylistCardIdxRef.current;
-                                  dragPlaylistCardIdx.current = null;
-                                  dragOverPlaylistCardIdxRef.current = null;
-                                  setDragOverPlaylistCardIdx(null);
-                                  setDragPlaylistCardIdxState(null);
-                                  window.removeEventListener('mouseup', onUp);
-                                  if (from === null || to === null || from === to) return;
-                                  setPlaylists(prev => {
-                                    const arr = [...prev];
-                                    const [moved] = arr.splice(from, 1);
-                                    arr.splice(to, 0, moved);
-                                    return arr;
-                                  });
-                                };
-                                window.addEventListener('mouseup', onUp);
-                              }}>
-                              <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                {pl.id==='p1'
-                                  ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.03) 100%)",border:"1px solid rgba(224,85,85,0.2)",borderRadius:"12px"}}><Heart size={32} style={{color:"#ff5e5e",fill:"rgba(255,94,94,0.1)"}}/></div>
-                                  : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,var(--v-bg3) 0%,var(--v-bg2) 100%)",borderRadius:"12px"}}><ListMusic size={32} style={{color:"var(--v-accent)",opacity:0.8}}/></div>}
-                              </div>
-                              {cover && (
-                                <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                    {playlistViewMode === 'grid' ? (
+                      <div style={{display:"grid",gap:"20px",gridTemplateColumns:"repeat(auto-fill, minmax(170px, 1fr))"}}>
+                        {playlists.map((pl, plIdx) => {
+                          const cover = getPlaylistCover(pl);
+                          const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
+                          return (
+                            <div key={pl.id}
+                              onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
+                              className="v-pl-card"
+                              style={{ animation: `fadeUp 0.2s cubic-bezier(0.2,0,0,1) ${plIdx * 30}ms both` }}
+                              onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
+                              onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
+                              {isDragTarget && (
+                                <div style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  bottom: 0,
+                                  width: "4px",
+                                  background: "var(--v-accent)",
+                                  borderRadius: "2px",
+                                  zIndex: 20,
+                                  pointerEvents: "none",
+                                  left: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
+                                  right: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-12px" : "auto",
+                                  boxShadow: "0 0 10px var(--v-accent)"
+                                }} />
                               )}
-                              <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(2px)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
-                                <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
-                                  style={{width:"42px",height:"42px",background:"var(--v-accent)",color:"var(--v-bg0)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 6px 16px rgba(0,0,0,0.5)",transition:"all 0.15s cubic-bezier(0.2,0,0,1)"}}
-                                  onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 8px 20px rgba(0,0,0,0.6), 0 0 10px var(--v-accent)";}}
-                                  onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 6px 16px rgba(0,0,0,0.5)";}}>
-                                  <Play size={16} style={{fill:"currentColor",color:"currentColor",marginLeft:"2px"}}/>
+                              <div
+                                className="v-pl-card__cover-wrapper"
+                                style={{
+                                  opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
+                                  transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
+                                  transition: "opacity 0.2s, transform 0.2s"
+                                }}
+                                onMouseDown={e => {
+                                  e.preventDefault();
+                                  dragPlaylistCardIdx.current = plIdx;
+                                  dragOverPlaylistCardIdxRef.current = plIdx;
+                                  setDragOverPlaylistCardIdx(plIdx);
+                                  setDragPlaylistCardIdxState(plIdx);
+                                  const onUp = () => {
+                                    const from = dragPlaylistCardIdx.current;
+                                    const to = dragOverPlaylistCardIdxRef.current;
+                                    dragPlaylistCardIdx.current = null;
+                                    dragOverPlaylistCardIdxRef.current = null;
+                                    setDragOverPlaylistCardIdx(null);
+                                    setDragPlaylistCardIdxState(null);
+                                    window.removeEventListener('mouseup', onUp);
+                                    if (from === null || to === null || from === to) return;
+                                    setPlaylists(prev => {
+                                      const arr = [...prev];
+                                      const [moved] = arr.splice(from, 1);
+                                      arr.splice(to, 0, moved);
+                                      return arr;
+                                    });
+                                  };
+                                  window.addEventListener('mouseup', onUp);
+                                }}>
+                                <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                  {pl.id==='p1'
+                                    ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.03) 100%)",border:"1px solid rgba(224,85,85,0.2)",borderRadius:"12px"}}><Heart size={32} style={{color:"#ff5e5e",fill:"rgba(255,94,94,0.1)"}}/></div>
+                                    : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,var(--v-bg3) 0%,var(--v-bg2) 100%)",borderRadius:"12px"}}><ListMusic size={32} style={{color:"var(--v-accent)",opacity:0.8}}/></div>}
+                                </div>
+                                {cover && (
+                                  <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                                )}
+                                <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(2px)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
+                                  <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
+                                    style={{width:"42px",height:"42px",background:"var(--v-accent)",color:"var(--v-bg0)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 6px 16px rgba(0,0,0,0.5)",transition:"all 0.15s cubic-bezier(0.2,0,0,1)"}}
+                                    onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 8px 20px rgba(0,0,0,0.6), 0 0 10px var(--v-accent)";}}
+                                    onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 6px 16px rgba(0,0,0,0.5)";}}>
+                                    <Play size={16} style={{fill:"currentColor",color:"currentColor",marginLeft:"2px"}}/>
+                                  </button>
+                                </div>
+                              </div>
+                              <div style={{fontSize:"14px",fontWeight:700,color:"var(--v-fg)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
+                              <div style={{fontSize:"11px",color:"var(--v-fg2)",marginTop:"4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                                {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                              </div>
+                              {pl.id!=='p1'&&(
+                                <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
+                                  className="pl-card-del"
+                                  style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"var(--v-fg3)",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
+                                  onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.2)";e.currentTarget.style.borderColor="rgba(255,96,96,0.2)";e.currentTarget.style.transform="scale(1.05)";}}
+                                  onMouseLeave={e=>{e.currentTarget.style.color="var(--v-fg3)";e.currentTarget.style.background="rgba(0,0,0,0.6)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";e.currentTarget.style.transform="scale(1)";}}>
+                                  <Trash2 size={12}/>
                                 </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="v-pl-list">
+                        {playlists.map((pl, plIdx) => {
+                          const cover = getPlaylistCover(pl);
+                          const isDragTarget = dragOverPlaylistCardIdx === plIdx && dragPlaylistCardIdx.current !== null && dragPlaylistCardIdx.current !== plIdx;
+                          return (
+                            <div key={pl.id}
+                              onMouseEnter={() => { if (dragPlaylistCardIdx.current !== null) { dragOverPlaylistCardIdxRef.current = plIdx; setDragOverPlaylistCardIdx(plIdx); } }}
+                              className="v-pl-row"
+                              style={{ animation: `fadeUp 0.15s cubic-bezier(0.2,0,0,1) ${plIdx * 20}ms both` }}
+                              onClick={() => { if (dragPlaylistCardIdx.current === null) setOpenPlaylistId(pl.id); }}
+                              onContextMenu={e => openCtx(e, { type: 'playlist', playlist: pl })}>
+                              {isDragTarget && (
+                                <div style={{
+                                  position: "absolute",
+                                  left: 0,
+                                  right: 0,
+                                  height: "3px",
+                                  background: "var(--v-accent)",
+                                  borderRadius: "1.5px",
+                                  zIndex: 20,
+                                  pointerEvents: "none",
+                                  top: plIdx < (dragPlaylistCardIdx.current ?? 0) ? "-6px" : "auto",
+                                  bottom: plIdx > (dragPlaylistCardIdx.current ?? 0) ? "-6px" : "auto",
+                                  boxShadow: "0 0 8px var(--v-accent)"
+                                }} />
+                              )}
+                              <div
+                                className="v-pl-row__cover-wrapper"
+                                style={{
+                                  opacity: dragPlaylistCardIdxState === plIdx ? 0.45 : 1,
+                                  transform: dragPlaylistCardIdxState === plIdx ? "scale(0.94)" : "none",
+                                  transition: "opacity 0.2s, transform 0.2s"
+                                }}
+                                onMouseDown={e => {
+                                  e.preventDefault();
+                                  dragPlaylistCardIdx.current = plIdx;
+                                  dragOverPlaylistCardIdxRef.current = plIdx;
+                                  setDragOverPlaylistCardIdx(plIdx);
+                                  setDragPlaylistCardIdxState(plIdx);
+                                  const onUp = () => {
+                                    const from = dragPlaylistCardIdx.current;
+                                    const to = dragOverPlaylistCardIdxRef.current;
+                                    dragPlaylistCardIdx.current = null;
+                                    dragOverPlaylistCardIdxRef.current = null;
+                                    setDragOverPlaylistCardIdx(null);
+                                    setDragPlaylistCardIdxState(null);
+                                    window.removeEventListener('mouseup', onUp);
+                                    if (from === null || to === null || from === to) return;
+                                    setPlaylists(prev => {
+                                      const arr = [...prev];
+                                      const [moved] = arr.splice(from, 1);
+                                      arr.splice(to, 0, moved);
+                                      return arr;
+                                    });
+                                  };
+                                  window.addEventListener('mouseup', onUp);
+                                }}>
+                                {pl.id==='p1'
+                                  ? <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,rgba(224,85,85,0.15) 0%,rgba(224,85,85,0.03) 100%)"}}><Heart size={20} style={{color:"#ff5e5e",fill:"rgba(255,94,94,0.1)"}}/></div>
+                                  : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,var(--v-bg3) 0%,var(--v-bg2) 100%)"}}><ListMusic size={20} style={{color:"var(--v-accent)",opacity:0.8}}/></div>}
+                                {cover && (
+                                  <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                                )}
+                              </div>
+                              <div className="v-pl-row__info">
+                                <div className="v-pl-row__name">{pl.name}</div>
+                                <div className="v-pl-row__desc">
+                                  {pl.description ? pl.description : `${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
+                                </div>
+                              </div>
+                              <div className="v-pl-row__actions">
+                                <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
+                                  className="v-pl-row__btn"
+                                  title="Play Playlist">
+                                  <Play size={13} style={{fill:"currentColor",color:"currentColor"}}/>
+                                </button>
+                                {pl.id!=='p1'&&(
+                                  <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
+                                    className="v-pl-row__btn v-pl-row__btn--danger"
+                                    title="Delete Playlist">
+                                    <Trash2 size={13}/>
+                                  </button>
+                                )}
                               </div>
                             </div>
-                            <div style={{fontSize:"14px",fontWeight:700,color:"var(--v-fg)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{pl.name}</div>
-                            <div style={{fontSize:"11px",color:"var(--v-fg2)",marginTop:"4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                              {pl.description?pl.description:`${pl.tracks.length} track${pl.tracks.length!==1?'s':''}`}
-                            </div>
-                            {pl.id!=='p1'&&(
-                              <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
-                                className="pl-card-del"
-                                style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"var(--v-fg3)",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
-                                onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.2)";e.currentTarget.style.borderColor="rgba(255,96,96,0.2)";e.currentTarget.style.transform="scale(1.05)";}}
-                                onMouseLeave={e=>{e.currentTarget.style.color="var(--v-fg3)";e.currentTarget.style.background="rgba(0,0,0,0.6)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";e.currentTarget.style.transform="scale(1)";}}>
-                                <Trash2 size={12}/>
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   <div className="v-library-sidebar">
                     <div className="v-library-sidebar-card">
