@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEB_URL="https://github.com/ishmweet/veluna/releases/download/v0.1.0/veluna_0.1.0_amd64.deb"
-RPM_URL="https://github.com/ishmweet/veluna/releases/download/v0.1.0/veluna-0.1.0-1.x86_64.rpm"
+DEB_URL="https://github.com/corvainx/veluna/releases/download/v0.1.0/veluna_0.1.0_amd64.deb"
+RPM_URL="https://github.com/corvainx/veluna/releases/download/v0.1.0/veluna-0.1.0-1.x86_64.rpm"
 
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
