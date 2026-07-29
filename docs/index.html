@@ -39,6 +39,12 @@
   --sans:  'DM Sans', sans-serif;
   --r:     6px;
   --r-lg:  10px;
+
+  /* Signature accent — the warm copper glow of a stylus catching light.
+     Used sparingly: focus states, the vinyl's atmosphere, and one CTA glow. */
+  --accent:      #c9793f;
+  --accent-dim:  #8a5730;
+  --accent-glow: rgba(201,121,63,.35);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,6 +75,16 @@ img { max-width: 100%; display: block; }
 strong { font-weight: 600; }
 code { font-family: var(--mono); font-size: .87em; }
 
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+
 #progress-bar {
   position: fixed; top: 0; left: 0;
   width: 0%; height: 1px;
@@ -87,7 +103,7 @@ nav {
   z-index: 1000;
   transition: background .3s, border-color .3s;
 }
-nav.scrolled { background: var(--bg2); }
+nav.scrolled { background: var(--bg2); box-shadow: 0 8px 24px -16px rgba(0,0,0,.5); }
 .nav-inner {
   width: 100%; max-width: var(--max); margin: 0 auto;
   display: flex; align-items: center;
@@ -104,13 +120,19 @@ nav.scrolled { background: var(--bg2); }
   gap: 0; margin: 0 auto;
 }
 .nav-link {
+  position: relative;
   font-family: var(--mono); font-size: 14px; font-weight: 400; color: var(--fg2);
   padding: 6px 13px; border-radius: 4px;
   letter-spacing: .06em;
   transition: color .2s, background .2s;
   white-space: nowrap;
 }
-.nav-link:hover, .nav-link.active { color: var(--fg); background: var(--bg3); }
+.nav-link:hover { color: var(--fg); background: var(--bg3); }
+.nav-link.active { color: var(--fg); }
+.nav-link.active::after {
+  content: ''; position: absolute; left: 13px; right: 13px; bottom: 1px;
+  height: 1.5px; background: var(--accent); border-radius: 1px;
+}
 .nav-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: auto; }
 
 .gh-btn {
@@ -245,10 +267,18 @@ nav.scrolled { background: var(--bg2); }
   height: clamp(320px, 42vw, 580px);
   pointer-events: none;
 }
+.hero-vinyl-wrap::before {
+  content: '';
+  position: absolute; inset: -18%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 68%);
+  opacity: .3;
+  filter: blur(4px);
+}
 .hero-vinyl {
   width: 100%; height: 100%;
   opacity: .13;
   animation: vinyl-spin 28s linear infinite;
+  position: relative;
 }
 @keyframes vinyl-spin {
   from { transform: rotate(0deg); }
@@ -328,7 +358,7 @@ nav.scrolled { background: var(--bg2); }
   letter-spacing: .08em; padding: 14px 26px; border-radius: var(--r);
   transition: opacity .2s, transform .15s;
 }
-.btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+.btn-primary:hover { opacity: .95; transform: translateY(-1px); box-shadow: 0 8px 24px -8px var(--accent-glow); }
 .btn-primary svg { width: 16px; height: 16px; }
 
 .btn-secondary {
@@ -445,7 +475,7 @@ nav.scrolled { background: var(--bg2); }
   background: linear-gradient(90deg, transparent, var(--fg4), transparent);
   opacity: .5; transition: opacity .3s;
 }
-.dl-card:hover { border-color: var(--bdr3); background: var(--bg3); transform: translateY(-2px); }
+.dl-card:hover { border-color: var(--bdr3); background: var(--bg3); transform: translateY(-3px); box-shadow: 0 16px 40px -20px rgba(0,0,0,.6); }
 .dl-card:hover::before { opacity: 1; background: linear-gradient(90deg, transparent, var(--fg3), transparent); }
 .dl-card-header {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -577,7 +607,7 @@ nav.scrolled { background: var(--bg2); }
   color: var(--fg2); flex-shrink: 0;
   transition: background .25s, color .25s, border-color .25s;
 }
-.feat:hover .feat-icon { background: var(--bg4); color: var(--fg); border-color: var(--bdr3); }
+.feat:hover .feat-icon { background: var(--bg4); color: var(--accent); border-color: var(--accent-dim); }
 .feat-icon svg { width: 17px; height: 17px; }
 .feat-title {
   font-family: var(--serif); font-size: 18px; font-weight: 400;
@@ -604,9 +634,9 @@ nav.scrolled { background: var(--bg2); }
 .faq-q[aria-expanded="true"] { color: var(--fg); }
 .faq-q svg {
   width: 16px; height: 16px; flex-shrink: 0; color: var(--fg3);
-  transition: transform .3s;
+  transition: transform .3s, color .2s;
 }
-.faq-q[aria-expanded="true"] svg { transform: rotate(45deg); }
+.faq-q[aria-expanded="true"] svg { transform: rotate(45deg); color: var(--accent); }
 .faq-ans { overflow: hidden; max-height: 0; transition: max-height .35s cubic-bezier(.16,1,.3,1); }
 .faq-ans-inner { padding: 0 0 22px; font-size: 15px; color: var(--fg2); line-height: 1.9; }
 .faq-ans-inner a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; }
@@ -963,6 +993,7 @@ footer {
       <circle cx="250" cy="250" r="78"  fill="#0a0a0a"/>
       <circle cx="250" cy="250" r="112" fill="none" stroke="#2a2a2a" stroke-width="1"/>
       <circle cx="250" cy="250" r="96"  fill="none" stroke="#222" stroke-width="0.8"/>
+      <circle cx="250" cy="250" r="94"  fill="#c9793f" opacity="0.55"/>
       <circle cx="250" cy="250" r="8" fill="#f0ece9"/>
     </svg>
 
