@@ -41,6 +41,8 @@ import {
   PlaySquare,
   Plus,
   PlusCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
   Repeat,
   Repeat1,
   Search,
@@ -188,6 +190,7 @@ export default function Veluna() {
   const trackDurationRef = useRef(0);
   const [progressSeconds, setProgressSeconds] = useState(0);
   const progressSecondsRef = useRef(0);
+  const codecPollRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -235,6 +238,21 @@ export default function Veluna() {
   const [dailyPlays, setDailyPlays] = useState<Record<string, number>>(() => loadLS('vg_dailyPlays', {}));
   const [listeningHistory, setListeningHistory] = useState<ListeningEvent[]>(() => loadLS('vg_listeningHistory', []));
   useEffect(() => { saveLS('vg_listeningHistory', listeningHistory); }, [listeningHistory]);
+
+  const [isPlaylistMenuOpen, setIsPlaylistMenuOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('playback');
+  const playlistMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isPlaylistMenuOpen) return;
+    const clickH = (e: MouseEvent) => {
+      if (playlistMenuRef.current && !playlistMenuRef.current.contains(e.target as Node)) {
+        setIsPlaylistMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', clickH);
+    return () => document.removeEventListener('mousedown', clickH);
+  }, [isPlaylistMenuOpen]);
+
   const [statsTimeRange, setStatsTimeRange] = useState<'7days' | 'all'>('all');
   const [theme, setThemeState] = useState<string>(() => loadLS('vg_theme', 'obsidian'));
   const [accentColor, setAccentColorState] = useState<string>(() => loadLS('vg_accentColor', '#e2ddd9'));
@@ -481,15 +499,26 @@ export default function Veluna() {
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].time > progressSeconds) { currentIdx = Math.max(0, i - 1); break; }
     }
-    if (currentIdx !== lastScrolledLyricIdxRef.current) {
-      const el = lyricsScrollContainerRef.current;
-      const active = el.querySelector('[data-active="true"]') as HTMLElement;
-      if (active) {
-        active.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        lastScrolledLyricIdxRef.current = currentIdx;
-      }
+    const el = lyricsScrollContainerRef.current;
+    const active = el.querySelector('[data-active="true"]') as HTMLElement;
+    if (active && (currentIdx !== lastScrolledLyricIdxRef.current || !el.getAttribute('data-scrolled'))) {
+      active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      lastScrolledLyricIdxRef.current = currentIdx;
+      el.setAttribute('data-scrolled', 'true');
     }
   }, [showLyrics, progressSeconds, lyricsData]);
+
+  useEffect(() => {
+    if (!showLyrics) return;
+    const onResize = () => {
+      if (lyricsScrollContainerRef.current) {
+        const active = lyricsScrollContainerRef.current.querySelector('[data-active="true"]') as HTMLElement;
+        if (active) active.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [showLyrics]);
 
   // Restore tray on startup
   useEffect(() => {
@@ -919,7 +948,7 @@ export default function Veluna() {
             if (s.duration > 0 || s.playing) {
               if (s.duration > 0) { setTrackDurationSeconds(s.duration); trackDurationRef.current = s.duration; }
               
-              if (s.paused) { invoke('pause_audio').catch(() => {}); }
+              if (s.paused) { invoke('resume_audio').catch(() => {}); }
               clearInterval(t); resolve(); return;
             }
           } catch {}
@@ -929,17 +958,22 @@ export default function Veluna() {
 
       setIsPlayingSync(true);
 
+      if (codecPollRef.current) clearInterval(codecPollRef.current);
       let codecWaited = 0;
-      const codecPoll = setInterval(async () => {
+      codecPollRef.current = setInterval(async () => {
         codecWaited += 400;
         try {
           const info: AudioInfo = await invoke('get_audio_info');
           if (info?.codec && info.codec !== 'unknown' && info.codec !== '') {
             setAudioInfo(info);
-            clearInterval(codecPoll);
+            if (codecPollRef.current) clearInterval(codecPollRef.current);
+            codecPollRef.current = null;
           }
         } catch {}
-        if (codecWaited >= 6000) clearInterval(codecPoll);
+        if (codecWaited >= 6000) {
+          if (codecPollRef.current) clearInterval(codecPollRef.current);
+          codecPollRef.current = null;
+        }
       }, 400);
 
       const bm = bookmarksRef.current[track.url];
@@ -1167,25 +1201,28 @@ export default function Veluna() {
       try {
         const state: { playing: boolean; paused: boolean; position: number; duration: number; eof_reached: boolean } =
           await invoke('get_playback_state');
-        // If mpv has no file loaded (position=0, not paused), restart the track from beginning
-        if (state.position === 0 && !state.paused) {
+        if ((state.position === 0 && !state.paused) || state.eof_reached) {
           await handlePlayTrack(currentTrackRef.current, true);
           return;
         }
+        await invoke('resume_audio');
+        setIsPlayingSync(true);
       } catch {
-        // mpv not running — restart from beginning
         await handlePlayTrack(currentTrackRef.current, true);
-        return;
       }
+    } else {
+      try {
+        await invoke('pause_audio');
+        setIsPlayingSync(false);
+      } catch {}
     }
-    try { await invoke('pause_audio'); setIsPlayingSync(!isPlayingRef.current); } catch {}
   }, [setIsPlayingSync, handlePlayTrack]);
 
   const toggleMute = useCallback(async () => {
-    const v = volume === 0 ? previousVolume : 0;
+    const targetVol = volume === 0 ? (previousVolume > 0 ? previousVolume : 80) : 0;
     if (volume > 0) setPreviousVolume(volume);
-    setVolume(v);
-    try { await invoke('set_volume', { volume: v }); } catch {}
+    setVolume(targetVol);
+    try { await invoke('set_volume', { volume: targetVol }); } catch {}
   }, [volume, previousVolume]);
 
   const handleSkipForward = useCallback(async () => {
@@ -1211,6 +1248,9 @@ export default function Veluna() {
       return;
     }
 
+    const q = queueRef.current;
+    if (q.length > 0) { const [next, ...rest] = q; setQueue(rest); await handlePlayTrack(next, true); return; }
+
     const ctx = playlistContextRef.current;
     if (ctx && ctx.tracks.length > 1) {
       let nextIdx: number;
@@ -1229,9 +1269,6 @@ export default function Veluna() {
       }
       return;
     }
-
-    const q = queueRef.current;
-    if (q.length > 0) { const [next, ...rest] = q; setQueue(rest); await handlePlayTrack(next, true); }
   }, [handlePlayTrack, handlePlayLocalTrack, shuffle]);
 
   const handleSkipBack = useCallback(async () => {
@@ -1551,10 +1588,13 @@ export default function Veluna() {
     setSearchHistory(prev => [q, ...prev.filter(h => h !== q)].slice(0, 8));
 
     try {
-      const [resMusic, resVideo] = await Promise.all([
-        invoke<string>('search_youtube', { query: `${q} music` }).catch(() => ''),
-        invoke<string>('search_youtube', { query: `${q} video` }).catch(() => '')
-      ]);
+      const isUrl = q.startsWith('http://') || q.startsWith('https://') || q.includes('youtube.com') || q.includes('youtu.be');
+      const [resMusic, resVideo] = isUrl 
+        ? await Promise.all([invoke<string>('search_youtube', { query: q }).catch(() => ''), Promise.resolve('')])
+        : await Promise.all([
+            invoke<string>('search_youtube', { query: `${q} music` }).catch(() => ''),
+            invoke<string>('search_youtube', { query: `${q} video` }).catch(() => '')
+          ]);
 
       const parseLines = (res: string) => {
         return res.trim().split('\n').filter(Boolean).map((line, i) => {
@@ -1668,6 +1708,9 @@ export default function Veluna() {
     if (id === 'p1') return;
     setPlaylists(p => p.filter(x => x.id !== id));
     setOpenPlaylistId(prev => prev === id ? null : prev);
+    if (playlistContextRef.current?.id === id) {
+      playlistContextRef.current = null;
+    }
     showToast('Playlist deleted');
   }, [showToast]);
 
@@ -1777,10 +1820,10 @@ export default function Veluna() {
         .v-track--active .v-track__title{color:var(--v-accent);}
         .v-track__artist{font-size:13px;color:var(--v-fg3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .v-track__dur{font-size:11px;color:var(--v-fg4);font-variant-numeric:tabular-nums;flex-shrink:0;}
-        .v-track__actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .12s;flex-shrink:0;}
+        .v-track__actions{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity .15s ease;flex-shrink:0;background:rgba(255,255,255,0.04);padding:2px 6px;border-radius:20px;border:1px solid rgba(255,255,255,0.06);}
         .v-track:hover .v-track__actions,.v-track--active .v-track__actions{opacity:1;}
-        .v-track__btn{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s ease;}
-        .v-track__btn:hover{background:rgba(255, 255, 255, 0.06);color:#fff;}
+        .v-track__btn{width:26px;height:26px;border-radius:50%;border:none;background:transparent;color:var(--v-fg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s ease;}
+        .v-track__btn:hover{background:rgba(255,255,255,0.12);color:#fff;}
 
         .v-card{flex-shrink:0;width:180px;cursor:pointer;animation:fadeUpSm .2s cubic-bezier(0.2,0,0,1) both;}
         .v-card__art{width:180px;height:180px;border-radius:13px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);position:relative;background:var(--v-bg3);transition:transform .18s cubic-bezier(0.2,0,0,1);}
@@ -1813,13 +1856,13 @@ export default function Veluna() {
         .v-pl-item:hover .v-pl-item__art{border-color:rgba(255,255,255,0.1);}
         .v-pl-item--active .v-pl-item__art{border-color:rgba(255,255,255,0.12);}
 
-        .v-topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;flex-shrink:0;border-bottom:1px solid var(--v-bdr);z-index:20;}
+        .v-topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;flex-shrink:0;border-bottom:none;z-index:20;}
         .v-topbar__back{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1px solid var(--v-bdr2);background:transparent;color:var(--v-fg3);font-size:13.5px;font-weight:500;cursor:pointer;transition:border-color .12s,color .12s;}
         .v-topbar__back:hover{border-color:var(--v-bdr3);color:var(--v-fg2);}
         .v-topbar__back:disabled{opacity:0.3;cursor:not-allowed;}
         .v-topbar__crumb{font-size:11.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--v-fg3);}
 
-        .v-player{height:72px;background:var(--v-bg1);border-top:1px solid var(--v-bdr);display:flex;align-items:center;padding:0 18px;position:relative;z-index:20;flex-shrink:0;gap:0;}
+        .v-player{height:72px;background:var(--v-bg1);border-top:none;display:flex;align-items:center;padding:0 18px;position:relative;z-index:20;flex-shrink:0;gap:0;}
         .v-player__track{display:flex;align-items:center;gap:11px;width:230px;flex-shrink:0;}
         .v-player__art{width:44px;height:44px;border-radius:7px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;}
         .v-player__art img{width:100%;height:100%;object-fit:cover;}
@@ -2277,120 +2320,118 @@ export default function Veluna() {
       `}</style>
 
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
-
-        {}
-        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 14px 96px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
-          {}
-          <div style={{display:"flex",alignItems:"center",marginBottom:"20px",flexShrink:0,padding:"0 4px"}}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              cursor: "pointer",
-              flex: 1,
-              transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-              transform: logoHovered ? "scale(1.03)" : "none"
-            }}
-              onMouseEnter={() => setLogoHovered(true)}
-              onMouseLeave={() => setLogoHovered(false)}
-              onClick={() => navigateTo('home')}>
-              <svg width="38" height="38" viewBox="0 0 28 28" fill="none" style={{
-                flexShrink: 0
-              }}>
-                <rect width="28" height="28" rx="6" fill="var(--v-accent)"/>
-                <polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#0e0d0d"/>
-                <polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="var(--v-accent)"/>
-              </svg>
-              <span style={{
-                letterSpacing: "0.22em",
-                fontSize: "19px",
-                fontWeight: 900,
-                color: "#ffffff",
-                textTransform: "uppercase"
-              }}>veluna</span>
-            </div>
-          </div>
-
-          {/* Sleep timer */}
-          <div style={{position:"relative",marginBottom:"6px",flexShrink:0,overflow:"visible",padding:"0 2px"}} onClick={e => e.stopPropagation()}>
-            <div
-              onClick={() => setShowSleepPopover(o => !o)}
-              style={sleepTimer>0
-                ?{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',border:'1px solid rgba(226,221,217,0.1)',background:'rgba(226,221,217,0.04)',color:'#9e9894',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'all .15s ease'}
-                :{display:'flex',alignItems:'center',gap:'8px',padding:'7px 12px',borderRadius:'8px',border:'1px solid transparent',background:'transparent',color:'#363230',cursor:'pointer',fontSize:'11px',fontWeight:500,transition:'all .15s ease'}
-              }
-              onMouseEnter={e=>{if(sleepTimer<=0){e.currentTarget.style.background='rgba(226,221,217,0.03)';e.currentTarget.style.color='#5c5755';}}}
-              onMouseLeave={e=>{if(sleepTimer<=0){e.currentTarget.style.background='transparent';e.currentTarget.style.color='#363230';}}}
-            >
-              <Moon size={14} style={sleepTimer > 0 ? {color:'#9e9894',animation:'velunaPulse 2s ease-in-out infinite'} : {color:'#363230'}} />
-              <span style={{flex:1}}>{sleepTimer>0?'Sleep in '+Math.ceil(sleepTimer/60)+'m':'Sleep Timer'}</span>
-              {sleepTimer > 0
-                ? <button onClick={e => { e.stopPropagation(); cancelSleepTimer(); }} style={{fontSize:"11px",color:"#5c5755",background:"none",border:"none",cursor:"pointer",padding:"2px 4px"}}><X size={11}/></button>
-                : <ChevronDown size={13} style={{transition:"transform .2s",transform:showSleepPopover?"rotate(180deg)":"none"}}/>}
-            </div>
-            {showSleepPopover && (
-              <div style={{position:"absolute",top:"100%",left:0,marginTop:"6px",zIndex:9999}}>
-                <SleepTimerPopover
-                  sleepTimer={sleepTimer}
-                  onSet={setSleepTimerMinutes}
-                  onCancel={cancelSleepTimer}
-                  onClose={() => setShowSleepPopover(false)}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'6px 8px 8px',flexShrink:0}}/>
+        {/* 📱 Sleek Navigation Sidebar */}
+        <div style={{width:"180px", flexShrink:0, display:"flex", flexDirection:"column", background:"var(--v-bg1)", borderRight:"none", padding:"16px 10px 96px 10px", zIndex:10, overflow:"visible", position:"relative"}}>
 
           <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0,padding:"0 2px"}}>
-            {([
-              { id: 'home', label: 'Home', icon: Home },
-              { id: 'downloads', label: 'Offline', icon: HardDrive },
-              { id: 'stats', label: 'Stats', icon: BarChart2 },
-              { id: 'settings', label: 'Settings', icon: Settings },
-            ] as { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }> }[]).map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => navigateTo(id)}
-                className={`v-nav-btn${activeNav===id?' v-nav-btn--active':''}`}>
-                <span className="v-nav-icon"><Icon size={16} style={activeNav===id?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
-                <span>{label}</span>
-              </button>
-            ))}
+            <button onClick={() => navigateTo('home')}
+              className={`v-nav-btn${activeNav==='home'?' v-nav-btn--active':''}`}>
+              <span className="v-nav-icon"><Home size={18} style={activeNav==='home'?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
+              <span>Home</span>
+            </button>
+            <button onClick={() => navigateTo('downloads')}
+              className={`v-nav-btn${activeNav==='downloads'?' v-nav-btn--active':''}`}>
+              <span className="v-nav-icon"><HardDrive size={18} style={activeNav==='downloads'?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
+              <span>Offline</span>
+            </button>
+            <button onClick={() => navigateTo('stats')}
+              className={`v-nav-btn${activeNav==='stats'?' v-nav-btn--active':''}`}>
+              <span className="v-nav-icon"><BarChart2 size={18} style={activeNav==='stats'?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
+              <span>Stats</span>
+            </button>
+
+            <button onClick={() => { navigateTo('settings'); setSettingsTab('playback'); }}
+              className={`v-nav-btn${activeNav==='settings'?' v-nav-btn--active':''}`}>
+              <span className="v-nav-icon"><Settings size={18} style={activeNav==='settings'?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
+              <span>Settings</span>
+            </button>
+
             <button onClick={() => setIsQueueOpen(o => !o)}
               className={`v-nav-btn${isQueueOpen?' v-nav-btn--active':''}`}>
-              <span className="v-nav-icon"><ListOrdered size={16} style={isQueueOpen?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
+              <span className="v-nav-icon"><ListOrdered size={18} style={isQueueOpen?{color:'#c8c4c0'}:{color:'#4a4644'}} /></span>
               <span style={{flex:1}}>Queue</span>
               {queue.length > 0 && <span key={queuePulseKey} className="queue-badge-pulse v-badge" style={{marginLeft:"auto"}}>{queue.length}</span>}
             </button>
           </nav>
 
-          {/* Divider */}
-          <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'8px 8px 6px',flexShrink:0}}/>
-
           {/* Playlists section */}
           <div style={{marginTop:"6px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"2px 4px 10px",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",justify:"space-between",padding:"2px 4px 10px",flexShrink:0}}>
               <button onClick={() => { navigateTo('library'); setOpenPlaylistId(null); }}
                 style={{display:'flex',alignItems:'center',gap:'8px',padding:'4px 6px',borderRadius:'6px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#e2ddd9':'#8a807c',fontSize:'10px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .15s ease'}}
                 onMouseEnter={e=>{if(activeNav!=='library')e.currentTarget.style.color='#c8c4c0';}}
                 onMouseLeave={e=>{if(activeNav!=='library')e.currentTarget.style.color='#8a807c';}}>
-                <ListMusic size={13} style={{color:activeNav==='library'?'var(--v-accent)':'#8a807c'}}/>
+                <ListMusic size={15} style={{color:activeNav==='library'?'var(--v-accent)':'#8a807c'}}/>
                 <span style={{fontWeight:700,letterSpacing:'0.08em'}}>Playlists</span>
               </button>
-              <div style={{display:'flex',alignItems:'center',gap:'2px'}}>
+              <div ref={playlistMenuRef} style={{display:'flex',alignItems:'center',gap:'2px',position:'relative'}}>
                 <button onClick={e => { e.stopPropagation(); setSidebarPlaylistsExpanded(o => !o); }}
-                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",transition:'color .15s ease,background .15s ease'}}
+                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justify:"center",transition:'color .15s ease,background .15s ease'}}
                   title={sidebarPlaylistsExpanded ? "Collapse playlists" : "Expand playlists"}
                   onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
                   onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
                   <ChevronRight size={14} style={{transition:"transform .2s ease",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
                 </button>
-                <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",transition:'color .15s ease,background .15s ease'}} title="Create playlist"
+                <button onClick={e => { e.stopPropagation(); setIsPlaylistMenuOpen(o => !o); }}
+                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:isPlaylistMenuOpen?"#e2ddd9":"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justify:"center",transition:'color .15s ease,background .15s ease'}} title="Add / Import Playlist"
                   onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
-                  onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
+                  onMouseLeave={e=>{if(!isPlaylistMenuOpen)e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
                   <Plus size={15} />
                 </button>
+
+                {isPlaylistMenuOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    width: '155px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    padding: '5px',
+                    background: 'var(--v-bg2)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid var(--v-bdr2)',
+                    borderRadius: '12px',
+                    boxShadow: '0 16px 40px rgba(0,0,0,0.85)',
+                    zIndex: 9999,
+                    animation: 'fadeUpSm 0.12s ease-out'
+                  }}>
+                    <button onClick={e => { e.stopPropagation(); setIsPlaylistMenuOpen(false); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
+                      style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px 10px',background:'transparent',border:'none',borderRadius:'8px',color:'var(--v-fg2)',fontSize:'12px',fontWeight:500,cursor:'pointer',textAlign:'left',transition:'all .15s'}}
+                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='var(--v-fg)';}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--v-fg2)';}}>
+                      <Plus size={14} style={{color:'var(--v-fg2)',flexShrink:0}} />
+                      <span>New Playlist</span>
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); setIsPlaylistMenuOpen(false); setShowCsvImportModal(true); }}
+                      style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px 10px',background:'transparent',border:'none',borderRadius:'8px',color:'var(--v-fg2)',fontSize:'12px',fontWeight:500,cursor:'pointer',textAlign:'left',transition:'all .15s'}}
+                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='var(--v-fg)';}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--v-fg2)';}}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="#1DB954" style={{flexShrink:0}}>
+                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                      </svg>
+                      <span>From Spotify</span>
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); setIsPlaylistMenuOpen(false); setShowYtImportModal(true); }}
+                      style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px 10px',background:'transparent',border:'none',borderRadius:'8px',color:'var(--v-fg2)',fontSize:'12px',fontWeight:500,cursor:'pointer',textAlign:'left',transition:'all .15s'}}
+                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='var(--v-fg)';}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--v-fg2)';}}>
+                      <svg width="13" height="11" viewBox="0 0 18 14" fill="#ef4444" style={{flexShrink:0}}>
+                        <path d="M17.6 2.2C17.4 1.4 16.8.8 16 .6 14.6.2 9 .2 9 .2S3.4.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.6 0 6.5 0 6.5s0 2.9.4 4.3c.2.8.8 1.4 1.6 1.6C3.4 12.8 9 12.8 9 12.8s5.6 0 7-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.3.4-4.3s0-2.9-.4-4.3zM7.2 9.3V3.7l4.7 2.8-4.7 2.8z"/>
+                      </svg>
+                      <span>From YouTube</span>
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); setIsPlaylistMenuOpen(false); handleImportPlaylistM3u(); }}
+                      style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px 10px',background:'transparent',border:'none',borderRadius:'8px',color:'var(--v-fg2)',fontSize:'12px',fontWeight:500,cursor:'pointer',textAlign:'left',transition:'all .15s'}}
+                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='var(--v-fg)';}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--v-fg2)';}}>
+                      <FileOutput size={13} style={{color:'var(--v-fg2)',flexShrink:0}} />
+                      <span>From M3U File</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             {sidebarPlaylistsExpanded && (
@@ -2421,35 +2462,67 @@ export default function Veluna() {
               </div>
             )}
           </div>
-
-          <ImportButton
-            onSpotify={() => setShowCsvImportModal(true)}
-            onYoutube={() => setShowYtImportModal(true)}
-            onM3u={handleImportPlaylistM3u}
-          />
         </div>
 
         {}
         <div style={{flex:"1 1 0%",display:"flex",flexDirection:"column",background:"var(--v-bg0)",position:"relative",minHeight:0,overflow:"hidden"}}>
+          {/* Ambient Lighting Backdrop */}
+          <div style={{
+            position: 'absolute',
+            top: '-120px',
+            right: '-100px',
+            width: '600px',
+            height: '600px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(226,221,217,0.035) 0%, rgba(0,0,0,0) 70%)',
+            pointerEvents: 'none',
+            zIndex: 0
+          }} />
 
-          <div className="v-topbar" style={{background:"var(--v-bg0)",padding:"14px 22px"}}>
-            <button
-              className="v-topbar__back"
-              onClick={() => {
-                if (activeNav === 'home' && tracks.length > 0) {
-                  setTracks([]); setSearchQuery(''); setIsSearching(false);
-                } else {
-                  navigateBack();
-                }
-              }}
-              disabled={activeNav === 'home' && tracks.length === 0}
+          <div className="v-topbar" style={{background:"var(--v-bg0)",padding:"14px 22px",display:"flex",alignItems:"center",justify:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+              <button
+                className="v-topbar__back"
+                onClick={() => {
+                  if (activeNav === 'home' && tracks.length > 0) {
+                    setTracks([]); setSearchQuery(''); setIsSearching(false);
+                  } else {
+                    navigateBack();
+                  }
+                }}
+                disabled={activeNav === 'home' && tracks.length === 0}
+              >
+                <ChevronLeft size={14} />
+                <span>Back</span>
+              </button>
+              <span className="v-topbar__crumb">
+                {activeNav === 'home' ? 'Home' : activeNav === 'downloads' ? 'Offline' : activeNav === 'settings' ? 'Settings' : activeNav === 'stats' ? 'Stats' : activeNav === 'library' ? (openPlaylistId ? 'Playlist' : 'Playlists') : activeNav}
+              </span>
+            </div>
+
+            {/* Veluna Logo at the Far Top Right of the Window */}
+            <div style={{
+              position: "fixed",
+              top: "14px",
+              right: "20px",
+              zIndex: 100,
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+              transition: "transform 0.2s ease",
+              transform: logoHovered ? "scale(1.06)" : "none"
+            }}
+              onMouseEnter={() => setLogoHovered(true)}
+              onMouseLeave={() => setLogoHovered(false)}
+              onClick={() => navigateTo('home')}
+              title="Home (Veluna)"
             >
-              <ChevronLeft size={14} />
-              <span>Back</span>
-            </button>
-            <span className="v-topbar__crumb">
-              {activeNav === 'home' ? 'Home' : activeNav === 'downloads' ? 'Offline' : activeNav === 'settings' ? 'Settings' : activeNav === 'stats' ? 'Stats' : activeNav === 'library' ? (openPlaylistId ? 'Playlist' : 'Playlists') : activeNav}
-            </span>
+              <svg width="34" height="34" viewBox="0 0 28 28" fill="none" style={{ flexShrink: 0 }}>
+                <rect width="28" height="28" rx="7" fill="var(--v-accent)"/>
+                <polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#0e0d0d"/>
+                <polygon points="8.5,6 11.5,6 14,16 16.5,6 19.5,6 14,21" fill="var(--v-accent)"/>
+              </svg>
+            </div>
           </div>
 
           {}
@@ -2522,7 +2595,7 @@ export default function Veluna() {
                   </div>
                   {updateAvailable && (
                     <button
-                      onClick={() => { setActiveNav('settings'); }}
+                      onClick={() => { setActiveNav('settings'); setSettingsTab('updates'); }}
                       title={`Update available — v${updateAvailable}`}
                       style={{flexShrink:0,width:"42px",height:"42px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"21px",border:"1px solid var(--v-bdr2)",background:"var(--v-bg2)",cursor:"pointer",position:"relative"}}
                     >
@@ -2625,61 +2698,75 @@ export default function Veluna() {
                   };
 
                   return (
-                    <div style={{display:"flex",flexDirection:"column",gap:"28px",paddingTop:"4px"}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:"36px",paddingTop:"4px"}}>
+                      {/* Hero Greeting Banner */}
                       <div style={{
-                        position: 'relative',
-                        overflow: 'hidden',
-                        borderRadius: '16px',
-                        padding: '24px 28px',
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.07)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        minHeight: '110px'
+                        padding: '4px 0 8px 0'
                       }}>
-                        <div
-                          className="banner-glow"
-                          style={{
-                            position: 'absolute',
-                            top: '-30px',
-                            left: '-30px',
-                            width: '200px',
-                            height: '200px',
-                            borderRadius: '50%',
-                            background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
-                            pointerEvents: 'none',
-                            zIndex: 0
-                          }}
-                        />
-                        <div style={{ zIndex: 1 }}>
+                        <div>
                           <h1 style={{
                             fontSize: '24px',
-                            fontWeight: 700,
+                            fontWeight: 800,
                             color: 'var(--v-fg)',
                             letterSpacing: '-0.02em',
                             margin: 0
                           }}>{greeting}</h1>
                           <p style={{
-                            fontSize: '13.5px',
+                            fontSize: '13px',
                             color: 'var(--v-fg2)',
-                            marginTop: '4px',
-                            margin: '4px 0 0'
+                            margin: '3px 0 0'
                           }}>Ready to discover and play your favorite tracks?</p>
                         </div>
                         <div style={{
                           zIndex: 1,
                           display: 'flex',
-                          gap: '16px',
+                          gap: '12px',
                           alignItems: 'center'
                         }}>
+                          {quickPicks.length > 0 && (
+                            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                              <button
+                                onClick={() => handlePlayInContext(quickPicks[0], quickPicks)}
+                                style={{
+                                  display:'flex',alignItems:'center',gap:'6px',padding:'7px 14px',borderRadius:'20px',
+                                  background:'var(--v-accent)',color:'#0c0b0b',border:'none',fontSize:'12px',fontWeight:700,cursor:'pointer',
+                                  boxShadow:'0 4px 14px rgba(0,0,0,0.4)',transition:'transform 0.15s ease'
+                                }}
+                                onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+                                onMouseLeave={e=>e.currentTarget.style.transform='none'}
+                              >
+                                <Play size={12} fill="#0c0b0b" />
+                                <span>Resume</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const shuffled = [...quickPicks].sort(() => 0.5 - Math.random());
+                                  if (shuffled[0]) handlePlayInContext(shuffled[0], shuffled);
+                                }}
+                                style={{
+                                  display:'flex',alignItems:'center',gap:'6px',padding:'7px 14px',borderRadius:'20px',
+                                  background:'rgba(255,255,255,0.06)',color:'var(--v-fg)',border:'1px solid rgba(255,255,255,0.08)',
+                                  fontSize:'12px',fontWeight:600,cursor:'pointer',transition:'background 0.15s ease'
+                                }}
+                                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+                                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.06)'}
+                              >
+                                <Shuffle size={12} />
+                                <span>Shuffle</span>
+                              </button>
+                            </div>
+                          )}
                           <div style={{
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'flex-end'
+                            alignItems: 'flex-end',
+                            marginLeft: '8px'
                           }}>
-                            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--v-fg3)' }}>Library Status</span>
-                            <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--v-fg)', marginTop: '2px' }}>
+                            <span style={{ fontSize: '9.5px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--v-fg3)', fontWeight: 700 }}>Library</span>
+                            <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--v-fg)', marginTop: '2px' }}>
                               {localAsTrack.length + playlists.reduce((acc, p) => acc + p.tracks.length, 0)} Tracks
                             </span>
                           </div>
@@ -2694,10 +2781,11 @@ export default function Veluna() {
                           marginBottom: '14px'
                         }}>
                           <h2 style={{
-                            fontSize: '16px',
+                            fontSize: '12px',
                             fontWeight: 700,
-                            color: 'var(--v-fg)',
-                            letterSpacing: '-0.01em',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            color: 'var(--v-fg3)',
                             margin: 0
                           }}>Recently Played</h2>
                           <button
@@ -2734,28 +2822,24 @@ export default function Veluna() {
                                 onClick={() => handlePlayInContext(track, quickPicks.slice(0, 12))}
                                 onContextMenu={e => openCtx(e, { type: 'quickpick', track })}
                                 style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '12px',
-                                  padding: '10px 12px',
-                                  borderRadius: '12px',
-                                  cursor: 'pointer',
-                                  background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.015)',
-                                  border: `1px solid ${isActive ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)'}`,
-                                  transition: 'background .18s, border-color .18s, transform .18s',
-                                  animation: `fadeUpSm .18s cubic-bezier(0.2,0,0,1) ${cardIdx * 25}ms both`,
-                                }}
-                                onMouseEnter={e => {
-                                  prefetchOnHover(track.url);
-                                  e.currentTarget.style.transform = 'translateY(-1px)';
-                                  e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.03)';
-                                  e.currentTarget.style.borderColor = isActive ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.06)';
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.transform = 'none';
-                                  e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.015)';
-                                  e.currentTarget.style.borderColor = isActive ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
-                                }}
+                                   display: 'flex',
+                                   alignItems: 'center',
+                                   gap: '12px',
+                                   padding: '8px 10px',
+                                   borderRadius: '8px',
+                                   cursor: 'pointer',
+                                   background: isActive ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                                   border: '1px solid transparent',
+                                   transition: 'background .15s ease, transform .15s ease',
+                                   animation: `fadeUpSm .18s cubic-bezier(0.2,0,0,1) ${cardIdx * 25}ms both`,
+                                 }}
+                                 onMouseEnter={e => {
+                                   prefetchOnHover(track.url);
+                                   e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.035)';
+                                 }}
+                                 onMouseLeave={e => {
+                                   e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.04)' : 'transparent';
+                                 }}
                               >
                                 <div style={{
                                   width: '48px',
@@ -2856,6 +2940,8 @@ export default function Veluna() {
                         </div>
                       </div>
 
+
+
                       <div className="v-home-split-layout">
                         <div className="v-home-main-col">
                           {activeGenres.map((genre, gIdx) => {
@@ -2871,10 +2957,11 @@ export default function Veluna() {
                               >
                                 <div className="v-section-head" style={{ marginBottom: '12px' }}>
                                   <h2 style={{
-                                    fontSize: '16px',
+                                    fontSize: '12px',
                                     fontWeight: 700,
-                                    color: 'var(--v-fg)',
-                                    letterSpacing: '-0.01em',
+                                    letterSpacing: '0.08em',
+                                    textTransform: 'uppercase',
+                                    color: 'var(--v-fg3)',
                                     margin: 0
                                   }}>{genre.label}</h2>
                                   <span style={{
@@ -4732,6 +4819,7 @@ export default function Veluna() {
 
           {activeNav === 'settings' && (
             <SettingsPanel
+              initialTab={settingsTab}
               downloadQuality={downloadQuality} setDownloadQuality={setDownloadQuality}
               downloadPath={downloadPath} handleSelectDirectory={handleSelectDirectory}
               downloadFormat={downloadFormat} setDownloadFormat={setDownloadFormatState}
@@ -4762,7 +4850,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flexShrink:0,background:'var(--v-bg1)',borderLeft:'1px solid var(--v-bdr)',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'300px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
+        <div style={{flexShrink:0,background:'var(--v-bg1)',borderLeft:'none',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'300px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
           {isQueueOpen && (() => {
             const contextualTracks = (() => {
               if (!playlistContextRef.current || !currentTrack) return [];
@@ -5195,6 +5283,24 @@ export default function Veluna() {
             onMouseEnter={e=>{if(currentTrack)e.currentTarget.style.color="#9e9894";}} onMouseLeave={e=>{if(!showLyrics)e.currentTarget.style.color="#363230";}}>
             <Mic2 size={16}/>
           </button>
+          <div style={{position:"relative",flexShrink:0}} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowSleepPopover(o => !o)} title={sleepTimer > 0 ? `Sleep in ${Math.ceil(sleepTimer/60)}m` : 'Sleep Timer'}
+              style={{background:"none",border:"none",cursor:"pointer",color:sleepTimer>0?"var(--v-accent)":showSleepPopover?"#e2ddd9":"#363230",flexShrink:0,display:"flex",padding:"3px",transition:"color .12s,transform .12s",transform:showSleepPopover?"scale(1.15)":"none"}}
+              onMouseEnter={e=>{e.currentTarget.style.color=sleepTimer>0?"var(--v-accent)":"#9e9894";}}
+              onMouseLeave={e=>{if(!showSleepPopover && sleepTimer<=0)e.currentTarget.style.color="#363230";}}>
+              <Moon size={16} style={sleepTimer > 0 ? {animation:'velunaPulse 2s ease-in-out infinite'} : {}}/>
+            </button>
+            {showSleepPopover && (
+              <div style={{position:"absolute",bottom:"calc(100% + 12px)",right:"-40px",zIndex:9999}}>
+                <SleepTimerPopover
+                  sleepTimer={sleepTimer}
+                  onSet={setSleepTimerMinutes}
+                  onCancel={cancelSleepTimer}
+                  onClose={() => setShowSleepPopover(false)}
+                />
+              </div>
+            )}
+          </div>
           <button onClick={toggleMute} title={volume===0?"Unmute":"Mute"}
             style={{background:"none",border:"none",cursor:"pointer",flexShrink:0,padding:"3px",color:"#5c5755",display:"flex",transition:"color .12s"}}
             onMouseEnter={e=>(e.currentTarget.style.color="#9e9894")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}>
@@ -5222,8 +5328,12 @@ export default function Veluna() {
       {ctxMenu && (() => {
         const { track, playlist } = ctxMenu;
         if ((ctxMenu.type === 'track' || ctxMenu.type === 'quickpick' || ctxMenu.type === 'queue-track') && track) {
+          const menuWidth = 220;
+          const menuHeight = track.url.startsWith('local://') ? 340 : 420;
+          const left = Math.max(12, Math.min(ctxMenu.x, window.innerWidth - menuWidth - 12));
+          const top = Math.max(12, Math.min(ctxMenu.y, window.innerHeight - menuHeight - 12));
           return (
-            <div className="v-ctx" style={{position:'fixed',zIndex:9999,width:'220px',top:ctxMenu.y,left:ctxMenu.x}} onClick={e => e.stopPropagation()}>
+            <div className="v-ctx custom-scrollbar" style={{position:'fixed',zIndex:9999,width:`${menuWidth}px`,top:`${top}px`,left:`${left}px`}} onClick={e => e.stopPropagation()}>
               <div className="v-ctx__header">
                 <div className="v-ctx__art" style={{
                   position: 'relative',
@@ -5283,8 +5393,12 @@ export default function Veluna() {
           );
         }
         if ((ctxMenu.type === 'playlist' || ctxMenu.type === 'sidebar-playlist') && playlist) {
+          const menuWidth = 200;
+          const menuHeight = playlist.id === 'p1' ? 340 : 430;
+          const left = Math.max(12, Math.min(ctxMenu.x, window.innerWidth - menuWidth - 12));
+          const top = Math.max(12, Math.min(ctxMenu.y, window.innerHeight - menuHeight - 12));
           return (
-            <div className="v-ctx" style={{position:"fixed",zIndex:9999,width:"200px",top:ctxMenu.y,left:ctxMenu.x}} onClick={e=>e.stopPropagation()}>
+            <div className="v-ctx custom-scrollbar" style={{position:"fixed",zIndex:9999,width:`${menuWidth}px`,top:`${top}px`,left:`${left}px`}} onClick={e=>e.stopPropagation()}>
               <div className="v-ctx__header">
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:"13px",fontWeight:700,color:"#e2ddd9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{playlist.name}</div>
@@ -5310,7 +5424,7 @@ export default function Veluna() {
 
       {}
       {addToPlaylistTrack && (
-        <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.9)"}} onClick={()=>setAddToPlaylistTrack(null)}>
+        <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(var(--v-bg0-rgb),0.9)"}} onClick={()=>setAddToPlaylistTrack(null)}>
           <div className="v-ctx" style={{width:"280px"}} onClick={e=>e.stopPropagation()}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderBottom:"1px solid var(--v-bdr2)"}}>
               <div>
@@ -5510,8 +5624,8 @@ export default function Veluna() {
           else seen.set(key, t);
         });
         return (
-          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(var(--v-bg0-rgb),0.9)"}} onClick={()=>setShowDuplicatesPlaylist(null)}>
-            <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"100%",maxWidth:"500px",maxHeight:"80vh",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(var(--v-bg0-rgb),0.9)"}} onClick={()=>setShowDuplicatesPlaylist(null)}>
+            <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"100%",maxWidth:"500px",maxHeight:"calc(100vh - 130px)",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
               <div style={{padding:"13px 16px",borderBottom:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Duplicate Finder</h3>
@@ -5565,8 +5679,8 @@ export default function Veluna() {
       {}
       {bulkEditPlaylist && (() => {
         return (
-          <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(var(--v-bg0-rgb),0.9)"}}>
-            <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"100%",maxWidth:"680px",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(var(--v-bg0-rgb),0.9)"}}>
+            <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",width:"100%",maxWidth:"680px",maxHeight:"calc(100vh - 130px)",display:"flex",flexDirection:"column",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
               <div style={{padding:"13px 16px",borderBottom:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
                 <div>
                   <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>Bulk Tag Editor</h3>
@@ -5631,7 +5745,7 @@ export default function Veluna() {
 
       {}
       {isPlaylistModalOpen && (
-        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.88)"}}>
+        <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(var(--v-bg0-rgb),0.88)"}}>
           <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",padding:"20px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
             <h3 style={{fontSize:"15px",fontWeight:700,color:"#e2ddd9",margin:"0 0 16px"}}>Create Playlist</h3>
             <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"16px"}}>
@@ -5660,7 +5774,7 @@ export default function Veluna() {
 
       {}
       {renamingPlaylist && (
-        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.88)"}}>
+        <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(var(--v-bg0-rgb),0.88)"}}>
           <div style={{background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",borderRadius:"14px",padding:"20px",width:"320px",boxShadow:"0 24px 60px rgba(0,0,0,0.85)"}}>
             <h3 style={{fontSize:"15px",fontWeight:700,color:"#e2ddd9",margin:"0 0 16px"}}>Edit Playlist</h3>
             <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"16px"}}>
@@ -6005,8 +6119,8 @@ export default function Veluna() {
             )}
             <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"rgba(0,0,0,0.18)"}}/>
 
-            {/* Left panel — centered vertically */}
-            <div style={{position:"relative",zIndex:10,width:"340px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 32px",gap:"16px"}}>
+            {/* Left panel — centered & responsive */}
+            <div style={{position:"relative",zIndex:10,width:"clamp(280px, 30vw, 360px)",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 28px",gap:"16px",maxHeight:"100vh",overflowY:"auto",boxSizing:"border-box"}}>
 
               {/* Close button */}
               <button onClick={()=>setShowLyrics(false)}
@@ -6017,14 +6131,14 @@ export default function Veluna() {
               </button>
 
               {/* Album art */}
-              <div style={{width:"220px",height:"220px",borderRadius:"10px",overflow:"hidden",flexShrink:0,boxShadow:"0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",position:"relative"}}>
+              <div style={{width:"clamp(130px, 24vh, 220px)",height:"clamp(130px, 24vh, 220px)",borderRadius:"12px",overflow:"hidden",flexShrink:0,boxShadow:"0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",position:"relative",marginTop:"12px"}}>
                 {getTrackCover(currentTrack)
                   ? <img src={getTrackCover(currentTrack)} alt={currentTrack.title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : <div style={{width:"100%",height:"100%",background:"var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center"}}><Music size={32} style={{color:"#363230"}}/></div>}
               </div>
 
               {/* Track info — no three-dot menu */}
-              <div style={{width:"100%",display:"flex",flexDirection:"column",gap:"2px"}}>
+              <div style={{width:"100%",display:"flex",flexDirection:"column",gap:"2px",textAlign:"center"}}>
                 <p style={{fontSize:"16px",fontWeight:800,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",margin:0,letterSpacing:"-0.01em"}}>{currentTrack.title}</p>
                 <p style={{fontSize:"12.5px",color:"rgba(255,255,255,0.5)",margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentTrack.artist}</p>
               </div>
@@ -6156,7 +6270,7 @@ export default function Veluna() {
                 </div>
               ) : lines.length > 0 ? (
                 <div style={{position:"relative",height:"100%"}}>
-                  <div style={{height:"100%",overflowY:"auto",padding:"160px 52px",scrollbarWidth:"none"}}
+                  <div style={{height:"100%",overflowY:"auto",padding:"calc(50vh - 40px) 44px",scrollbarWidth:"none",boxSizing:"border-box"}}
                     ref={lyricsScrollContainerRef}>
                     {lines.map((line, idx) => {
                       const isCurrent = idx === currentIdx;
@@ -6168,19 +6282,20 @@ export default function Veluna() {
                         <p key={idx}
                           data-active={isCurrent?'true':'false'}
                           onClick={async()=>{await invoke('seek_audio',{time:line.time}).catch(()=>{});}}
-                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)';(e.currentTarget as HTMLElement).style.transform='scale(1.02)';}}
-                          onMouseLeave={e=>{if(!isCurrent){(e.currentTarget as HTMLElement).style.color=isPast?`rgba(255,255,255,${pastOpacity})`:`rgba(255,255,255,${futureOpacity})`;(e.currentTarget as HTMLElement).style.transform='scale(1)';}else{(e.currentTarget as HTMLElement).style.transform='scale(1.18)';}}}
+                          onMouseEnter={e=>{if(!isCurrent)(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.85)';}}
+                          onMouseLeave={e=>{if(!isCurrent){(e.currentTarget as HTMLElement).style.color=isPast?`rgba(255,255,255,${pastOpacity})`:`rgba(255,255,255,${futureOpacity})`;}}}
                           style={{
-                            cursor:"pointer",lineHeight:1.35,padding:"14px 0",userSelect:"none",margin:0,
-                            fontSize: '1.85rem',
+                            cursor:"pointer",lineHeight:1.45,padding:"10px 0",userSelect:"none",margin:0,
+                            fontSize: isCurrent ? 'clamp(1.35rem, 2.5vw, 1.75rem)' : 'clamp(1.15rem, 2vw, 1.45rem)',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'pre-wrap',
+                            maxWidth: 'calc(100% - 48px)',
                             letterSpacing: '-0.01em',
-                            fontWeight: 800,
+                            fontWeight: isCurrent ? 800 : 600,
                             fontStyle: 'normal',
-                            color: isCurrent ? '#fff' : isPast ? `rgba(255,255,255,${pastOpacity})` : `rgba(255,255,255,${futureOpacity})`,
-                            transform: isCurrent ? 'scale(1.18)' : 'scale(1)',
-                            transformOrigin: 'left center',
-                            transition: 'color 0.4s ease, transform 0.4s ease',
-                            textShadow: isCurrent ? '0 0 40px rgba(255,255,255,0.12)' : 'none',
+                            color: isCurrent ? '#ffffff' : isPast ? `rgba(255,255,255,${pastOpacity})` : `rgba(255,255,255,${futureOpacity})`,
+                            transition: 'color 0.3s ease, font-size 0.3s ease, font-weight 0.3s ease',
+                            textShadow: isCurrent ? '0 0 32px rgba(255,255,255,0.18)' : 'none',
                           }}>
                           {line.text || '\u00A0'}
                         </p>

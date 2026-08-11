@@ -213,6 +213,7 @@ const ThemedSelect = ({ value, options, onChange }: {
 };
 
 export type SettingsPanelProps = {
+  initialTab?: SettingsTab;
   downloadQuality: string; setDownloadQuality: (q: string) => void;
   downloadPath: string; handleSelectDirectory: () => void;
   downloadFormat: string; setDownloadFormat: (f: string) => void;
@@ -241,6 +242,7 @@ export type SettingsPanelProps = {
 };
 
 export function SettingsPanel({
+  initialTab,
   downloadQuality, setDownloadQuality, downloadPath, handleSelectDirectory,
   downloadFormat, setDownloadFormat,
   embedThumbnail, setEmbedThumbnail,
@@ -264,7 +266,10 @@ export function SettingsPanel({
   autoCheckUpdates, setAutoCheckUpdates,
   isCheckingUpdate, handleCheckUpdate,
 }: SettingsPanelProps) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('playback');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab || 'playback');
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const matchesSearch = (textList: string[]) => {

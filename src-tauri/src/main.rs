@@ -900,7 +900,16 @@ async fn play_local_file(path: String) -> Result<(), String> {
 #[tauri::command]
 async fn pause_audio() -> Result<(), String> {
     tokio::task::spawn_blocking(|| {
-        send_ipc_command_with_retry(r#"{"command": ["cycle", "pause"]}"#, 2).map(|_| ())
+        send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", true]}"#, 2).map(|_| ())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn resume_audio() -> Result<(), String> {
+    tokio::task::spawn_blocking(|| {
+        send_ipc_command_with_retry(r#"{"command": ["set_property", "pause", false]}"#, 2).map(|_| ())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -1259,15 +1268,9 @@ async fn batch_download(
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct LocalTrack { title: String, path: String, size_bytes: u64, extension: String }
 
-#[tauri::command]
-async fn scan_downloads(path: String) -> Result<Vec<LocalTrack>, String> {
-    tokio::task::spawn_blocking(move || {
-        let resolved   = expand_tilde(&path);
-        let extensions = ["mp3", "flac", "wav", "ogg", "m4a", "aac", "opus", "wma"];
-        let mut tracks: Vec<LocalTrack> = Vec::new();
-        let dir = std::fs::read_dir(&resolved)
-            .map_err(|e| format!("Cannot read directory: {}", e))?;
-        for entry in dir.flatten() {
+fn collect_local_tracks(dir: &std::path::Path, tracks: &mut Vec<LocalTrack>, extensions: &[&str]) {
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
             let p = entry.path();
             if p.is_file() {
                 if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
@@ -1280,8 +1283,24 @@ async fn scan_downloads(path: String) -> Result<Vec<LocalTrack>, String> {
                         });
                     }
                 }
+            } else if p.is_dir() {
+                collect_local_tracks(&p, tracks, extensions);
             }
         }
+    }
+}
+
+#[tauri::command]
+async fn scan_downloads(path: String) -> Result<Vec<LocalTrack>, String> {
+    tokio::task::spawn_blocking(move || {
+        let resolved   = expand_tilde(&path);
+        let extensions = ["mp3", "flac", "wav", "ogg", "m4a", "aac", "opus", "wma"];
+        let mut tracks: Vec<LocalTrack> = Vec::new();
+        let target_path = std::path::Path::new(&resolved);
+        if !target_path.exists() {
+            return Err("Directory does not exist".to_string());
+        }
+        collect_local_tracks(target_path, &mut tracks, &extensions);
         tracks.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
         Ok(tracks)
     })
@@ -2319,6 +2338,7 @@ fn main() {
             play_audio,
             play_local_file,
             pause_audio,
+            resume_audio,
             seek_audio,
             seek_relative,
             seek_to_start,

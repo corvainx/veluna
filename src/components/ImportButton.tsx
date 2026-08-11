@@ -21,7 +21,7 @@ export function ImportButton({ onSpotify, onYoutube, onM3u }: ImportButtonProps)
   }, [open]);
 
   return (
-    <div ref={ref} style={{ marginTop: '12px', flexShrink: 0, position: 'relative' }}>
+    <div ref={ref} style={{ marginTop: '12px', flexShrink: 0, position: 'relative', width: '100%' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -37,7 +37,7 @@ export function ImportButton({ onSpotify, onYoutube, onM3u }: ImportButtonProps)
           cursor: 'pointer',
           fontSize: '12px',
           fontWeight: 600,
-          transition: 'border-color .12s,color .12s,background .12s'
+          transition: 'all .12s'
         }}
         onMouseEnter={e => {
           if (!open) {
@@ -52,9 +52,9 @@ export function ImportButton({ onSpotify, onYoutube, onM3u }: ImportButtonProps)
           }
         }}
       >
-        <PlusCircle size={13} />
-        <span style={{ flex: 1, textAlign: 'left' }}>Import Playlist</span>
-        <ChevronDown size={12} style={{ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none' }} />
+        <PlusCircle size={13} style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Import Playlist</span>
+        <ChevronDown size={12} style={{ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
       </button>
       {open && (
         <div
@@ -72,7 +72,7 @@ export function ImportButton({ onSpotify, onYoutube, onM3u }: ImportButtonProps)
             overflow: 'hidden',
             boxShadow: '0 -8px 24px rgba(0,0,0,0.5)',
             animation: 'fadeUpSm 0.15s ease-out',
-            zIndex: 10
+            zIndex: 9999
           }}
         >
           {[
@@ -117,18 +117,19 @@ export function ImportButton({ onSpotify, onYoutube, onM3u }: ImportButtonProps)
                 fontSize: '12px',
                 fontWeight: 500,
                 textAlign: 'left',
+                whiteSpace: 'nowrap',
                 transition: 'background .15s, color .15s'
               }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.02)';
-                (e.currentTarget as HTMLElement).style.color = 'var(--v-accent)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.04)';
+                (e.currentTarget as HTMLElement).style.color = '#ffffff';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.background = 'transparent';
                 (e.currentTarget as HTMLElement).style.color = '#9e9894';
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', justifyItems: 'center', width: '16px', height: '16px', flexShrink: 0 }}>{icon}</span>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px', flexShrink: 0 }}>{icon}</span>
               <span>{label}</span>
             </button>
           ))}

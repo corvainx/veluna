@@ -623,20 +623,19 @@ kbd {
 /* 🎴 Modern Glassmorphic Playlist/Album Cards */
 .v-pl-card, .v-card {
   position: relative;
-  background: var(--v-bg3);
-  border: 1px solid var(--v-bdr3);
-  border-radius: 16px;
-  padding: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: background 0.18s ease, transform 0.18s ease;
+  box-shadow: none;
   overflow: hidden;
 }
 .v-pl-card:hover, .v-card:hover {
-  background: var(--v-bg4);
-  border-color: var(--v-bdr2);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.01);
+  background: rgba(255, 255, 255, 0.035);
+  border-color: transparent;
+  box-shadow: none;
 }
 .v-pl-card__cover-wrapper, .v-card__art {
   position: relative;
@@ -708,7 +707,7 @@ kbd {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 500;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -797,7 +796,7 @@ kbd {
   gap: 12px;
   padding: 16px 24px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: none !important;
   background: var(--v-bg0) !important;
   z-index: 20;
 }
@@ -840,7 +839,7 @@ kbd {
   right: 0;
   height: 90px;
   background: var(--v-bg1) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: none !important;
   border-bottom: none !important;
   border-left: none !important;
   border-right: none !important;
@@ -855,7 +854,7 @@ kbd {
   box-sizing: border-box;
 }
 .v-player-dock:hover {
-  border-top-color: rgba(255, 255, 255, 0.14) !important;
+  border-top: none !important;
   background: var(--v-bg1) !important;
 }
 
@@ -980,7 +979,9 @@ kbd {
   background: var(--v-bg2) !important;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 24px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
   padding: 6px;
 }

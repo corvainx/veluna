@@ -113,8 +113,8 @@ export function YtImportModal({
   const isYtUrl = url.includes('youtube.com') || url.includes('youtu.be');
 
   return (
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)"}} onClick={onClose}>
-      <div className="yt-import-modal-container" style={{width:"580px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}}
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(0,0,0,0.85)"}} onClick={onClose}>
+      <div className="yt-import-modal-container" style={{width:"580px",maxHeight:"calc(100vh - 120px)",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}}
         onClick={e => e.stopPropagation()}>
 
         <div style={{

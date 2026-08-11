@@ -76,6 +76,7 @@ export function CsvImportModal({
     setResults(initial);
     setPhase('matching');
     abortRef.current = false;
+    onProgress?.(0, initial.length, `0/${initial.length} matched`);
 
     const CONCURRENCY = 12;
     const total = initial.length;
@@ -185,8 +186,8 @@ export function CsvImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)"}} onClick={phase==='matching'?undefined:onClose}>
-      <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}}
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",padding:"16px 16px 100px 16px",background:"rgba(0,0,0,0.85)"}} onClick={phase==='matching'?undefined:onClose}>
+      <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"calc(100vh - 120px)",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}}
         onClick={e => e.stopPropagation()}>
 
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
