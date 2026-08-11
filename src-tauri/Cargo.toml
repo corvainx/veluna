@@ -1,6 +1,6 @@
 [package]
 name = "veluna"
-version = "0.1.0"
+version = "0.1.1"
 description = "Ad-free desktop music streaming powered by YouTube. Stream millions of songs without subscriptions, bloat, or interruptions."
 authors = ["Corvainx"]
 edition = "2021"

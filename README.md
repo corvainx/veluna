@@ -138,6 +138,16 @@ Export all playlists, queue, play history, EQ settings, search history, Quick Pi
 
 ## Installation
 
+### Linux — Arch / Manjaro / EndeavourOS
+
+Build and install native Arch Linux `.pkg.tar.zst` package with `makepkg`:
+
+```bash
+git clone https://github.com/corvainx/veluna.git
+cd veluna/packaging
+makepkg -si
+```
+
 ### Linux — Debian / Ubuntu / Mint
 
 ```bash
@@ -187,6 +197,13 @@ Download and run the `.exe` installer from the [Releases](https://github.com/cor
 | [Tauri CLI](https://tauri.app/start/prerequisites/) | v2 | `cargo install tauri-cli --version "^2"` |
 
 ### Linux — System Dependencies
+
+For Arch Linux (Pacman):
+```bash
+sudo pacman -S --needed mpv yt-dlp ffmpeg openssl pkg-config \
+  webkit2gtk-4.1 gtk3 cairo gdk-pixbuf2 glib2 \
+  libayatana-appindicator librsvg
+```
 
 For Debian/Ubuntu/Mint (APT):
 ```bash

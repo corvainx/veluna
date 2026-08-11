@@ -1,0 +1,39 @@
+# Maintainer: Corvainx <https://github.com/corvainx>
+pkgname=veluna
+pkgver=0.1.1
+pkgrel=1
+pkgdesc="Ad-free desktop music streaming powered by YouTube"
+arch=('x86_64')
+url="https://github.com/corvainx/veluna"
+license=('MIT')
+depends=('mpv' 'yt-dlp' 'ffmpeg' 'webkit2gtk-4.1' 'libayatana-appindicator' 'gtk3')
+makedepends=('cargo' 'nodejs' 'npm' 'pkg-config' 'openssl' 'librsvg')
+source=("../")
+sha256sums=('SKIP')
+
+build() {
+    cd "${srcdir}/veluna" || cd "${srcdir}/.."
+    npm install
+    cargo tauri build --no-bundle
+}
+
+package() {
+    cd "${srcdir}/veluna" || cd "${srcdir}/.."
+
+    # Install compiled binary
+    install -Dm755 "src-tauri/target/release/veluna" "${pkgdir}/usr/bin/veluna"
+
+    # Install desktop entry
+    install -Dm644 "packaging/veluna.desktop" "${pkgdir}/usr/share/applications/veluna.desktop"
+
+    # Install application icons
+    if [ -f "src-tauri/icons/32x32.png" ]; then
+        install -Dm644 "src-tauri/icons/32x32.png" "${pkgdir}/usr/share/icons/hicolor/32x32/apps/veluna.png"
+    fi
+    if [ -f "src-tauri/icons/128x128.png" ]; then
+        install -Dm644 "src-tauri/icons/128x128.png" "${pkgdir}/usr/share/icons/hicolor/128x128/apps/veluna.png"
+    fi
+    if [ -f "src-tauri/icons/128x128@2x.png" ]; then
+        install -Dm644 "src-tauri/icons/128x128@2x.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/veluna.png"
+    fi
+}

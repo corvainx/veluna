@@ -57,7 +57,7 @@ import {
   Youtube
 } from 'lucide-react';;
 
-const __APP_VERSION__ = '0.1.0';
+const __APP_VERSION__ = '0.1.1';
 
 
 import { Track, LocalTrack, Playlist, RepeatMode, CtxMenu, AudioInfo, BatchProgress, ListeningEvent } from './types';

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-YTDLP_PATH="/usr/local/bin/yt-dlp"
+YTDLP_PATH="/usr/bin/yt-dlp"
 YTDLP_URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
 
 mkdir -p "$(dirname "$YTDLP_PATH")"
