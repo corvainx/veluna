@@ -28,7 +28,7 @@ Veluna is a native desktop music application that treats `mpv` as its audio engi
 ## Features
 
 ### 🔍 Streaming & Search
-- Search YouTube directly from the app — results appear as a track list with thumbnails, artist, and duration
+- Search YouTube directly from the app — results appear with **dual search categories** (**YT Music** for official audio releases and **Videos** for official music videos) with dedicated category filter pills
 - Stream audio instantly via `yt-dlp` + `mpv` IPC — no video, no buffering delay
 - Search history dropdown (up to 8 recent queries) with one-click re-search
 - **Quick Picks** — a strip of your 20 most recently played tracks on the home screen for instant replay
@@ -56,11 +56,11 @@ Veluna is a native desktop music application that treats `mpv` as its audio engi
 - Create, name, and describe playlists; edit or delete at any time
 - Upload a custom cover image for any playlist (except Liked Songs)
 - **Enhanced View Selector** — switch between grid and list views with clear "Layout: Grid" and "Layout: List" labels, featuring smooth interactive scaling on hover
-- Drag-to-reorder playlists in the sidebar and tracks within playlists
+- **Collapsible Sidebar Playlists** — sleek collapsible sidebar playlist section with glowing active accents, artwork covers, track count subtitles, and independent expand/collapse toggle
 - **Search within a playlist** — filter tracks by title or artist in real time
 - **Liked Songs** — built-in smart playlist; heart any track anywhere in the app to add it
 - **Import from Spotify** — export your Spotify playlist as a CSV via [exportify.net](https://exportify.net), upload it, and Veluna matches each track against YouTube with a live progress feed. Minimize the import window while it runs — a **name & description popup appears automatically when matching completes**, even if the window was closed
-- **Import from YouTube** — paste any public YouTube playlist URL for instant import
+- **Import from YouTube** — paste any public YouTube or YouTube Music playlist link for instant import with automatic playlist title extraction, high-definition cover art, and clean track artist parsing
 
 ### 📋 Queue
 - Add any track to the persistent queue from search results, playlists, or right-click menus
@@ -303,7 +303,7 @@ Playlist saved to localStorage
 | Layer | Technology | Purpose |
 |---|---|---|
 | UI Framework | React 19 + TypeScript | Component rendering, state management |
-| Styling | Tailwind CSS | Utility-first CSS |
+| Styling | Vanilla CSS | Custom design system, dynamic gradients, ambient blurs |
 | Icons | lucide-react | All UI icons |
 | Desktop Shell | Tauri v2 | Native window, IPC bridge, file system |
 | Backend | Rust (stable) | All system operations |
@@ -325,12 +325,17 @@ Playlist saved to localStorage
 veluna/
 ├── src/
 │   ├── App.tsx                   # React UI main entry
+│   ├── App.css                   # Core design system & component styles
 │   ├── types.ts                  # Shared TypeScript type definitions
 │   ├── utils.ts                  # Common helper utilities
 │   └── components/               # Extracted sub-components
 │       ├── TrackRow.tsx          # Renders track items and skeletons
 │       ├── SleepTimerPopover.tsx # Sleep timer popover overlay
-│       ├── Modals.tsx            # Playlist CSV/YT import & metadata edit modals
+│       ├── ImportButton.tsx      # Sidebar import playlist dropdown
+│       ├── YtImportModal.tsx     # YouTube playlist import modal
+│       ├── CsvImportModal.tsx    # Spotify CSV playlist import modal
+│       ├── MetadataEditModal.tsx # Track metadata editor modal
+│       ├── Modals.tsx            # Modal overlays & result dialogues
 │       ├── SettingsPanel.tsx     # Full app settings panel interface
 │       └── DownloadsPanel.tsx    # Offline library & folder downloads panel
 ├── src-tauri/
