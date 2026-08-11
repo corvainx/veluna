@@ -8,23 +8,25 @@ url="https://github.com/corvainx/veluna"
 license=('MIT')
 depends=('mpv' 'yt-dlp' 'ffmpeg' 'webkit2gtk-4.1' 'libayatana-appindicator' 'gtk3')
 makedepends=('cargo' 'nodejs' 'npm' 'pkg-config' 'openssl' 'librsvg')
-source=("../")
-sha256sums=('SKIP')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/corvainx/${pkgname}/archive/refs/tags/v${pkgver}.tar.gz"
+        "veluna.desktop")
+sha256sums=('SKIP'
+            'SKIP')
 
 build() {
-    cd "${srcdir}/veluna" || cd "${srcdir}/.."
+    cd "${srcdir}/${pkgname}-${pkgver}"
     npm install
     cargo tauri build --no-bundle
 }
 
 package() {
-    cd "${srcdir}/veluna" || cd "${srcdir}/.."
+    cd "${srcdir}/${pkgname}-${pkgver}"
 
     # Install compiled binary
     install -Dm755 "src-tauri/target/release/veluna" "${pkgdir}/usr/bin/veluna"
 
     # Install desktop entry
-    install -Dm644 "packaging/veluna.desktop" "${pkgdir}/usr/share/applications/veluna.desktop"
+    install -Dm644 "${srcdir}/veluna.desktop" "${pkgdir}/usr/share/applications/veluna.desktop"
 
     # Install application icons
     if [ -f "src-tauri/icons/32x32.png" ]; then
