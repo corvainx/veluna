@@ -428,7 +428,7 @@ export function SettingsPanel({
         )}
       </div>
 
-      <div style={{flex:1,overflowY:"auto",padding:"20px 24px"} } className="custom-scrollbar">
+      <div style={{flex:1,overflowY:"auto",padding:"20px 24px 140px 24px"}} className="custom-scrollbar">
         {searchQuery && (
           <div style={{ marginBottom: "20px" }}>
             <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#e2ddd9", margin: "0 0 3px" }}>Search Results</h2>
@@ -472,8 +472,7 @@ export function SettingsPanel({
                 width: "120px",
                 height: "120px",
                 background: "var(--v-accent)",
-                opacity: 0.05,
-                filter: "blur(30px)",
+                opacity: 0.02,
                 borderRadius: "50%",
                 pointerEvents: "none"
               }} />
@@ -508,8 +507,7 @@ export function SettingsPanel({
                   {updateAvailable ? <ArrowUpCircle size={11}/> : <CheckCircle size={11}/>}
                 </div>
                 <svg width="34" height="34" viewBox="0 0 28 28" fill="none" style={{
-                  flexShrink: 0,
-                  filter: "drop-shadow(0 2px 6px var(--v-accent))"
+                  flexShrink: 0
                 }}>
                   <rect width="28" height="28" rx="6" fill="var(--v-accent)"/>
                   <polygon points="4,6 8.5,6 14,21 19.5,6 24,6 14,23" fill="#0e0d0d"/>
@@ -522,7 +520,7 @@ export function SettingsPanel({
                   <>
                     <div style={{fontSize:"13.5px",fontWeight:700,color:"#ffffff",marginBottom:"4px"}}>Update available — v{updateAvailable}</div>
                     <div style={{fontSize:"11.5px",color:"#6f6966",lineHeight:1.4,marginBottom:"10px"}}>A new version of Veluna is ready to download. Features and stability updates await.</div>
-                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna/releases/latest');}}
+                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/corvainx/veluna/releases/latest');}}
                       style={{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",fontWeight:600,color:"var(--v-accent)",textDecoration:"none"}}
                       onMouseEnter={e=>(e.currentTarget.style.textDecoration="underline")} onMouseLeave={e=>(e.currentTarget.style.textDecoration="none")}>
                       <ExternalLink size={12}/> View Release Notes on GitHub
@@ -532,7 +530,7 @@ export function SettingsPanel({
                   <>
                     <div style={{fontSize:"13.5px",fontWeight:700,color:"#ffffff",marginBottom:"4px"}}>You're up to date</div>
                     <div style={{fontSize:"11.5px",color:"#6f6966",lineHeight:1.4,marginBottom:"10px"}}>Veluna v{appVersion} is currently the latest version.</div>
-                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/ishmweet/veluna');}}
+                    <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/corvainx/veluna');}}
                       style={{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",fontWeight:600,color:"var(--v-accent)",textDecoration:"none"}}
                       onMouseEnter={e=>(e.currentTarget.style.textDecoration="underline")} onMouseLeave={e=>(e.currentTarget.style.textDecoration="none")}>
                       <ExternalLink size={12}/> Visit GitHub Repository

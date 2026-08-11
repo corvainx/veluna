@@ -49,7 +49,7 @@ export function LyricsAudioDropdown({ devices, switching, onSwitch }: LyricsAudi
         <ChevronDown size={11} style={{ color: "rgba(255,255,255,0.3)", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
       </button>
       {open && (
-        <div style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, right: 0, borderRadius: "10px", overflow: "hidden", zIndex: 20, background: "var(--v-bg2)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 16px 40px rgba(0,0,0,0.9)" }}>
+        <div style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, right: 0, borderRadius: "10px", overflow: "hidden", zIndex: 9999, background: "var(--v-bg2)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 16px 40px rgba(0,0,0,0.9)" }}>
           <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <span style={{ fontSize: "9.5px", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>
               Output Device

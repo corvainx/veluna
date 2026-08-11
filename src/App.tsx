@@ -39,6 +39,7 @@ import {
   Pencil,
   Play,
   PlaySquare,
+  Plus,
   PlusCircle,
   Repeat,
   Repeat1,
@@ -153,7 +154,6 @@ export default function Veluna() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>(() => loadLS('vg_searchHistory', []));
   const [showHistory, setShowHistory] = useState(false);
-  const [, setHasSearched] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(() => loadLS('vg_currentTrack', null));
   const [currentLocalPath, setCurrentLocalPath] = useState<string | null>(null);
   const currentLocalPathRef = useRef<string | null>(null);
@@ -190,12 +190,22 @@ export default function Veluna() {
   const progressSecondsRef = useRef(0);
 
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [ytMusicTracks, setYtMusicTracks] = useState<Track[]>([]);
+  const [videoTracks, setVideoTracks] = useState<Track[]>([]);
+  const [searchTab, setSearchTab] = useState<'music' | 'video'>('music');
 
   useEffect(() => {
     if (activeNav === 'home') {
       setSearchQuery('');
       setTracks([]);
+      setYtMusicTracks([]);
+      setVideoTracks([]);
       setIsSearching(false);
+      setHasSearched(false);
+      setSearchError(null);
+      setSearchTab('music');
     }
   }, [activeNav]);
 
@@ -863,6 +873,7 @@ export default function Veluna() {
   }, []);
 
   const handlePlayTrack = useCallback(async (track: Track, fromQueue = false) => {
+    invoke('pause_audio').catch(() => {});
     endDetectedRef.current = false;
     setAbLoop({ a: null, b: null }); abLoopRef.current = { a: null, b: null };
     setCurrentTrack(track); currentTrackRef.current = track;
@@ -940,6 +951,7 @@ export default function Veluna() {
   }, [volume, playbackSpeed, eq, setIsPlayingSync]);
 
   const handlePlayLocalTrack = useCallback(async (local: LocalTrack, localList?: LocalTrack[], localIndex?: number) => {
+    invoke('pause_audio').catch(() => {});
     endDetectedRef.current = false;
     setCurrentLocalPath(local.path); currentLocalPathRef.current = local.path;
     
@@ -947,16 +959,14 @@ export default function Veluna() {
       localTracksListRef.current = localList;
       localTrackIndexRef.current = localIndex ?? 0;
     } else if (localTracksListRef.current.length === 0) {
-      
       localTracksListRef.current = [local];
       localTrackIndexRef.current = 0;
     } else {
-      
       const idx = localTracksListRef.current.findIndex(t => t.path === local.path);
       if (idx >= 0) localTrackIndexRef.current = idx;
     }
 
-    setIsLoadingTrack(false); setIsPlayingSync(false);
+    setIsLoadingTrack(true); setIsPlayingSync(false);
     setProgressSeconds(0); progressSecondsRef.current = 0;
     setTrackDurationSeconds(0); trackDurationRef.current = 0;
     setAudioInfo(null);
@@ -1003,6 +1013,7 @@ export default function Veluna() {
         } catch {}
       }, 300);
     } catch { setIsPlayingSync(false); }
+    finally { setIsLoadingTrack(false); }
   }, [volume, playbackSpeed, setIsPlayingSync]);
 
   const handleDeleteLocalTrack = useCallback(async (t: LocalTrack) => {
@@ -1535,22 +1546,55 @@ export default function Veluna() {
   const searchMusic = useCallback(async (override?: string) => {
     const q = (override ?? searchQuery).trim();
     if (!q || isSearching) return;
-    setIsSearching(true); setTracks([]); setShowHistory(false); setHasSearched(true);
+    setIsSearching(true); setHasSearched(true); setSearchError(null);
+    setTracks([]); setYtMusicTracks([]); setVideoTracks([]); setShowHistory(false);
     setSearchHistory(prev => [q, ...prev.filter(h => h !== q)].slice(0, 8));
+
     try {
-      const res: string = await invoke('search_youtube', { query: q });
-      const parsed = res.trim().split('\n').filter(Boolean).map((line, i) => {
-        const [title, artist, duration, id] = line.split('====');
-        const cleanId = id?.trim();
-        return { id: i, title: title?.trim() || '', artist: cleanArtist(artist), duration: duration?.trim() || '0:00', url: `https://youtube.com/watch?v=${cleanId}`, cover: `https://i.ytimg.com/vi/${cleanId}/mqdefault.jpg` };
-      });
-      setTracks(parsed);
-      parsed.slice(0, 5).forEach(track => {
+      const [resMusic, resVideo] = await Promise.all([
+        invoke<string>('search_youtube', { query: `${q} music` }).catch(() => ''),
+        invoke<string>('search_youtube', { query: `${q} video` }).catch(() => '')
+      ]);
+
+      const parseLines = (res: string) => {
+        return res.trim().split('\n').filter(Boolean).map((line, i) => {
+          const parts = line.split('====');
+          const title = parts[0]?.trim() || '';
+          const artist = cleanArtist(parts[1]);
+          const duration = parts[2]?.trim() || '0:00';
+          const id = parts[3]?.trim() || '';
+          if (!id || id === 'NA') return null;
+          return { id: i, title: title || 'Unknown Track', artist: artist || 'YouTube', duration: duration || '0:00', url: `https://youtube.com/watch?v=${id}`, cover: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` };
+        }).filter((t): t is Track => t !== null);
+      };
+
+      let parsedMusic = parseLines(resMusic);
+      let parsedVideo = parseLines(resVideo);
+
+      if (parsedMusic.length === 0 && parsedVideo.length === 0) {
+        const resFallback = await invoke<string>('search_youtube', { query: q }).catch(() => '');
+        parsedMusic = parseLines(resFallback);
+      }
+
+      setYtMusicTracks(parsedMusic);
+      setVideoTracks(parsedVideo);
+      setTracks(parsedMusic.length > 0 ? parsedMusic : parsedVideo);
+
+      if (parsedMusic.length === 0 && parsedVideo.length === 0) {
+        setSearchError(`No tracks found for "${q}". Try another search term.`);
+      }
+
+      [...parsedMusic.slice(0, 3), ...parsedVideo.slice(0, 2)].forEach(track => {
         if (track.url) invoke('prefetch_track', { url: track.url }).catch(() => {});
       });
-    } catch { setTracks([]); }
+    } catch (err: any) {
+      setYtMusicTracks([]); setVideoTracks([]); setTracks([]);
+      const msg = typeof err === 'string' ? err : (err?.message || 'Search failed');
+      setSearchError(msg);
+      showToast(`Search failed: ${msg}`);
+    }
     finally { setIsSearching(false); }
-  }, [searchQuery, isSearching]);
+  }, [searchQuery, isSearching, showToast]);
 
   const openCtx = useCallback((e: React.MouseEvent, menu: Omit<CtxMenu, 'x' | 'y'>) => {
     e.preventDefault(); e.stopPropagation();
@@ -2094,24 +2138,30 @@ export default function Veluna() {
           transform: translateX(2px);
         }
         .v-player-dock {
-          height: 96px;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 90px;
           background: var(--v-bg1);
-          border: 1px solid var(--v-bdr2);
-          border-radius: 20px;
+          border-top: 1px solid var(--v-bdr2);
+          border-bottom: none;
+          border-left: none;
+          border-right: none;
+          border-radius: 0;
           display: flex;
           align-items: center;
           padding: 0 24px;
-          position: relative;
-          z-index: 20;
+          z-index: 99;
           flex-shrink: 0;
-          margin: 0 20px 20px 20px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+          margin: 0;
+          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
           gap: 0;
           box-sizing: border-box;
           transition: border-color 0.2s;
         }
         .v-player-dock:hover {
-          border-color: var(--v-bdr);
+          border-top-color: var(--v-bdr);
         }
         .v-player-btn-play {
           width: 48px;
@@ -2144,12 +2194,12 @@ export default function Veluna() {
           display: inline-flex;
           align-items: center;
           padding: 2px 6px;
-          background: var(--v-bg3);
-          border: 1px solid var(--v-bdr2);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 5px;
           font-size: 9px;
           font-weight: 700;
-          color: var(--v-fg3);
+          color: var(--v-fg2);
           font-family: monospace;
           letter-spacing: 0.05em;
           margin-top: 3px;
@@ -2229,7 +2279,7 @@ export default function Veluna() {
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
 
         {}
-        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
+        <div style={{width:"248px",flexShrink:0,display:"flex",flexDirection:"column",background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",padding:"18px 14px 96px 14px",zIndex:10,overflow:"visible",position:"relative"}}>
           {}
           <div style={{display:"flex",alignItems:"center",marginBottom:"20px",flexShrink:0,padding:"0 4px"}}>
             <div style={{
@@ -2318,41 +2368,52 @@ export default function Veluna() {
           <div style={{height:'1px',background:'linear-gradient(to right,transparent,var(--v-bdr2),transparent)',margin:'8px 8px 6px',flexShrink:0}}/>
 
           {/* Playlists section */}
-          <div style={{marginTop:"4px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"2px 6px 10px",flexShrink:0}}>
-              <button onClick={() => { setSidebarPlaylistsExpanded(o => !o); navigateTo('library'); setOpenPlaylistId(null); }}
-                style={{display:'flex',alignItems:'center',gap:'8px',flex:1,padding:'4px 8px',borderRadius:'6px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#9e9894':'#4a4644',fontSize:'9.5px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .15s ease'}}
-                onMouseEnter={e=>{if(activeNav!=='library')e.currentTarget.style.color='#5c5755';}}
-                onMouseLeave={e=>{if(activeNav!=='library')e.currentTarget.style.color='#4a4644';}}>
-                <ListMusic size={13} style={{color:activeNav==='library'?'#9e9894':'#4a4644'}}/>
-                <span style={{fontWeight:600,letterSpacing:'0.08em'}}>Playlists</span>
-                <ChevronRight size={14} style={{marginLeft:"auto",transition:"transform .2s ease",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
+          <div style={{marginTop:"6px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"2px 4px 10px",flexShrink:0}}>
+              <button onClick={() => { navigateTo('library'); setOpenPlaylistId(null); }}
+                style={{display:'flex',alignItems:'center',gap:'8px',padding:'4px 6px',borderRadius:'6px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#e2ddd9':'#8a807c',fontSize:'10px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .15s ease'}}
+                onMouseEnter={e=>{if(activeNav!=='library')e.currentTarget.style.color='#c8c4c0';}}
+                onMouseLeave={e=>{if(activeNav!=='library')e.currentTarget.style.color='#8a807c';}}>
+                <ListMusic size={13} style={{color:activeNav==='library'?'var(--v-accent)':'#8a807c'}}/>
+                <span style={{fontWeight:700,letterSpacing:'0.08em'}}>Playlists</span>
               </button>
-              <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
-                style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#363230",borderRadius:"6px",flexShrink:0,transition:'color .15s ease,background .15s ease'}} title="New playlist"
-                onMouseEnter={e=>{e.currentTarget.style.color='#9e9894';e.currentTarget.style.background='rgba(226,221,217,0.05)';}}
-                onMouseLeave={e=>{e.currentTarget.style.color='#363230';e.currentTarget.style.background='transparent';}}>
-                <PlusCircle size={15} />
-              </button>
+              <div style={{display:'flex',alignItems:'center',gap:'2px'}}>
+                <button onClick={e => { e.stopPropagation(); setSidebarPlaylistsExpanded(o => !o); }}
+                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",transition:'color .15s ease,background .15s ease'}}
+                  title={sidebarPlaylistsExpanded ? "Collapse playlists" : "Expand playlists"}
+                  onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
+                  <ChevronRight size={14} style={{transition:"transform .2s ease",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
+                </button>
+                <button onClick={e => { e.stopPropagation(); setNewPlaylistName(''); setNewPlaylistDesc(''); setIsPlaylistModalOpen(true); }}
+                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",transition:'color .15s ease,background .15s ease'}} title="Create playlist"
+                  onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
+                  <Plus size={15} />
+                </button>
+              </div>
             </div>
             {sidebarPlaylistsExpanded && (
               <div style={{flex:"1 1 0%",overflowY:"auto",scrollbarWidth:"thin",scrollbarColor:"var(--v-bdr2) transparent",padding:"0 2px"}}>
-                <div style={{display:"flex",flexDirection:"column",gap:"1px",paddingBottom:"8px"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:"2px",paddingBottom:"8px"}}>
                   {playlists.map(pl => {
                     const isOpen = openPlaylistId === pl.id && activeNav === 'library';
                     const cover = getPlaylistCover(pl);
+                    const isLiked = pl.id === 'p1';
                     return (
                       <button key={pl.id}
                         onClick={() => { setOpenPlaylistId(pl.id); navigateTo('library'); }}
                         onContextMenu={e => openCtx(e, { type: 'sidebar-playlist', playlist: pl })}
                         className={`v-pl-item${isOpen?' v-pl-item--active':''}`}>
-                        <div className="v-pl-item__art">
+                        <div className="v-pl-item__art" style={isLiked ? { background: 'linear-gradient(135deg, rgba(224, 85, 85, 0.25) 0%, rgba(140, 30, 80, 0.15) 100%)', borderColor: 'rgba(224, 85, 85, 0.2)' } : undefined}>
                           {cover ? <img src={cover} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
-                            : pl.id === 'p1' ? <Heart size={11} style={{color:'#e05555',fill:isOpen?'rgba(220,60,60,0.4)':'none'}}/>
-                            : <ListMusic size={11} style={{color:isOpen?'#9e9894':'#363230'}} />}
+                            : isLiked ? <Heart size={14} style={{color:'#e05555',fill:'rgba(224,85,85,0.3)'}}/>
+                            : <ListMusic size={14} style={{color:isOpen?'var(--v-accent)':'#8a807c'}} />}
                         </div>
-                        <span style={{fontSize:'12.5px',fontWeight:isOpen?600:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1,transition:'font-weight .15s ease'}}>{pl.name}</span>
-                        {pl.tracks.length > 0 && <span style={{fontSize:'10px',color:isOpen?'#5c5755':'#363230',flexShrink:0,marginLeft:'auto',fontVariantNumeric:'tabular-nums'}}>{pl.tracks.length}</span>}
+                        <div style={{display:'flex',flexDirection:'column',gap:'1px',flex:1,minWidth:0}}>
+                          <span style={{fontSize:'12.5px',fontWeight:isOpen?700:500,color:isOpen?'#ffffff':isLiked?'#e2ddd9':'#a8a29e',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',transition:'color .15s ease'}}>{pl.name}</span>
+                          <span style={{fontSize:'10px',color:isOpen?'rgba(255,255,255,0.6)':'#5c5755'}}>{pl.tracks.length} {pl.tracks.length === 1 ? 'song' : 'songs'}</span>
+                        </div>
                       </button>
                     );
                   })}
@@ -2398,45 +2459,67 @@ export default function Veluna() {
               <div style={{padding:"16px 24px 10px",position:"relative",zIndex:30,flexShrink:0,display:"flex",justifyContent:"center"}}>
                 <div className="v-home-search-container" onClick={e=>e.stopPropagation()}>
                   <div style={{position:"relative",flex:1}}>
-                    <div style={{position:"absolute",top:0,bottom:0,left:0,paddingLeft:"14px",display:"flex",alignItems:"center",pointerEvents:"none"}}>
+                    <button
+                      type="button"
+                      onClick={() => { if (!isSearching && searchQuery.trim()) { setShowHistory(false); searchMusic(); } }}
+                      disabled={isSearching || !searchQuery.trim()}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        bottom: 0,
+                        left: "4px",
+                        width: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "none",
+                        border: "none",
+                        cursor: searchQuery.trim() && !isSearching ? "pointer" : "default",
+                        zIndex: 2,
+                        color: searchQuery.trim() ? "var(--v-accent)" : "#8a807c",
+                        transition: "all .15s ease",
+                        padding: 0
+                      }}
+                      title="Search"
+                    >
                       {isSearching
-                        ? <div style={{width:"15px",height:"15px",border:"2px solid rgba(226,221,217,0.5)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-                        : <Search size={16} style={{color:showHistory||searchQuery?"#9e9894":"#5c5755",transition:"color .2s"}}/> }
-                    </div>
+                        ? <div style={{width:"15px",height:"15px",border:"2px solid var(--v-accent)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+                        : <Search size={16} /> }
+                    </button>
                     <input ref={searchRef} type="text"
                       placeholder="Search YouTube..."
                       value={searchQuery} readOnly={isSearching}
                       onChange={e => setSearchQuery(e.target.value)}
                       onFocus={() => !isSearching && setShowHistory(searchHistory.length > 0)}
                       onKeyDown={e => { if (e.key === 'Enter') { setShowHistory(false); searchMusic(); } if (e.key === 'Escape') setShowHistory(false); }}
-                      style={{width:'100%',height:'42px',background:'var(--v-bg2)',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'var(--v-bdr2)'}`,borderRadius:'21px',padding:'0 12px 0 42px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
+                      style={{width:'100%',height:'42px',background:'var(--v-bg2)',color:'#e2ddd9',border:`1px solid ${isSearching?'rgba(226,221,217,0.15)':'var(--v-bdr2)'}`,borderRadius:'21px',paddingTop:0,paddingBottom:0,paddingLeft:'44px',paddingRight:searchQuery?'38px':'16px',fontSize:'13.5px',outline:'none',opacity:isSearching?0.5:1,cursor:isSearching?'not-allowed':'text',transition:'border-color .15s',boxSizing:'border-box'}}
                     />
+                    {searchQuery && !isSearching && (
+                      <button onClick={() => setSearchQuery('')}
+                        style={{position:"absolute",right:"12px",top:0,bottom:0,margin:"auto",background:"none",border:"none",color:"#8a807c",cursor:"pointer",display:"flex",alignItems:"center",padding:0}}
+                        onMouseEnter={e=>(e.currentTarget.style.color="#e2ddd9")}
+                        onMouseLeave={e=>(e.currentTarget.style.color="#8a807c")}>
+                        <X size={14}/>
+                      </button>
+                    )}
                     {showHistory && (
-                      <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:'6px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',borderRadius:'10px',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,0.7)',zIndex:100}}>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',borderBottom:'1px solid var(--v-bdr2)'}}>
-                          <span style={{fontSize:'9.5px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#363230'}}>Recent</span>
-                          <button onClick={e=>{e.stopPropagation();setSearchHistory([]);setShowHistory(false);}} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'#363230',transition:'color .12s'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#363230')}>Clear</button>
+                      <div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:'6px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',borderRadius:'12px',overflow:'hidden',boxShadow:'0 12px 32px rgba(0,0,0,0.7)',zIndex:100}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 14px',borderBottom:'1px solid var(--v-bdr2)'}}>
+                          <span style={{fontSize:'9.5px',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'#8a807c'}}>Recent Searches</span>
+                          <button onClick={e=>{e.stopPropagation();setSearchHistory([]);setShowHistory(false);}} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'#8a807c',transition:'color .12s'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#8a807c')}>Clear</button>
                         </div>
                         {searchHistory.map((h, i) => (
                           <button key={i} onClick={e=>{e.stopPropagation();setSearchQuery(h);setShowHistory(false);searchMusic(h);}}
-                            style={{width:'100%',display:'flex',alignItems:'center',gap:'10px',padding:'8px 12px',background:'transparent',border:'none',cursor:'pointer',textAlign:'left',transition:'background .08s'}}
-                            onMouseEnter={e=>(e.currentTarget.style.background='rgba(226,221,217,0.03)')}
+                            style={{width:'100%',display:'flex',alignItems:'center',gap:'10px',padding:'9px 14px',background:'transparent',border:'none',cursor:'pointer',textAlign:'left',transition:'background .08s'}}
+                            onMouseEnter={e=>(e.currentTarget.style.background='rgba(226,221,217,0.04)')}
                             onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                            <Clock size={12} style={{color:'#363230',flexShrink:0}} />
+                            <Clock size={12} style={{color:'#8a807c',flexShrink:0}} />
                             <span style={{fontSize:'13px',color:'#9e9894',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>{h}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                  <button onClick={() => { setShowHistory(false); searchMusic(); }}
-                    disabled={isSearching || !searchQuery.trim()}
-                    style={{height:'42px',padding:'0 16px',borderRadius:'21px',border:'1px solid var(--v-bdr2)',background:'var(--v-bg2)',color:isSearching||!searchQuery.trim()?'#363230':'#9e9894',cursor:isSearching||!searchQuery.trim()?'not-allowed':'pointer',fontSize:'13px',fontWeight:600,display:'flex',alignItems:'center',gap:'6px',flexShrink:0,transition:'border-color .15s,color .15s,background .15s',whiteSpace:'nowrap'}}
-                    onMouseEnter={e=>{if(!isSearching&&searchQuery.trim()){(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';}}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='var(--v-bg2)';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';}}>
-                    {isSearching ? <div style={{width:'14px',height:'14px',border:'2px solid #5c5755',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} /> : <Search size={15} />}
-                    {!isSearching && 'Search'}
-                  </button>
                   {updateAvailable && (
                     <button
                       onClick={() => { setActiveNav('settings'); }}
@@ -2452,7 +2535,7 @@ export default function Veluna() {
 
               <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px",zIndex:10}} onClick={()=>setShowHistory(false)}>
                 {}
-                {!isSearching && tracks.length === 0 && quickPicks.length === 0 && (
+                {!hasSearched && !isSearching && quickPicks.length === 0 && (
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:"280px",gap:"20px"}}>
                     <div className="relative">
                       <div style={{width:'56px',height:'56px',borderRadius:'12px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -2469,7 +2552,7 @@ export default function Veluna() {
                   </div>
                 )}
 
-                {!isSearching && tracks.length === 0 && quickPicks.length > 0 && isHydrated && (() => {
+                {!hasSearched && !isSearching && quickPicks.length > 0 && isHydrated && (() => {
                   // --- Genre detection via keyword matching on title + artist ---
 
                   // Map local files to Track shape for genre matching
@@ -2548,9 +2631,8 @@ export default function Veluna() {
                         overflow: 'hidden',
                         borderRadius: '16px',
                         padding: '24px 28px',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%)',
+                        background: 'rgba(255,255,255,0.02)',
                         border: '1px solid rgba(255,255,255,0.07)',
-                        backdropFilter: 'blur(12px)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -2704,7 +2786,18 @@ export default function Veluna() {
                                       loading="lazy"
                                     />
                                   )}
-                                  {isActive && isPlaying && (
+                                  {isActive && isLoadingTrack ? (
+                                    <div style={{
+                                      position: 'absolute',
+                                      inset: 0,
+                                      background: 'rgba(0,0,0,0.5)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{ width: '12px', height: '12px', border: '1.5px solid var(--v-accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                    </div>
+                                  ) : isActive && isPlaying ? (
                                     <div style={{
                                       position: 'absolute',
                                       inset: 0,
@@ -2734,7 +2827,7 @@ export default function Veluna() {
                                         ))}
                                       </div>
                                     </div>
-                                  )}
+                                  ) : null}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{
@@ -2898,7 +2991,18 @@ export default function Veluna() {
                                               loading="lazy"
                                             />
                                           )}
-                                          {isActive && isPlaying ? (
+                                          {isActive && isLoadingTrack ? (
+                                            <div style={{
+                                              position: 'absolute',
+                                              inset: 0,
+                                              background: 'rgba(0,0,0,0.5)',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center'
+                                            }}>
+                                              <div style={{ width: '16px', height: '16px', border: '2px solid var(--v-accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                            </div>
+                                          ) : isActive && isPlaying ? (
                                             <div style={{
                                               position: 'absolute',
                                               inset: 0,
@@ -2923,7 +3027,8 @@ export default function Veluna() {
                                                 ))}
                                               </div>
                                             </div>
-                                          ) : (
+                                          ) : null}
+                                          {!isActive && (
                                             <div
                                               className="v-card__hover-overlay"
                                               style={{
@@ -3306,46 +3411,145 @@ export default function Veluna() {
                 })()}
 
                 {}
-                {(isSearching || tracks.length > 0) && (
-                  <div className="v-home-search-results">
-                    <div className="v-section-head">
-                      <h2>{isSearching ? 'Searching...' : `Results`}</h2>
-                      {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} style={{ width:"4px",borderRadius:"2px",background:"rgba(226,221,217,0.4)",height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
-                      {tracks.length > 0 && !isSearching && (
-                        <button onClick={() => playAll(tracks)} style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:'rgba(226,221,217,0.06)',border:'1px solid rgba(226,221,217,0.12)',color:'#9e9894',borderRadius:'7px',cursor:'pointer',fontSize:'11px',fontWeight:600,transition:'background .12s'}}>
-                          <Play size={11} style={{fill:'currentColor'}} /> Play All
-                        </button>
+                {hasSearched && (() => {
+                  const activeTracks = searchTab === 'music' ? (ytMusicTracks.length > 0 ? ytMusicTracks : tracks) : videoTracks;
+                  return (
+                    <div className="v-home-search-results">
+                      <div className="v-section-head" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                          <button onClick={() => { setHasSearched(false); setSearchQuery(''); setTracks([]); setYtMusicTracks([]); setVideoTracks([]); setSearchError(null); }}
+                            style={{display:'flex',alignItems:'center',gap:'4px',padding:'4px 10px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',borderRadius:'7px',color:'#8a807c',fontSize:'11.5px',fontWeight:600,cursor:'pointer',transition:'color .15s,background .15s'}}
+                            onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
+                            onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='var(--v-bg2)';}}>
+                            <ChevronLeft size={14} /> Back
+                          </button>
+                          <h2 style={{fontSize:'16px',fontWeight:700,color:'#e2ddd9',margin:0}}>
+                            {isSearching ? 'Searching YouTube...' : `Results for "${searchQuery}"`}
+                          </h2>
+                          {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} style={{ width:"4px",borderRadius:"2px",background:"rgba(226,221,217,0.4)",height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
+                        </div>
+                        {activeTracks.length > 0 && !isSearching && (
+                          <button onClick={() => playAll(activeTracks)} style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:'rgba(226,221,217,0.06)',border:'1px solid rgba(226,221,217,0.12)',color:'#9e9894',borderRadius:'7px',cursor:'pointer',fontSize:'11px',fontWeight:600,transition:'background .12s'}}>
+                            <Play size={11} style={{fill:'currentColor'}} /> Play All
+                          </button>
+                        )}
+                      </div>
+
+                      {!isSearching && (ytMusicTracks.length > 0 || videoTracks.length > 0) && (
+                        <div style={{display:'flex',alignItems:'center',gap:'8px',margin:'10px 0 16px'}}>
+                          <button
+                            onClick={() => setSearchTab('music')}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '16px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              border: searchTab === 'music' ? 'none' : '1px solid var(--v-bdr2)',
+                              background: searchTab === 'music' ? 'var(--v-accent)' : 'var(--v-bg2)',
+                              color: searchTab === 'music' ? '#0c0b0b' : '#8a807c',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all .15s ease'
+                            }}
+                          >
+                            <Music size={13} />
+                            <span>YT Music</span>
+                            {ytMusicTracks.length > 0 && <span style={{fontSize:'10.5px',opacity:0.8}}>({ytMusicTracks.length})</span>}
+                          </button>
+                          
+                          <button
+                            onClick={() => setSearchTab('video')}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '16px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              border: searchTab === 'video' ? 'none' : '1px solid var(--v-bdr2)',
+                              background: searchTab === 'video' ? 'var(--v-accent)' : 'var(--v-bg2)',
+                              color: searchTab === 'video' ? '#0c0b0b' : '#8a807c',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all .15s ease'
+                            }}
+                          >
+                            <Play size={13} />
+                            <span>Videos</span>
+                            {videoTracks.length > 0 && <span style={{fontSize:'10.5px',opacity:0.8}}>({videoTracks.length})</span>}
+                          </button>
+                        </div>
+                      )}
+
+                      {isSearching && (
+                        <>
+                          <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid var(--v-bdr2)",marginBottom:"4px"}}>
+                            <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
+                            <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
+                            <div style={{width:"60px",flexShrink:0}}/>
+                            <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>{Array.from({ length: 8 }).map((_, i) => <TrackRowSkeleton key={i} index={i} />)}</div>
+                        </>
+                      )}
+
+                      {!isSearching && activeTracks.length > 0 && (
+                        <>
+                          <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid var(--v-bdr2)",marginBottom:"4px"}}>
+                            <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
+                            <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
+                            <div style={{width:"60px",flexShrink:0}}/>
+                            <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>
+                            {activeTracks.map((track, i) => (
+                              <TrackRow key={track.id} track={track} index={i}
+                                isActive={currentTrack?.url === track.url}
+                                isHovered={hoveredTrackUrl === track.url}
+                                isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
+                                isLiked={isTrackLiked(track.url)} isDownloading={(downloadingTracks[track.url] ?? 0)}
+                                onPlay={() => handlePlayInContext(track, activeTracks)}
+                                onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
+                                onHoverLeave={() => setHoveredTrackUrl(null)}
+                                onLike={() => toggleLikeTrack(track)}
+                                onDownload={() => handleDownload(track)}
+                                onCtx={e => openCtx(e, { type: 'track', track })}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {!isSearching && activeTracks.length === 0 && (
+                        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"260px",gap:"16px",padding:"40px 20px",textAlign:"center"}}>
+                          <div style={{width:'52px',height:'52px',borderRadius:'14px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <Search size={22} style={{color:'#8a807c'}} />
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",gap:"4px"}}>
+                            <h3 style={{fontSize:"14px",fontWeight:700,color:"#e2ddd9",margin:0}}>
+                              {searchError ? "Search Error" : `No ${searchTab === 'music' ? 'YT Music' : 'Video'} results found for "${searchQuery}"`}
+                            </h3>
+                            <p style={{fontSize:"12px",color:"#8a807c",maxWidth:"360px",margin:0}}>
+                              {searchError ? searchError : "Double check spelling or try switching tabs above."}
+                            </p>
+                          </div>
+                          <div style={{display:"flex",gap:"10px",marginTop:"6px"}}>
+                            <button onClick={() => searchMusic(searchQuery)}
+                              style={{padding:"8px 16px",borderRadius:"8px",background:"var(--v-accent)",color:"#0c0b0b",border:"none",fontWeight:700,fontSize:"12px",cursor:"pointer"}}>
+                              Try Again
+                            </button>
+                            <button onClick={() => { setHasSearched(false); setSearchQuery(''); setTracks([]); setYtMusicTracks([]); setVideoTracks([]); setSearchError(null); }}
+                              style={{padding:"8px 16px",borderRadius:"8px",background:"var(--v-bg2)",color:"#e2ddd9",border:"1px solid var(--v-bdr2)",fontWeight:600,fontSize:"12px",cursor:"pointer"}}>
+                              Back to Home
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
-
-                    <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"0 12px 6px",borderBottom:"1px solid var(--v-bdr2)",marginBottom:"4px"}}>
-                      <div style={{width:"26px",flexShrink:0}}/><div style={{width:"38px",flexShrink:0}}/>
-                      <p style={{flex:1,fontSize:"9.5px",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:"#363230"}}>Title</p>
-                      <div style={{width:"60px",flexShrink:0}}/>
-                      <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
-                    </div>
-
-                    {isSearching && <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>{Array.from({ length: 8 }).map((_, i) => <TrackRowSkeleton key={i} index={i} />)}</div>}
-                    {!isSearching && tracks.length > 0 && (
-                      <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>
-                        {tracks.map((track, i) => (
-                          <TrackRow key={track.id} track={track} index={i}
-                            isActive={currentTrack?.url === track.url}
-                            isHovered={hoveredTrackUrl === track.url}
-                            isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
-                            isLiked={isTrackLiked(track.url)} isDownloading={(downloadingTracks[track.url] ?? 0)}
-                            onPlay={() => handlePlayInContext(track, tracks)}
-                            onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
-                            onHoverLeave={() => setHoveredTrackUrl(null)}
-                            onLike={() => toggleLikeTrack(track)}
-                            onDownload={() => handleDownload(track)}
-                            onCtx={e => openCtx(e, { type: 'track', track })}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </>
           )}
@@ -3386,13 +3590,26 @@ export default function Veluna() {
                     left: 0,
                     right: 0,
                     height: "360px",
-                    backgroundImage: `url(${getPlaylistCover(openPlaylist)})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    filter: "blur(60px) opacity(0.2)",
+                    overflow: "hidden",
                     pointerEvents: "none",
                     zIndex: 0
-                  }} />
+                  }}>
+                    <div style={{
+                      position: "absolute",
+                      inset: "-25px",
+                      backgroundImage: `url(${getPlaylistCover(openPlaylist)})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      filter: "blur(50px) brightness(0.35) saturate(1.3)",
+                      transform: "scale(1.1)",
+                      opacity: 0.8
+                    }} />
+                    <div style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "linear-gradient(180deg, rgba(12,11,11,0.3) 0%, rgba(12,11,11,0.92) 80%, var(--v-bg0) 100%)"
+                    }} />
+                  </div>
                 ) : (
                   <div style={{
                     position: "absolute",
@@ -3851,7 +4068,7 @@ export default function Veluna() {
                                 {cover && (
                                   <img src={cover} style={{position: "absolute", inset: 0, width:"100%",height:"100%",objectFit:"cover"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
                                 )}
-                                <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(2px)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
+                                <div className="pl-hover-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)",opacity:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s ease",zIndex:5}}>
                                   <button onClick={e=>{e.stopPropagation();playAll(pl.tracks);}}
                                     style={{width:"42px",height:"42px",background:"var(--v-accent)",color:"#0c0b0b",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",border:"none",cursor:"pointer",boxShadow:"0 6px 16px rgba(0,0,0,0.5)",transition:"all 0.15s cubic-bezier(0.2,0,0,1)"}}
                                     onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 8px 20px rgba(0,0,0,0.6), 0 0 10px var(--v-accent)";}}
@@ -3867,7 +4084,7 @@ export default function Veluna() {
                               {pl.id!=='p1'&&(
                                 <button onClick={e=>{e.stopPropagation();deletePlaylist(pl.id);}}
                                   className="pl-card-del"
-                                  style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"#8a807c",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
+                                  style={{position:"absolute",top:"10px",right:"10px",opacity:0,width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.75)",borderRadius:"8px",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"#8a807c",transition:"all .2s cubic-bezier(0.2,0,0,1)",zIndex:6}}
                                   onMouseEnter={e=>{e.currentTarget.style.color="#ff6060";e.currentTarget.style.background="rgba(160,40,40,0.2)";e.currentTarget.style.borderColor="rgba(255,96,96,0.2)";e.currentTarget.style.transform="scale(1.05)";}}
                                   onMouseLeave={e=>{e.currentTarget.style.color="#8a807c";e.currentTarget.style.background="rgba(0,0,0,0.6)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";e.currentTarget.style.transform="scale(1)";}}>
                                   <Trash2 size={12}/>
@@ -4621,11 +4838,15 @@ export default function Veluna() {
                     <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'8px',borderRadius:'8px',background:'rgba(226,221,217,0.04)',border:'1px solid rgba(226,221,217,0.08)'}}>
                       <div style={{position:'relative',width:'38px',height:'38px',borderRadius:'6px',overflow:'hidden',flexShrink:0,background:'var(--v-bdr2)',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                         {getTrackCover(currentTrack) ? <img src={getTrackCover(currentTrack)} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" /> : <FileMusic size={16} style={{color:'#5c5755'}} />}
-                        {!isLoadingTrack && isPlaying && (
+                        {isLoadingTrack ? (
+                          <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <div style={{width:'12px',height:'12px',border:'1.5px solid #e2ddd9',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+                          </div>
+                        ) : isPlaying ? (
                           <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                             <div style={{display:'flex',gap:'2px',alignItems:'flex-end',height:'12px'}}>{[100,60,80].map((h,i)=><div key={i} style={{width:'2px',background:'#9e9894',borderRadius:'1px',height:`${h}%`,animation:`barBounce ${0.7+i*0.12}s ease-in-out ${i*110}ms infinite`,transformOrigin:'bottom'}}/>)}</div>
                           </div>
-                        )}
+                        ) : null}
                       </div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontSize:'12px',fontWeight:700,color:'#e2ddd9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentTrack.title}</div>
@@ -4874,20 +5095,22 @@ export default function Veluna() {
           ) : (
             <>
               <div style={{width:"42px",height:"42px",borderRadius:"7px",border:"1px solid var(--v-bdr2)",background:"var(--v-bg2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <Music size={16} style={{color:"#363230"}}/>
+                <Music size={16} style={{color:"#8a807c"}}/>
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontWeight:600,color:"#363230",fontSize:"12.5px"}}>Nothing playing</div>
-                <div style={{fontSize:"11px",color:"#2a2727"}}>Search YouTube to start</div>
+                <div style={{fontWeight:600,color:"#e2ddd9",fontSize:"12.5px"}}>Nothing playing</div>
+                <div style={{fontSize:"11px",color:"#8a807c"}}>Search YouTube to start</div>
               </div>
             </>
           )}
         </div>
 
         <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"10px",padding:"0 24px",minWidth:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:"18px"}}>
-            <SpeedSelector speed={playbackSpeed} onChange={setPlaybackSpeed}/>
-            <div style={{display:"flex",alignItems:"center",gap:"16px",marginLeft:"12px",marginRight:"12px"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",position:"relative"}}>
+            <div style={{flex:1,display:"flex",justifyContent:"flex-end",alignItems:"center",paddingRight:"16px",minWidth:0}}>
+              <SpeedSelector speed={playbackSpeed} onChange={setPlaybackSpeed}/>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:"16px",flexShrink:0}}>
               <button onClick={toggleShuffle} title="Shuffle" style={{background:"none",border:"none",cursor:"pointer",color:shuffle?"#e2ddd9":"#363230",padding:"3px",display:"flex",transition:"color .12s,transform .1s"}}
                 onMouseEnter={e=>(e.currentTarget.style.transform="scale(1.15)")} onMouseLeave={e=>(e.currentTarget.style.transform="scale(1)")}>
                 <Shuffle size={15}/>
@@ -4911,24 +5134,26 @@ export default function Veluna() {
                 {repeatMode==='one' ? <Repeat1 size={15}/> : <Repeat size={15}/>}
               </button>
             </div>
-            <button
-              title={abLoop.a===null?'Set A (loop start)':abLoop.b===null?'Set B (loop end)':'Clear A-B loop'}
-              onClick={()=>{
-                if(abLoop.a===null){const a=progressSecondsRef.current;setAbLoop({a,b:null});abLoopRef.current={a,b:null};showToast(`Loop A: ${formatTime(a)}`);}
-                else if(abLoop.b===null){const b=progressSecondsRef.current;if(b>(abLoop.a??0)+1){setAbLoop(p=>({...p,b}));abLoopRef.current={...abLoopRef.current,b};showToast(`Loop: ${formatTime(abLoop.a!)} → ${formatTime(b)}`);}else{showToast('B must be after A');}}
-                else{setAbLoop({a:null,b:null});abLoopRef.current={a:null,b:null};showToast('Loop cleared');}
-              }}
-              style={{
-                display:"flex",alignItems:"center",gap:"3px",padding:"2px 6px",
-                borderRadius:"5px",border:"1px solid",
-                fontSize:"10px",fontWeight:700,flexShrink:0,cursor:"pointer",
-                background:abLoop.b!==null?"rgba(226,221,217,0.08)":abLoop.a!==null?"rgba(226,221,217,0.04)":"transparent",
-                borderColor:abLoop.b!==null?"rgba(226,221,217,0.25)":abLoop.a!==null?"rgba(226,221,217,0.12)":"var(--v-bdr2)",
-                color:abLoop.b!==null?"#e2ddd9":abLoop.a!==null?"#9e9894":"#363230",
-                transition:"all .12s",
-              }}>
-              A·B{abLoop.b!==null?" ✓":abLoop.a!==null?" …":""}
-            </button>
+            <div style={{flex:1,display:"flex",justifyContent:"flex-start",alignItems:"center",paddingLeft:"16px",minWidth:0}}>
+              <button
+                title={abLoop.a===null?'Set A (loop start)':abLoop.b===null?'Set B (loop end)':'Clear A-B loop'}
+                onClick={()=>{
+                  if(abLoop.a===null){const a=progressSecondsRef.current;setAbLoop({a,b:null});abLoopRef.current={a,b:null};showToast(`Loop A: ${formatTime(a)}`);}
+                  else if(abLoop.b===null){const b=progressSecondsRef.current;if(b>(abLoop.a??0)+1){setAbLoop(p=>({...p,b}));abLoopRef.current={...abLoopRef.current,b};showToast(`Loop: ${formatTime(abLoop.a!)} → ${formatTime(b)}`);}else{showToast('B must be after A');}}
+                  else{setAbLoop({a:null,b:null});abLoopRef.current={a:null,b:null};showToast('Loop cleared');}
+                }}
+                style={{
+                  display:"flex",alignItems:"center",gap:"3px",padding:"2px 6px",
+                  borderRadius:"5px",border:"1px solid",
+                  fontSize:"10px",fontWeight:700,flexShrink:0,cursor:"pointer",
+                  background:abLoop.b!==null?"rgba(226,221,217,0.08)":abLoop.a!==null?"rgba(226,221,217,0.04)":"transparent",
+                  borderColor:abLoop.b!==null?"rgba(226,221,217,0.25)":abLoop.a!==null?"rgba(226,221,217,0.12)":"var(--v-bdr2)",
+                  color:abLoop.b!==null?"#e2ddd9":abLoop.a!==null?"#9e9894":"#363230",
+                  transition:"all .12s",
+                }}>
+                A·B{abLoop.b!==null?" ✓":abLoop.a!==null?" …":""}
+              </button>
+            </div>
           </div>
 
           <div style={{width:"100%",display:"flex",alignItems:"center",gap:"8px"}}>
@@ -4959,7 +5184,7 @@ export default function Veluna() {
           </div>
         </div>
 
-        <div style={{width:"220px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"12px",flexShrink:0}}>
+        <div style={{width:"240px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:"12px",flexShrink:0}}>
           {crossfadeSeconds>0&&(
             <span style={{fontSize:"9.5px",color:"#5c5755",fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}} title={`Crossfade: ${crossfadeSeconds}s`}>
               ×{crossfadeSeconds}s
@@ -5128,16 +5353,16 @@ export default function Veluna() {
         const isYt = !!ytId;
         const trackAudioInfo = infoModalTrack.url === currentTrack?.url ? audioInfo : null;
         return (
-          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(0,0,0,0.8)",backdropFilter:"blur(20px)"}}
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",background:"rgba(0,0,0,0.85)"}}
             onClick={() => setInfoModalTrack(null)}>
             <div style={{borderRadius:"14px",width:"100%",maxWidth:"420px",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,0.9)",display:"flex",flexDirection:"column",background:"#0c0c0c",border:"1px solid rgba(255,255,255,0.08)"}}
               onClick={e => e.stopPropagation()}>
 
               {}
               <div style={{position:"relative",height:"130px",width:"100%",flexShrink:0,overflow:"hidden",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist),display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <div style={{position:"absolute",inset:0,opacity:.25,filter:"blur(20px)",transform:"scale(1.1)",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist)}}/>
+                <div style={{position:"absolute",inset:0,opacity:.15,transform:"scale(1.1)",background:getTrackGradient(infoModalTrack.title,infoModalTrack.artist)}}/>
                 {infoModalTrack.cover && (
-                  <img src={infoModalTrack.cover} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.25,filter:"blur(20px)",transform:"scale(1.1)"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
+                  <img src={infoModalTrack.cover} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.15,transform:"scale(1.1)"}} onError={e => { e.currentTarget.style.display = 'none'; }} alt=""/>
                 )}
                 <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent,var(--v-bg2))"}}/>
                 <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -5576,9 +5801,7 @@ export default function Veluna() {
             padding: "12px 16px",
             borderRadius: "12px",
             border: "1px solid rgba(29, 185, 84, 0.15)",
-            background: "rgba(22, 20, 20, 0.75)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
+            background: "rgba(22, 20, 20, 0.95)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
             animation: "fadeUp 0.25s cubic-bezier(0.2,0.8,0.2,1) both",
             cursor: "pointer",
@@ -5681,9 +5904,7 @@ export default function Veluna() {
             padding: "12px 16px",
             borderRadius: "12px",
             border: "1px solid rgba(255, 30, 39, 0.15)",
-            background: "rgba(22, 20, 20, 0.75)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
+            background: "rgba(22, 20, 20, 0.95)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.7)",
             animation: "fadeUp 0.25s cubic-bezier(0.2,0.8,0.2,1) both",
             cursor: "pointer",
@@ -5789,7 +6010,7 @@ export default function Veluna() {
 
               {/* Close button */}
               <button onClick={()=>setShowLyrics(false)}
-                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(12px)",transition:"color .15s,background .15s,border-color .15s"}}
+                style={{position:"absolute",top:"20px",left:"20px",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.06)",transition:"color .15s,background .15s,border-color .15s"}}
                 onMouseEnter={e=>{e.currentTarget.style.color="#fff";e.currentTarget.style.background="rgba(255,255,255,0.12)";e.currentTarget.style.borderColor="rgba(255,255,255,0.18)";}}
                 onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.6)";e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.borderColor="rgba(255,255,255,0.1)";}}>
                 <X size={16} />
@@ -5954,7 +6175,7 @@ export default function Veluna() {
                             fontSize: '1.85rem',
                             letterSpacing: '-0.01em',
                             fontWeight: 800,
-                            fontStyle: 'italic',
+                            fontStyle: 'normal',
                             color: isCurrent ? '#fff' : isPast ? `rgba(255,255,255,${pastOpacity})` : `rgba(255,255,255,${futureOpacity})`,
                             transform: isCurrent ? 'scale(1.18)' : 'scale(1)',
                             transformOrigin: 'left center',

@@ -49,7 +49,7 @@ export const TrackRow = React.memo(({
       justifyContent: 'center'
     }}>
       <Music size={16} style={{position: 'absolute', color: 'rgba(255,255,255,0.25)'}} />
-      {track.cover && <img src={track.cover} alt={track.title} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} onError={e => { e.currentTarget.style.display = 'none'; }} loading="lazy" />}
+      {track.cover && <img src={track.cover} alt={track.title} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)'}} onError={e => { e.currentTarget.style.display = 'none'; }} loading="lazy" />}
     </div>
     <div className="v-track__info">
       <div className="v-track__title">{track.title}</div>

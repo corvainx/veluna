@@ -343,8 +343,8 @@ export function CsvImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='matching'?undefined:onClose}>
-      <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)"}} onClick={phase==='matching'?undefined:onClose}>
+      <div className="yt-import-modal-container" style={{width:"640px",maxHeight:"88vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}}
         onClick={e => e.stopPropagation()}>
 
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
@@ -618,46 +618,78 @@ export function YtImportModal({
       const raw: string = await invoke('import_youtube_playlist', { url: trimmed });
       if (abortRef.current) return;
       const lines = raw.trim().split('\n').filter(Boolean);
-      const parsed = lines.map(l => {
+      let detectedPlaylistName = '';
+
+      const parsed = lines.map((l, idx) => {
         const parts = l.split('====');
         if (parts.length < 4) return null;
-        const [id, title, duration, thumb, artist, playlistTitle] = parts;
+        const [id, rawTitle, duration, rawUploader, rawPlaylistTitle] = parts;
         const idTrim = id?.trim() || '';
-        const thumbTrim = thumb?.trim() || '';
-        const cover = (thumbTrim && thumbTrim.startsWith('http'))
-          ? thumbTrim
-          : (idTrim ? `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg` : '');
+        if (!idTrim || idTrim === 'NA' || idTrim.length < 5) return null;
 
-        let parsedArtist = artist?.trim() || '';
-        if (parsedArtist.toLowerCase().endsWith(' - topic')) {
-          parsedArtist = parsedArtist.slice(0, -8).trim();
+        let titleStr = rawTitle?.trim() || 'Unknown Track';
+        let artistStr = rawUploader?.trim() || '';
+
+        const plTitleCandidate = rawPlaylistTitle?.trim();
+        if (plTitleCandidate && plTitleCandidate !== 'YouTube Playlist' && plTitleCandidate !== 'NA' && !detectedPlaylistName) {
+          detectedPlaylistName = plTitleCandidate;
         }
 
+        if (artistStr.toLowerCase().endsWith(' - topic')) {
+          artistStr = artistStr.slice(0, -8).trim();
+        }
+        if (artistStr.toLowerCase().endsWith('vevo')) {
+          artistStr = artistStr.slice(0, -4).trim();
+        }
+
+        // Smart Artist - Title extraction
+        if (titleStr.includes(' - ')) {
+          const dashIdx = titleStr.indexOf(' - ');
+          const left = titleStr.slice(0, dashIdx).trim();
+          const right = titleStr.slice(dashIdx + 3).trim();
+          if (left && right) {
+            artistStr = left;
+            titleStr = right;
+          }
+        }
+
+        // Clean title clutter like (Official Music Video), [Lyric Video], etc.
+        titleStr = titleStr
+          .replace(/\s*[\(\[](official\s*)?(music\s*)?(video|audio|lyric|lyrics|visualizer|hd|4k)?[\)\]]/gi, '')
+          .replace(/\s*[\(\[]from\s+the\s+.*[\)\]]/gi, '')
+          .trim() || titleStr;
+
+        const cleaned = cleanArtist(artistStr);
+        const finalArtist = cleaned ? cleaned : (artistStr && artistStr !== 'Unknown' && artistStr !== '?' ? artistStr : 'YouTube');
+        const cover = `https://i.ytimg.com/vi/${idTrim}/mqdefault.jpg`;
+
         return {
-          title: title?.trim() || 'Unknown',
-          artist: cleanArtist(parsedArtist) || 'Unknown',
-          id: idTrim,
-          duration: duration?.trim() || '',
+          id: idx,
+          title: titleStr,
+          artist: finalArtist,
+          duration: duration?.trim() || '0:00',
+          url: `https://youtube.com/watch?v=${idTrim}`,
           cover,
-          playlistTitle: playlistTitle?.trim() || 'YouTube Playlist',
+          playlistTitle: detectedPlaylistName || plTitleCandidate || 'YouTube Playlist',
         };
-      }).filter((t): t is NonNullable<typeof t> => t !== null && !!t.id);
+      }).filter((t): t is NonNullable<typeof t> => t !== null);
 
       if (abortRef.current) return;
-      if (parsed.length === 0) { showToast('No tracks found'); setPhase('input'); return; }
+      if (parsed.length === 0) { showToast('No tracks found in playlist'); setPhase('input'); return; }
 
-      const playlistName = parsed[0]?.playlistTitle || 'YouTube Import';
+      const playlistName = detectedPlaylistName || parsed[0]?.playlistTitle || 'YouTube Import';
       const tracks: Track[] = parsed.map((r, i) => ({
-        id: i, title: r.title, artist: r.artist || 'Unknown',
-        duration: r.duration || '', url: `https://youtube.com/watch?v=${r.id}`, cover: r.cover,
+        id: i, title: r.title, artist: r.artist || 'YouTube',
+        duration: r.duration || '', url: r.url, cover: r.cover,
       }));
 
       onSavePlaylist(playlistName, `Imported from YouTube: ${trimmed}`, tracks);
       setPhase('done');
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       if (abortRef.current) return;
-      showToast(`Import failed: ${e}`);
+      const errMsg = typeof e === 'string' ? e : (e?.message || 'Import failed');
+      showToast(`Import failed: ${errMsg}`);
       setPhase('input');
     }
   };
@@ -666,8 +698,8 @@ export function YtImportModal({
 
   return (
     <>
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={phase==='loading'?undefined:onClose}>
-      <div className="yt-import-modal-container" style={{width:"580px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}}
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:visible?"flex":"none",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)"}} onClick={phase==='loading'?undefined:onClose}>
+      <div className="yt-import-modal-container" style={{width:"580px",maxHeight:"86vh",display:"flex",flexDirection:"column",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}}
         onClick={e => e.stopPropagation()}>
 
         <div style={{
@@ -968,8 +1000,8 @@ export function MetadataEditModal({
   };
 
   return (
-    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={onClose}>
-      <div className="yt-import-modal-container" style={{width:"420px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}} onClick={e => e.stopPropagation()}>
+    <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)"}} onClick={onClose}>
+      <div className="yt-import-modal-container" style={{width:"420px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}} onClick={e => e.stopPropagation()}>
         <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"20px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.01)"}}>
           <div style={{flex:1}}>
             <h2 style={{fontSize:"15px",fontWeight:800,color:"#e2ddd9",margin:0,letterSpacing:"-0.01em"}}>Edit Metadata</h2>

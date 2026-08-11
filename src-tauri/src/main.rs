@@ -277,7 +277,7 @@ async fn search_youtube(query: String) -> Result<String, String> {
         let search_arg = if is_url {
             q_trim.to_string()
         } else {
-            format!("ytsearch40:{}", q_trim)
+            format!("ytsearch25:{}", q_trim)
         };
         let mut child = Command::new(bin_ytdlp())
             .args([
@@ -286,7 +286,8 @@ async fn search_youtube(query: String) -> Result<String, String> {
                 "--print", "%(title)s====%(uploader)s====%(duration_string)s====%(id)s",
                 "--no-warnings",
                 "--no-check-certificates",
-                "--socket-timeout", "8",
+                "--geo-bypass",
+                "--socket-timeout", "15",
             ])
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
@@ -294,7 +295,7 @@ async fn search_youtube(query: String) -> Result<String, String> {
             .spawn()
             .map_err(|e| format!("yt-dlp not found: {}", e))?;
 
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(35);
         loop {
             match child.try_wait() {
                 Ok(Some(_)) => break,
@@ -342,17 +343,20 @@ async fn open_url_in_browser(url: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn import_youtube_playlist(url: String) -> Result<String, String> {
-    let flat_output = tokio::task::spawn_blocking(move || {
+    tokio::task::spawn_blocking(move || {
+        let u_trim = url.trim();
         let mut child = Command::new(bin_ytdlp())
             .args([
                 "--flat-playlist",
+                "--yes-playlist",
                 "--no-warnings",
                 "--ignore-errors",
-                "--socket-timeout", "10",
+                "--geo-bypass",
+                "--socket-timeout", "15",
                 "--no-config",
-                "--print", "%(id)s====%(title)s====%(duration_string|0:00)s====%(thumbnails.-1.url,thumbnail|no_thumb)s====%(artist,uploader,channel|Unknown)s====%(playlist_title|YouTube Playlist)s",
+                "--print", "%(id)s====%(title)s====%(duration_string|0:00)s====%(artist,uploader,channel,creator,uploader_id|Unknown)s====%(playlist,playlist_title|YouTube Playlist)s",
                 "--",
-                url.as_str(),
+                u_trim,
             ])
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
@@ -360,7 +364,7 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
             .spawn()
             .map_err(|e| format!("yt-dlp not found: {}", e))?;
 
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(45);
         loop {
             match child.try_wait() {
                 Ok(Some(_)) => break,
@@ -377,91 +381,14 @@ async fn import_youtube_playlist(url: String) -> Result<String, String> {
         }
         let out = child.wait_with_output().map_err(|e| e.to_string())?;
         let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+        if stdout.trim().is_empty() {
+            let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+            return Err(if stderr.trim().is_empty() { "No tracks found. Is this a public playlist?".to_string() } else { stderr });
+        }
         Ok(stdout)
     })
     .await
-    .map_err(|e| e.to_string())??;
-
-    let lines: Vec<String> = flat_output.lines().filter(|l| !l.trim().is_empty()).map(|s| s.to_string()).collect();
-    if lines.is_empty() {
-        return Err("No tracks found. Is this a public playlist?".to_string());
-    }
-
-    let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(6));
-    let mut handles = Vec::new();
-    for line in lines {
-        let sem_clone = std::sync::Arc::clone(&semaphore);
-        let handle = tokio::spawn(async move {
-            let parts: Vec<String> = line.split("====").map(|s| s.to_string()).collect();
-            if parts.len() < 6 {
-                return line;
-            }
-            let id = parts[0].clone();
-            let title = parts[1].clone();
-            let duration = parts[2].clone();
-            let thumb = parts[3].clone();
-            let mut artist = parts[4].clone();
-            let playlist_title = parts[5].clone();
-
-            if let Ok(_permit) = sem_clone.acquire().await {
-                let mut cmd = tokio::process::Command::new(bin_ytdlp());
-                cmd.args([
-                    "--no-warnings",
-                    "--ignore-errors",
-                    "--socket-timeout", "5",
-                    "--no-config",
-                    "--print", "%(artist,creator,uploader,channel|Unknown)s",
-                    "--",
-                    &id,
-                ])
-                .stdout(std::process::Stdio::piped())
-                .stderr(std::process::Stdio::piped())
-                .no_window();
-
-                if let Ok(mut child) = cmd.spawn() {
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-                    let mut status = None;
-                    loop {
-                        match child.try_wait() {
-                            Ok(Some(s)) => { status = Some(s); break; }
-                            Ok(None) => {
-                                if std::time::Instant::now() > deadline {
-                                    let _ = child.kill().await;
-                                    let _ = child.wait().await;
-                                    break;
-                                }
-                                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                            }
-                            Err(_) => break,
-                        }
-                    }
-                    if status.map_or(false, |s| s.success()) {
-                        if let Ok(out) = child.wait_with_output().await {
-                            let mut got = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                            if !got.is_empty() && got != "Unknown" {
-                                if got.to_lowercase().ends_with(" - topic") {
-                                    got = got[..got.len() - 8].trim().to_string();
-                                }
-                                artist = got;
-                            }
-                        }
-                    }
-                }
-            }
-
-            format!("{}===={}===={}===={}===={}===={}", id, title, duration, thumb, artist, playlist_title)
-        });
-        handles.push(handle);
-    }
-
-    let mut resolved_lines = Vec::new();
-    for h in handles {
-        if let Ok(res) = h.await {
-            resolved_lines.push(res);
-        }
-    }
-
-    Ok(resolved_lines.join("\n"))
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -2026,7 +1953,7 @@ async fn check_for_update() -> Result<Option<String>, String> {
         .map_err(|e| e.to_string())?;
 
     let resp = client
-        .get("https://api.github.com/repos/ishmweet/veluna/releases/latest")
+        .get("https://api.github.com/repos/corvainx/veluna/releases/latest")
         .send()
         .await
         .map_err(|e| e.to_string())?;

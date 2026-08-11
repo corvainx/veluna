@@ -58,7 +58,7 @@ export const SpeedSelector = React.memo(({ speed, onChange }: SpeedSelectorProps
             animation: "dropIn 0.12s ease-out"
           }}
         >
-          <p style={{ fontSize: "9.5px", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#363230", padding: "8px 12px 4px" }}>Speed</p>
+          <p style={{ fontSize: "9.5px", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8a807c", padding: "8px 12px 4px" }}>Speed</p>
           {speeds.map(s => (
             <button
               key={s}

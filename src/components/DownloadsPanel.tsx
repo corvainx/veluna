@@ -164,7 +164,9 @@ export function DownloadsPanel({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px",zIndex:10}}>
+    <div className="flex-1 overflow-y-auto custom-scrollbar" style={{padding:"24px 30px 140px 30px",zIndex:10}}>
+
+      {/* Header */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -184,8 +186,7 @@ export function DownloadsPanel({
           width: "150px",
           height: "150px",
           background: "var(--v-accent)",
-          opacity: 0.05,
-          filter: "blur(40px)",
+          opacity: 0.02,
           borderRadius: "50%",
           pointerEvents: "none"
         }} />
@@ -201,7 +202,7 @@ export function DownloadsPanel({
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
           flexShrink: 0
         }}>
-          <HardDrive size={26} style={{ color: "var(--v-accent)", filter: "drop-shadow(0 2px 8px var(--v-accent))" }} />
+          <HardDrive size={26} style={{ color: "var(--v-accent)" }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 style={{ fontSize: "24px", fontWeight: 900, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Offline Library</h2>
@@ -364,11 +365,11 @@ export function DownloadsPanel({
       {!scanning && tracks.length === 0 && !error && (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"160px",gap:"12px",textAlign:"center"}}>
           <div style={{width:"52px",height:"52px",borderRadius:"12px",background:"var(--v-bg2)",border:"1px solid var(--v-bdr2)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <FileMusic size={22} strokeWidth={1} style={{color:"#363230"}}/>
+            <FileMusic size={22} strokeWidth={1} style={{color:"#8a807c"}}/>
           </div>
           <div>
-            <div style={{fontSize:"13px",fontWeight:600,color:"#5c5755"}}>No audio files found</div>
-            <div style={{fontSize:"11px",color:"#363230",marginTop:"4px"}}>Download tracks from Home or change folder in Settings</div>
+            <div style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9"}}>No audio files found</div>
+            <div style={{fontSize:"11px",color:"#8a807c",marginTop:"4px"}}>Download tracks from Home or change folder in Settings</div>
           </div>
         </div>
       )}
@@ -450,8 +451,8 @@ export function DownloadsPanel({
       )}
 
       {renaming && ReactDOM.createPortal(
-        <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(var(--v-bg0-rgb),0.75)",backdropFilter:"blur(12px)"}} onClick={()=>setRenaming(null)}>
-          <div className="yt-import-modal-container" style={{width:"380px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"rgba(22, 20, 20, 0.95)",backdropFilter:"blur(20px)"}} onClick={e => e.stopPropagation()}>
+        <div className="yt-import-modal-overlay" style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)"}} onClick={()=>setRenaming(null)}>
+          <div className="yt-import-modal-container" style={{width:"380px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 16px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06)",background:"var(--v-bg2)"}} onClick={e => e.stopPropagation()}>
             <div style={{display:"flex",alignItems:"center",gap:"14px",padding:"20px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.01)"}}>
               <div style={{flex:1}}>
                 <h2 style={{fontSize:"15px",fontWeight:800,color:"#e2ddd9",margin:0,letterSpacing:"-0.01em"}}>Edit Track Metadata</h2>

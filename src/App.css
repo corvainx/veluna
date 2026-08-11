@@ -280,23 +280,23 @@ body::after {
 }
 
 input, textarea, select {
-  background-color: rgba(255, 255, 255, 0.015) !important;
-  color: var(--v-fg) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  border-radius: 12px !important;
-  padding: 10px 14px !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background-color: rgba(255, 255, 255, 0.015);
+  color: var(--v-fg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px 14px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
 }
 input::placeholder, textarea::placeholder {
-  color: var(--v-fg4) !important;
-  opacity: 0.8 !important;
+  color: var(--v-fg4);
+  opacity: 0.8;
 }
 input:focus, textarea:focus, select:focus {
-  outline: none !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03) !important;
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
 }
 
 button {
@@ -587,7 +587,8 @@ kbd {
 .v-track:hover .v-track__art {
   transform: scale(1.02);
 }
-.v-track__art img { width: 100%; height: 100%; object-fit: cover; }
+.v-track__art img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.35); transition: transform 0.25s ease; }
+.v-track:hover .v-track__art img { transform: scale(1.42); }
 .v-track__info { flex: 1; min-width: 0; }
 .v-track__title {
   font-size: 14.5px;
@@ -655,7 +656,7 @@ kbd {
   transform: scale(1.02);
   border-color: var(--v-bdr);
 }
-.v-pl-card__cover-wrapper img, .v-card__art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.v-pl-card__cover-wrapper img, .v-card__art img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.35); display: block; transition: transform 0.25s ease; }
 
 .v-pl-card__play-btn, .v-card__overlay {
   position: absolute;
@@ -740,7 +741,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -748,32 +749,45 @@ kbd {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 .v-pl-item:hover {
-  background: rgba(255, 255, 255, 0.02);
-  color: #fff;
-  transform: translateX(1px);
+  background: rgba(255, 255, 255, 0.035);
+  color: #ffffff;
 }
 .v-pl-item--active {
-  background: rgba(255, 255, 255, 0.04) !important;
-  color: #fff !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+.v-pl-item--active::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  background: var(--v-accent);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 10px var(--v-accent);
 }
 .v-pl-item__art {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--v-bg3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(226, 221, 217, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .v-pl-item:hover .v-pl-item__art {
   transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* 🏔️ Sleek Topbar Header */
@@ -784,8 +798,7 @@ kbd {
   padding: 16px 24px;
   flex-shrink: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  background: rgba(var(--v-bg0-rgb), 0.65) !important;
-  backdrop-filter: blur(20px);
+  background: var(--v-bg0) !important;
   z-index: 20;
 }
 .v-topbar__back {
@@ -819,31 +832,31 @@ kbd {
   color: var(--v-fg3);
 }
 
-/* 🌴 Apple-style Floating Bottom Player Island */
+/* 🌴 Bottom Edge Player Bar */
 .v-player-dock {
   position: fixed;
-  bottom: 22px;
-  left: 22px;
-  right: 22px;
-  height: 94px;
-  background: rgba(var(--v-bg2-rgb), 0.58) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 24px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: var(--v-bg1) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
   display: flex;
   align-items: center;
   padding: 0 28px;
   z-index: 99;
   flex-shrink: 0;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4) !important;
   gap: 0;
   box-sizing: border-box;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .v-player-dock:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(var(--v-bg2-rgb), 0.62) !important;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+  border-top-color: rgba(255, 255, 255, 0.14) !important;
+  background: var(--v-bg1) !important;
 }
 
 .v-player-btn-play {
@@ -858,12 +871,12 @@ kbd {
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, opacity 0.12s;
 }
 .v-player-btn-play:hover:not(:disabled) {
   transform: scale(1.08);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 18px var(--v-accent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 .v-player-btn-play:active:not(:disabled) {
   transform: scale(0.95);
@@ -903,21 +916,20 @@ kbd {
   position: relative;
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  transition: height 0.25s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  transition: height 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 .v-progress-container:hover .v-progress-track {
   height: 6px;
-  background: rgba(255, 255, 255, 0.1);
 }
 .v-progress-fill {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
-  background: linear-gradient(90deg, var(--v-accent) 0%, #fff 100%) !important;
-  border-radius: 10px;
+  background: var(--v-accent);
+  border-radius: 2px;
   pointer-events: none;
 }
 .v-progress-thumb {
@@ -929,9 +941,9 @@ kbd {
   height: 12px;
   background: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   opacity: 0;
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), opacity 0.2s;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), opacity 0.15s;
   pointer-events: none;
 }
 .v-progress-container:hover .v-progress-thumb,
@@ -942,22 +954,22 @@ kbd {
 
 .v-progress-tooltip {
   position: absolute;
-  top: -32px;
+  top: -30px;
   left: 0%;
   transform: translateX(-50%);
-  background: rgba(var(--v-bg2-rgb), 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-size: 10.5px;
+  background: var(--v-bg1);
+  border: 1px solid var(--v-bdr2);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
   font-weight: 700;
-  color: #fff;
+  color: var(--v-fg2);
   pointer-events: none;
   white-space: nowrap;
   z-index: 10;
   opacity: 0;
-  transition: opacity 0.2s;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 .v-progress-container:hover .v-progress-tooltip {
   opacity: 1;
@@ -965,12 +977,11 @@ kbd {
 
 /* 🎛️ Premium Context Menu Styles */
 .v-ctx {
-  background: rgba(var(--v-bg2-rgb), 0.72) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
+  background: var(--v-bg2) !important;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
   padding: 6px;
 }
 .v-ctx__header {
