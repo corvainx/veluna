@@ -15,8 +15,8 @@ sha256sums=('SKIP'
 
 build() {
     cd "${srcdir}/${pkgname}-${pkgver}"
-    npm install
-    cargo tauri build --no-bundle
+    npm ci
+    npx tauri build --no-bundle
 }
 
 package() {
