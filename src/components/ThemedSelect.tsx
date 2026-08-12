@@ -80,15 +80,17 @@ export const ThemedSelect = ({ value, options, onChange }: ThemedSelectProps) =>
         minWidth: dropPos.width,
         zIndex: 999999,
         animation: 'dropIn 0.15s ease-out',
-        background: 'var(--v-bg2)',
+        background: 'rgba(14,13,12,0.85)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         borderStyle: 'solid',
         borderWidth: '1px',
-        borderColor: 'var(--v-bdr2)',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderRadius: '16px',
+        padding: '5px',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
       }}>
-      {options.map((opt, i) => (
+      {options.map((opt) => (
         <button key={opt.value}
           onMouseDown={e => { e.preventDefault(); onChange(opt.value); setOpen(false); }}
           style={{
@@ -96,35 +98,21 @@ export const ThemedSelect = ({ value, options, onChange }: ThemedSelectProps) =>
             flexDirection: 'column',
             alignItems: 'flex-start',
             width: '100%',
-            padding: '9px 14px',
+            padding: '8px 14px',
             textAlign: 'left',
             cursor: 'pointer',
-            background: value === opt.value ? 'rgba(226,221,217,0.06)' : 'transparent',
-            color: value === opt.value ? 'var(--v-accent)' : '#9e9894',
+            borderRadius: '9999px',
+            background: value === opt.value ? 'rgba(255,255,255,0.08)' : 'transparent',
+            color: value === opt.value ? 'var(--v-accent)' : 'rgba(255,255,255,0.55)',
             transition: 'background 0.1s',
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            outlineStyle: 'none',
-            outlineWidth: 0,
-            outlineColor: 'transparent',
-            borderLeftStyle: 'none',
-            borderLeftWidth: 0,
-            borderLeftColor: 'transparent',
-            borderRightStyle: 'none',
-            borderRightWidth: 0,
-            borderRightColor: 'transparent',
-            borderBottomStyle: 'none',
-            borderBottomWidth: 0,
-            borderBottomColor: 'transparent',
-            borderTopStyle: i !== 0 ? 'solid' : 'none',
-            borderTopWidth: i !== 0 ? 1 : 0,
-            borderTopColor: i !== 0 ? 'var(--v-bdr2)' : 'transparent',
+            border: 'none',
+            outline: 'none',
           }}
-          onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(226,221,217,0.04)'; }}
+          onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
           onMouseLeave={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
-          <span style={{ fontSize: '13.5px', fontWeight: 600 }}>{opt.label}</span>
-          {opt.desc && <span style={{ fontSize: '12px', color: '#5c5755', marginTop: '3px' }}>{opt.desc}</span>}
+          <span style={{ fontSize: '13px', fontWeight: 600 }}>{opt.label}</span>
+          {opt.desc && <span style={{ fontSize: '11.5px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{opt.desc}</span>}
         </button>
       ))}
     </div>
@@ -138,24 +126,20 @@ export const ThemedSelect = ({ value, options, onChange }: ThemedSelectProps) =>
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          padding: '7px 12px',
-          borderRadius: '8px',
+          padding: '7px 14px',
+          borderRadius: '9999px',
           fontSize: '13px',
           fontWeight: 500,
-          borderStyle: 'solid',
-          borderWidth: '1px',
-          borderColor: open ? 'var(--v-bdr3)' : 'var(--v-bdr2)',
-          outlineStyle: 'none',
-          outlineWidth: 0,
-          outlineColor: 'transparent',
-          background: open ? 'rgba(226,221,217,0.05)' : 'var(--v-bg2)',
-          color: open ? '#e2ddd9' : '#9e9894',
+          border: '1px solid rgba(255,255,255,0.09)',
+          outline: 'none',
+          background: open ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+          color: open ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)',
           cursor: 'pointer',
           minWidth: '130px',
-          transition: 'border-color .12s,color .12s,background .12s',
+          transition: 'all .12s',
         }}
-        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr3)'; (e.currentTarget as HTMLElement).style.color = '#e2ddd9'; } }}
-        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr2)'; (e.currentTarget as HTMLElement).style.color = '#9e9894'; } }}
+        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'; } }}
+        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; } }}
       >
         <span style={{ flex: 1, textAlign: "left" }}>{current?.label}</span>
         <ChevronDown size={14} style={{ transition: "transform .2s", transform: open ? "rotate(180deg)" : "none" }} />

@@ -328,6 +328,18 @@ body::after {
   }
 }
 
+/* ⚡ Speed Popover Drop-In Animation (Keeps Centered Alignment) */
+@keyframes speedPopoverDropIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
 .animate-pulse,
 .v-skeleton-pulse {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 75%) !important;
@@ -772,16 +784,16 @@ kbd {
 .v-nav-btn {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 9999px;
   border: none;
   background: transparent;
   color: var(--v-fg2);
   cursor: pointer;
   width: 100%;
   text-align: left;
-  font-size: 15.5px;
+  font-size: 14px;
   font-weight: 500;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -790,10 +802,9 @@ kbd {
 .v-nav-btn:hover {
   background: rgba(255, 255, 255, 0.025);
   color: #fff;
-  transform: translateX(1px);
 }
 .v-nav-btn--active {
-  background: rgba(255, 255, 255, 0.045) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   color: #fff !important;
   font-weight: 700;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
@@ -801,12 +812,12 @@ kbd {
 .v-nav-btn--active::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
   width: 3px;
   background: var(--v-accent);
-  border-radius: 0 4px 4px 0;
+  border-radius: 1.5px;
   box-shadow: 0 0 10px var(--v-accent);
 }
 
@@ -814,15 +825,16 @@ kbd {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 7px 10px;
-  border-radius: 10px;
+  padding: 8px 12px;
+  border-radius: 9999px;
   border: none;
   background: transparent;
   color: var(--v-fg2);
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 13px;
+  transition: all 0.15s ease;
   position: relative;
 }
 .v-pl-item:hover {
@@ -878,8 +890,8 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 10px;
+  padding: 8px 18px;
+  border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(255, 255, 255, 0.01);
   color: var(--v-fg2);
@@ -1048,6 +1060,47 @@ kbd {
   opacity: 1;
 }
 
+.v-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--v-fg2);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-size: 15.5px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+.v-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.025);
+  color: #fff;
+  transform: translateX(1px);
+}
+.v-nav-btn--active {
+  background: rgba(255, 255, 255, 0.045) !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+.v-nav-btn--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  background: var(--v-accent);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px var(--v-accent);
+}
+
 /* 🎛️ Premium Context Menu & Popover Glass Design System Surface */
 .v-ctx,
 .v-glass-popover,
@@ -1056,7 +1109,7 @@ kbd {
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 14px !important;
+  border-radius: 20px !important;
   overflow-x: hidden;
   overflow-y: auto;
   max-height: calc(100vh - 24px);
@@ -1088,13 +1141,13 @@ kbd {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 13px;
+  padding: 9px 14px;
   font-size: 13px;
   font-weight: 500;
   color: var(--v-fg2);
   background: none;
   border: none;
-  border-radius: 10px !important;
+  border-radius: 9999px !important;
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;

@@ -125,15 +125,17 @@ const ThemedSelect = ({ value, options, onChange }: {
         minWidth: dropPos.width,
         zIndex: 999999,
         animation: 'dropIn 0.15s ease-out',
-        background: 'var(--v-bg2)',
+        background: 'rgba(14,13,12,0.85)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         borderStyle: 'solid',
         borderWidth: '1px',
-        borderColor: 'var(--v-bdr2)',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderRadius: '16px',
+        padding: '5px',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
       }}>
-      {options.map((opt, i) => (
+      {options.map((opt) => (
         <button key={opt.value}
           onMouseDown={e => { e.preventDefault(); onChange(opt.value); setOpen(false); }}
           style={{
@@ -141,35 +143,21 @@ const ThemedSelect = ({ value, options, onChange }: {
             flexDirection: 'column',
             alignItems: 'flex-start',
             width: '100%',
-            padding: '9px 14px',
+            padding: '8px 14px',
             textAlign: 'left',
             cursor: 'pointer',
-            background: value === opt.value ? 'rgba(226,221,217,0.06)' : 'transparent',
-            color: value === opt.value ? 'var(--v-accent)' : '#9e9894',
+            borderRadius: '9999px',
+            background: value === opt.value ? 'rgba(255,255,255,0.08)' : 'transparent',
+            color: value === opt.value ? 'var(--v-accent)' : 'rgba(255,255,255,0.55)',
             transition: 'background 0.1s',
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            outlineStyle: 'none',
-            outlineWidth: 0,
-            outlineColor: 'transparent',
-            borderLeftStyle: 'none',
-            borderLeftWidth: 0,
-            borderLeftColor: 'transparent',
-            borderRightStyle: 'none',
-            borderRightWidth: 0,
-            borderRightColor: 'transparent',
-            borderBottomStyle: 'none',
-            borderBottomWidth: 0,
-            borderBottomColor: 'transparent',
-            borderTopStyle: i !== 0 ? 'solid' : 'none',
-            borderTopWidth: i !== 0 ? 1 : 0,
-            borderTopColor: i !== 0 ? 'var(--v-bdr2)' : 'transparent',
+            border: 'none',
+            outline: 'none',
           }}
-          onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(226,221,217,0.04)'; }}
+          onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
           onMouseLeave={e => { if (value !== opt.value) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
-          <span style={{ fontSize: '13.5px', fontWeight: 600 }}>{opt.label}</span>
-          {opt.desc && <span style={{ fontSize: '12px', color: '#5c5755', marginTop: '3px' }}>{opt.desc}</span>}
+          <span style={{ fontSize: '13px', fontWeight: 600 }}>{opt.label}</span>
+          {opt.desc && <span style={{ fontSize: '11.5px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{opt.desc}</span>}
         </button>
       ))}
     </div>
@@ -183,24 +171,20 @@ const ThemedSelect = ({ value, options, onChange }: {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          padding: '7px 12px',
-          borderRadius: '8px',
+          padding: '7px 14px',
+          borderRadius: '9999px',
           fontSize: '13px',
           fontWeight: 500,
-          borderStyle: 'solid',
-          borderWidth: '1px',
-          borderColor: open ? 'var(--v-bdr3)' : 'var(--v-bdr2)',
-          outlineStyle: 'none',
-          outlineWidth: 0,
-          outlineColor: 'transparent',
-          background: open ? 'rgba(226,221,217,0.05)' : 'var(--v-bg2)',
-          color: open ? '#e2ddd9' : '#9e9894',
+          border: '1px solid rgba(255,255,255,0.09)',
+          outline: 'none',
+          background: open ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+          color: open ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)',
           cursor: 'pointer',
           minWidth: '130px',
-          transition: 'border-color .12s,color .12s,background .12s',
+          transition: 'all .12s',
         }}
-        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr3)'; (e.currentTarget as HTMLElement).style.color = '#e2ddd9'; } }}
-        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--v-bdr2)'; (e.currentTarget as HTMLElement).style.color = '#9e9894'; } }}
+        onMouseEnter={e => { if (!open) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'; } }}
+        onMouseLeave={e => { if (!open) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; } }}
       >
         <span style={{ flex: 1, textAlign: "left" }}>{current?.label}</span>
         <ChevronDown size={14} style={{ transition: "transform .2s", transform: open ? "rotate(180deg)" : "none" }} />
@@ -319,12 +303,12 @@ export function SettingsPanel({
 
   return (
     <div style={{flex:1,display:"flex",overflow:"hidden",background:"var(--v-bg0)"}}>
-      <div style={{width:"210px",flexShrink:0,background:"var(--v-bg0)",borderRight:"1px solid var(--v-bdr)",display:"flex",flexDirection:"column",padding:"16px 12px",gap:"4px"}}>
+      <div style={{width:"180px",flexShrink:0,background:"var(--v-bg0)",borderRight:"none",display:"flex",flexDirection:"column",padding:"16px 10px",gap:"4px"}}>
         <div style={{fontSize:"10px",fontWeight:800,letterSpacing:".18em",textTransform:"uppercase",color:"#76706c",padding:"4px 10px 14px"}}>Settings</div>
         
-        <div style={{ padding: "0 6px 12px" }}>
+        <div style={{ padding: "0 2px 12px" }}>
           <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-            <Search size={12} style={{ position: "absolute", left: "10px", color: "#5c5755", pointerEvents: "none" }} />
+            <Search size={12} style={{ position: "absolute", left: "11px", color: "#5c5755", pointerEvents: "none" }} />
             <input
               type="text"
               placeholder="Find a setting..."
@@ -332,10 +316,10 @@ export function SettingsPanel({
               onChange={e => setSearchQuery(e.target.value)}
               style={{
                 width: "100%",
-                padding: "7px 28px 7px 28px",
-                background: "rgba(226, 221, 217, 0.015)",
-                border: "1px solid #1b1918",
-                borderRadius: "8px",
+                padding: "8px 28px 8px 30px",
+                background: "rgba(226, 221, 217, 0.03)",
+                border: "1px solid var(--v-bdr2)",
+                borderRadius: "9999px",
                 color: "#e2ddd9",
                 fontSize: "12px",
                 outline: "none",
@@ -344,12 +328,12 @@ export function SettingsPanel({
               }}
               onFocus={e => {
                 e.currentTarget.style.borderColor = "#44403c";
-                e.currentTarget.style.background = "rgba(226, 221, 217, 0.03)";
+                e.currentTarget.style.background = "rgba(226, 221, 217, 0.05)";
                 e.currentTarget.style.boxShadow = "0 0 0 1px #44403c";
               }}
               onBlur={e => {
-                e.currentTarget.style.borderColor = "#1b1918";
-                e.currentTarget.style.background = "rgba(226, 221, 217, 0.015)";
+                e.currentTarget.style.borderColor = "var(--v-bdr2)";
+                e.currentTarget.style.background = "rgba(226, 221, 217, 0.03)";
                 e.currentTarget.style.boxShadow = "none";
               }}
             />
@@ -358,7 +342,7 @@ export function SettingsPanel({
                 onClick={() => setSearchQuery('')}
                 style={{
                   position: "absolute",
-                  right: "8px",
+                  right: "10px",
                   background: "none",
                   border: "none",
                   color: "#5c5755",
@@ -381,20 +365,20 @@ export function SettingsPanel({
           return (
             <button key={tab.id} onClick={() => { setSearchQuery(''); setActiveTab(tab.id); }}
               style={{
-                display:"flex",alignItems:"center",gap:"10px",
-                padding:"8px 12px",borderRadius:"8px",
+                display:"flex",alignItems:"center",gap:"12px",
+                padding:"10px 14px",borderRadius:"9999px",
                 border:"none",cursor:"pointer",
                 textAlign:"left",width:"100%",
-                fontSize:"12.5px",fontWeight:isActive?600:500,
-                background:isActive?"rgba(226,221,217,0.04)":"transparent",
+                fontSize:"13.5px",fontWeight:isActive?700:500,
+                background:isActive?"rgba(226,221,217,0.06)":"transparent",
                 color:isActive?"#e2ddd9":"#8c8682",
                 position:"relative",
                 transition:"all 0.15s ease-out",
               }}
-              onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background="rgba(226, 221, 217, 0.02)";e.currentTarget.style.color="#e2ddd9";}}}
+              onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background="rgba(226, 221, 217, 0.025)";e.currentTarget.style.color="#e2ddd9";}}}
               onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#8c8682";}}}>
               {isActive && (
-                <span style={{position:"absolute",left:"0",top:"10px",bottom:"10px",width:"3px",borderRadius:"1.5px",background:"var(--v-accent)"}} />
+                <span style={{position:"absolute",left:"3px",top:"10px",bottom:"10px",width:"3px",borderRadius:"1.5px",background:"var(--v-accent)"}} />
               )}
               <span style={{color:isActive?"#e2ddd9":"#5c5755",display:"flex",flexShrink:0,transition:"color 0.15s ease"}}>{tab.icon}</span>
               <span style={{flex:1}}>{tab.label}</span>
@@ -761,33 +745,32 @@ export function SettingsPanel({
 
             <div style={{borderRadius:"12px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",padding:"12px 16px",display:"flex",alignItems:"center",gap:"12px"}}>
               <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0,display:"flex",alignItems:"center",gap:"8px",whiteSpace:"nowrap",flexShrink:0}}><Volume2 size={14} style={{color:"#8c8682"}} /> Audio Output Device</h3>
-              <div style={{flex:1,minWidth:0}}>
-                {audioDevices.length === 0 ? (
-                  <div style={{fontSize:"12px",color:"#6f6966"}}>No output devices found</div>
-                ) : (() => {
-                  const activeDevice = audioDevices.find(d => d.is_default) ?? audioDevices[0];
-                  return (
-                    <ThemedSelect
-                      value={activeDevice?.id ?? ''}
-                      onChange={async (id) => {
-                        if (id === activeDevice?.id) return;
-                        setSwitchingDevice(true);
-                        try {
-                          await invoke('set_audio_device', { id });
-                          setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === id })));
-                          showToast(`Output switched: ${audioDevices.find(d=>d.id===id)?.name ?? id}`);
-                        } catch (e) { showToast(`Switch failed: ${e}`); }
-                        finally { setSwitchingDevice(false); }
-                      }}
-                      options={audioDevices.map(dev => ({
-                        value: dev.id,
-                        label: dev.name,
-                        desc: dev.form ? dev.form.charAt(0).toUpperCase() + dev.form.slice(1) : undefined,
-                      }))}
-                    />
-                  );
-                })()}
-              </div>
+              <div style={{flex:1}} />
+              {audioDevices.length === 0 ? (
+                <div style={{fontSize:"12px",color:"#6f6966"}}>No devices found</div>
+              ) : (() => {
+                const activeDevice = audioDevices.find(d => d.is_default) ?? audioDevices[0];
+                return (
+                  <ThemedSelect
+                    value={activeDevice?.id ?? ''}
+                    onChange={async (id) => {
+                      if (id === activeDevice?.id) return;
+                      setSwitchingDevice(true);
+                      try {
+                        await invoke('set_audio_device', { id });
+                        setAudioDevices(prev => prev.map(d => ({ ...d, is_default: d.id === id })));
+                        showToast(`Output switched: ${audioDevices.find(d=>d.id===id)?.name ?? id}`);
+                      } catch (e) { showToast(`Switch failed: ${e}`); }
+                      finally { setSwitchingDevice(false); }
+                    }}
+                    options={audioDevices.map(dev => ({
+                      value: dev.id,
+                      label: dev.name,
+                      desc: dev.form ? dev.form.charAt(0).toUpperCase() + dev.form.slice(1) : undefined,
+                    }))}
+                  />
+                );
+              })()}
               <button onClick={(e) => { const icon = e.currentTarget.querySelector('svg')!; icon.style.transition='transform .5s ease'; icon.style.transform='rotate(360deg)'; setTimeout(()=>{icon.style.transition='none';icon.style.transform='rotate(0deg)';},520); invoke<{ id: string; name: string; form: string; is_default: boolean }[]>('list_audio_devices').then(setAudioDevices).catch(() => {}); }}
                 style={{padding:"4px",background:"none",border:"none",cursor:"pointer",color:"#5c5755",borderRadius:"6px",display:"flex",flexShrink:0,transition:"color .12s"}} title="Refresh devices" onMouseEnter={e=>e.currentTarget.style.color="#e2ddd9"} onMouseLeave={e=>e.currentTarget.style.color="#5c5755"}>
                 <RefreshCw size={13} />
@@ -798,9 +781,9 @@ export function SettingsPanel({
               <div style={{padding:"12px 16px",borderBottom:"1px solid var(--v-bdr)",background:"rgba(226,221,217,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0,display:"flex",alignItems:"center",gap:"8px"}}><BarChart2 size={14} style={{color:"#8c8682"}} /> Equalizer</h3>
                 <button onClick={() => { setEq({ bass: 0, mid: 0, treble: 0 }); invoke('set_equalizer', { bass: 0, mid: 0, treble: 0 }).catch(() => {}); }}
-                  style={{fontSize:"11px",fontWeight:600,color:"#5c5755",cursor:"pointer",padding:"4px 10px",borderRadius:"6px",border:"1px solid #1f1d1c",background:"transparent",transition:"color .12s, border-color .12s"}}
-                  onMouseEnter={e=>{e.currentTarget.style.color="#e2ddd9";e.currentTarget.style.borderColor="#3a3735";}}
-                  onMouseLeave={e=>{e.currentTarget.style.color="#5c5755";e.currentTarget.style.borderColor="#1f1d1c";}}>
+                  style={{fontSize:"11px",fontWeight:600,color:"rgba(255,255,255,0.35)",cursor:"pointer",padding:"4px 12px",borderRadius:"9999px",border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",transition:"all .12s"}}
+                  onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.8)";e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";e.currentTarget.style.background="rgba(255,255,255,0.08)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.35)";e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";e.currentTarget.style.background="rgba(255,255,255,0.04)";}}>
                   Reset
                 </button>
               </div>

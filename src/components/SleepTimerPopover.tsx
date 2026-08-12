@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Moon, X } from 'lucide-react';
+import { Moon, X, Clock } from 'lucide-react';
 
 export type SleepTimerPopoverProps = {
   sleepTimer: number;
@@ -13,65 +13,129 @@ export const SleepTimerPopover = React.memo(({
 }: SleepTimerPopoverProps) => {
   const [input, setInput] = useState('');
   const presets = [5, 10, 15, 20, 30, 45, 60, 90];
+
   return (
-    <div style={{width:'220px',background:'var(--v-bg2)',borderStyle:'solid',borderWidth:'1px',borderColor:'var(--v-bdr2)',borderRadius:'12px',overflow:'hidden',boxShadow:'0 12px 40px rgba(0,0,0,0.8)'}} onClick={e=>e.stopPropagation()}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderBottomStyle:'solid',borderBottomWidth:'1px',borderBottomColor:'var(--v-bdr2)'}}>
-        <span style={{fontSize:'12px',fontWeight:700,color:'#9e9894',display:'flex',alignItems:'center',gap:'7px'}}><Moon size={13}/> Sleep Timer</span>
-        <button onClick={onClose} style={{background:'none',borderStyle:'none',borderWidth:0,borderColor:'transparent',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent',cursor:'pointer',color:'#363230',display:'flex'}} onMouseEnter={e=>(e.currentTarget.style.color='#9e9894')} onMouseLeave={e=>(e.currentTarget.style.color='#363230')}><X size={13}/></button>
+    <div
+      className="v-glass-popover"
+      style={{
+        width: '260px',
+        borderRadius: '22px',
+        padding: '14px',
+        boxShadow: '0 20px 48px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)',
+        animation: 'dropIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+      }}
+      onClick={e => e.stopPropagation()}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '12px' }}>
+        <span style={{ fontSize: '13px', fontWeight: 700, color: '#e2ddd9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Moon size={14} style={{ color: 'var(--v-accent)' }} /> Sleep Timer
+        </span>
+        <button
+          onClick={onClose}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--v-fg2)', padding: '2px', display: 'flex', borderRadius: '50%', transition: 'color 0.12s' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--v-fg2)')}
+        >
+          <X size={14} />
+        </button>
       </div>
+
       {sleepTimer > 0 && (
-        <div style={{padding:'10px 14px',borderBottomStyle:'solid',borderBottomWidth:'1px',borderBottomColor:'var(--v-bdr2)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span style={{fontSize:'12px',color:'#9e9894'}}>Pausing in <strong>{Math.ceil(sleepTimer/60)}m</strong></span>
-          <button onClick={()=>{onCancel();onClose();}} style={{background:'none',borderStyle:'none',borderWidth:0,borderColor:'transparent',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent',cursor:'pointer',fontSize:'11px',color:'#5c5755',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={e=>(e.currentTarget.style.color='#b05555')} onMouseLeave={e=>(e.currentTarget.style.color='#5c5755')}><X size={10}/>Cancel</button>
+        <div style={{ padding: '8px 12px', marginBottom: '12px', background: 'rgba(226,221,217,0.06)', border: '1px solid rgba(226,221,217,0.15)', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '11.5px', color: '#e2ddd9', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={12} style={{ color: 'var(--v-accent)' }} /> Pausing in <strong>{Math.ceil(sleepTimer / 60)}m</strong>
+          </span>
+          <button
+            onClick={() => { onCancel(); onClose(); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 600, color: '#ff6b6b', display: 'flex', alignItems: 'center', gap: '3px', transition: 'opacity 0.12s' }}
+          >
+            <X size={11} /> Cancel
+          </button>
         </div>
       )}
-      <div style={{padding:'10px 14px 6px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'5px'}}>
-        {presets.map(m=>(
-          <button key={m} onClick={()=>{onSet(m);onClose();}}
-            style={{
-              padding:'5px 0',
-              borderRadius:'7px',
-              borderStyle: 'solid',
-              borderWidth: '1px',
-              borderColor: 'var(--v-bdr2)',
-              outlineStyle: 'none',
-              outlineWidth: 0,
-              outlineColor: 'transparent',
-              background:'transparent',
-              color:'#5c5755',
-              cursor:'pointer',
-              fontSize:'11px',
-              fontWeight:600,
-              transition:'border-color .1s,color .1s,background .1s'
-            }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(226,221,217,0.06)';(e.currentTarget as HTMLElement).style.color='#9e9894';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr3)';}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent';(e.currentTarget as HTMLElement).style.color='#5c5755';(e.currentTarget as HTMLElement).style.borderColor='var(--v-bdr2)';}}>
-            {m}m
-          </button>
-        ))}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '12px' }}>
+        {presets.map(m => {
+          const isActive = sleepTimer > 0 && Math.ceil(sleepTimer / 60) === m;
+          return (
+            <button
+              key={m}
+              onClick={() => { onSet(m); onClose(); }}
+              style={{
+                padding: '7px 0',
+                borderRadius: '9999px',
+                border: `1px solid ${isActive ? 'var(--v-accent)' : 'rgba(255,255,255,0.08)'}`,
+                background: isActive ? 'var(--v-accent)' : 'rgba(255,255,255,0.03)',
+                color: isActive ? '#0c0b0b' : '#dedad7',
+                cursor: 'pointer',
+                fontSize: '11.5px',
+                fontWeight: 700,
+                transition: 'all 0.12s ease'
+              }}
+              onMouseEnter={e => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.09)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)';
+                  (e.currentTarget as HTMLElement).style.color = '#ffffff';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+                  (e.currentTarget as HTMLElement).style.color = '#dedad7';
+                }
+              }}
+            >
+              {m}m
+            </button>
+          );
+        })}
       </div>
-      <div style={{padding:'6px 14px 12px',display:'flex',gap:'6px'}}>
-        <input type="number" min="1" max="999" placeholder="Custom min"
-          value={input} onChange={e=>setInput(e.target.value)}
-          onKeyDown={e=>{if(e.key==='Enter'){const m=parseInt(input);if(m>0){onSet(m);onClose();}}}}
-          style={{flex:1,background:'var(--v-bdr2)',borderStyle:'solid',borderWidth:'1px',borderColor:'var(--v-bdr2)',color:'#e2ddd9',borderRadius:'7px',padding:'5px 8px',fontSize:'11px',outlineStyle:'none',outlineWidth:0,outlineColor:'transparent'}}
-        />
-        <button onClick={()=>{const m=parseInt(input);if(m>0){onSet(m);onClose();}}}
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <input
+          type="number"
+          min="1"
+          max="999"
+          placeholder="Custom min"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              const m = parseInt(input);
+              if (m > 0) { onSet(m); onClose(); }
+            }
+          }}
           style={{
-            padding:'5px 10px',
-            background:'rgba(226,221,217,0.07)',
-            borderStyle:'solid',
-            borderWidth:'1px',
-            borderColor:'var(--v-bdr3)',
-            outlineStyle:'none',
-            outlineWidth:0,
-            outlineColor:'transparent',
-            color:'#9e9894',
-            borderRadius:'7px',
-            cursor:'pointer',
-            fontSize:'11px',
-            fontWeight:600
-          }}>
+            flex: 1,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: '#e2ddd9',
+            borderRadius: '9999px',
+            padding: '7px 14px',
+            fontSize: '11.5px',
+            outline: 'none',
+            transition: 'border-color 0.12s'
+          }}
+        />
+        <button
+          onClick={() => {
+            const m = parseInt(input);
+            if (m > 0) { onSet(m); onClose(); }
+          }}
+          style={{
+            padding: '7px 18px',
+            background: 'var(--v-accent)',
+            border: 'none',
+            color: '#0c0b0b',
+            borderRadius: '9999px',
+            cursor: 'pointer',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            transition: 'opacity 0.12s'
+          }}
+        >
           Set
         </button>
       </div>
