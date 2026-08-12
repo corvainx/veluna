@@ -2213,7 +2213,14 @@ fn get_discord_client() -> &'static Mutex<Option<DiscordIpcClient>> {
 }
 
 #[tauri::command]
-fn update_discord_rpc(title: String, artist: Option<String>, cover_url: Option<String>) {
+fn update_discord_rpc(
+    title: String,
+    artist: Option<String>,
+    cover_url: Option<String>,
+    track_url: Option<String>,
+    start_timestamp: Option<i64>,
+    end_timestamp: Option<i64>,
+) {
     std::thread::spawn(move || {
         let mut client_lock = get_discord_client().lock().unwrap();
         if client_lock.is_none() {
@@ -2239,6 +2246,22 @@ fn update_discord_rpc(title: String, artist: Option<String>, cover_url: Option<S
                 }
             }
             act = act.assets(assets);
+
+            if let (Some(start), Some(end)) = (start_timestamp, end_timestamp) {
+                if end > start {
+                    act = act.timestamps(activity::Timestamps::new().start(start).end(end));
+                }
+            }
+
+            let mut buttons = Vec::new();
+            if let Some(ref url) = track_url {
+                if url.starts_with("http") {
+                    buttons.push(activity::Button::new("Listen on YouTube", url));
+                }
+            }
+            buttons.push(activity::Button::new("Download Veluna", "https://github.com/corvainx/veluna/releases/"));
+            act = act.buttons(buttons);
+
             if client.set_activity(act).is_err() {
                 let _ = client.close();
                 *client_lock = None;

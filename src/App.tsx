@@ -428,19 +428,35 @@ export default function Veluna() {
   const lastScrolledLyricIdxRef = useRef<number>(-1);
   const lyricsScrollContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const lastRpcProgressRef = useRef<number>(0);
   useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
   useEffect(() => {
     if (discordRpcEnabled && isPlaying && currentTrack) {
-      const coverUrl = currentTrack.cover && !currentTrack.cover.startsWith('data:') && !currentTrack.cover.startsWith('blob:') ? currentTrack.cover : null;
-      invoke('update_discord_rpc', {
-        title: currentTrack.title,
-        artist: cleanArtist(currentTrack.artist) || null,
-        coverUrl
-      }).catch(() => {});
+      const delta = Math.abs(progressSeconds - lastRpcProgressRef.current);
+      // Update RPC on initial play, track switch, or when user seeks/skips (> 2s jump)
+      if (delta > 2 || lastRpcProgressRef.current === 0) {
+        lastRpcProgressRef.current = progressSeconds;
+        const coverUrl = currentTrack.cover && !currentTrack.cover.startsWith('data:') && !currentTrack.cover.startsWith('blob:') ? currentTrack.cover : null;
+        const trackUrl = currentTrack.url && currentTrack.url.startsWith('http') ? currentTrack.url : null;
+        const now = Math.floor(Date.now() / 1000);
+        const remainingSecs = Math.max(0, trackDurationSeconds - progressSeconds);
+        const startTimestamp = now - Math.floor(progressSeconds);
+        const endTimestamp = trackDurationSeconds > 0 ? now + Math.floor(remainingSecs) : null;
+
+        invoke('update_discord_rpc', {
+          title: currentTrack.title,
+          artist: cleanArtist(currentTrack.artist) || null,
+          coverUrl,
+          trackUrl,
+          startTimestamp,
+          endTimestamp
+        }).catch(() => {});
+      }
     } else {
+      lastRpcProgressRef.current = 0;
       invoke('clear_discord_rpc').catch(() => {});
     }
-  }, [discordRpcEnabled, isPlaying, currentTrack]);
+  }, [discordRpcEnabled, isPlaying, currentTrack, trackDurationSeconds, progressSeconds]);
   useEffect(() => { saveLS('vg_discordRpcEnabled', discordRpcEnabled); }, [discordRpcEnabled]);
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
