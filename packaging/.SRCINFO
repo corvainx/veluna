@@ -17,6 +17,7 @@ pkgbase = veluna
 	depends = webkit2gtk-4.1
 	depends = libayatana-appindicator
 	depends = gtk3
+	depends = hicolor-icon-theme
 	source = veluna-0.1.1.tar.gz::https://github.com/corvainx/veluna/archive/refs/tags/v0.1.1.tar.gz
 	source = veluna.desktop
 	sha256sums = SKIP

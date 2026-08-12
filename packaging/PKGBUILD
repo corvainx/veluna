@@ -6,7 +6,7 @@ pkgdesc="Ad-free desktop music streaming powered by YouTube"
 arch=('x86_64')
 url="https://github.com/corvainx/veluna"
 license=('MIT')
-depends=('mpv' 'yt-dlp' 'ffmpeg' 'webkit2gtk-4.1' 'libayatana-appindicator' 'gtk3')
+depends=('mpv' 'yt-dlp' 'ffmpeg' 'webkit2gtk-4.1' 'libayatana-appindicator' 'gtk3' 'hicolor-icon-theme')
 makedepends=('cargo' 'nodejs' 'npm' 'pkg-config' 'openssl' 'librsvg')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/corvainx/${pkgname}/archive/refs/tags/v${pkgver}.tar.gz"
         "veluna.desktop")
