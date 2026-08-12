@@ -1620,8 +1620,8 @@ export default function Veluna() {
             invoke<string>('search_youtube', { query: `${q} video` }).catch(() => '')
           ]);
 
-      const parseLines = (res: string, mediaType: 'music' | 'video') => {
-        return res.trim().split('\n').filter(Boolean).map((line, i) => {
+      const parseLines = (res: string, mediaType: 'music' | 'video'): Track[] => {
+        return res.trim().split('\n').filter(Boolean).map((line, i): Track | null => {
           const parts = line.split('====');
           const title = parts[0]?.trim() || '';
           const artist = cleanArtist(parts[1]);
