@@ -777,17 +777,55 @@ export function SettingsPanel({
               </button>
             </div>
 
-            <div style={{borderRadius:"12px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",overflow:"hidden"}}>
-              <div style={{padding:"12px 16px",borderBottom:"1px solid var(--v-bdr)",background:"rgba(226,221,217,0.015)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <h3 style={{fontSize:"13px",fontWeight:600,color:"#e2ddd9",margin:0,display:"flex",alignItems:"center",gap:"8px"}}><BarChart2 size={14} style={{color:"#8c8682"}} /> Equalizer</h3>
-                <button onClick={() => { setEq({ bass: 0, mid: 0, treble: 0 }); invoke('set_equalizer', { bass: 0, mid: 0, treble: 0 }).catch(() => {}); }}
-                  style={{fontSize:"11px",fontWeight:600,color:"rgba(255,255,255,0.35)",cursor:"pointer",padding:"4px 12px",borderRadius:"9999px",border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",transition:"all .12s"}}
-                  onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.8)";e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";e.currentTarget.style.background="rgba(255,255,255,0.08)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.35)";e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";e.currentTarget.style.background="rgba(255,255,255,0.04)";}}>
-                  Reset
-                </button>
+            <div style={{borderRadius:"14px",border:"1px solid var(--v-bdr)",background:"var(--v-bg0)",overflow:"hidden"}}>
+              {/* Header & Presets */}
+              <div style={{padding:"14px 18px",display:"flex",flexDirection:"column",gap:"12px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <h3 style={{fontSize:"13.5px",fontWeight:700,color:"var(--v-fg)",margin:0,display:"flex",alignItems:"center",gap:"8px",letterSpacing:"-0.01em"}}>
+                    <BarChart2 size={15} style={{color:"var(--v-fg2)"}} /> Equalizer
+                  </h3>
+                  <button onClick={() => { setEq({ bass: 0, mid: 0, treble: 0 }); invoke('set_equalizer', { bass: 0, mid: 0, treble: 0 }).catch(() => {}); }}
+                    style={{fontSize:"11px",fontWeight:700,color:"var(--v-fg2)",cursor:"pointer",padding:"4px 14px",borderRadius:"9999px",border:"1px solid var(--v-bdr2)",background:"rgba(255,255,255,0.02)",transition:"all .15s ease"}}
+                    onMouseEnter={e=>{e.currentTarget.style.color="var(--v-fg)";e.currentTarget.style.borderColor="var(--v-bdr3)";e.currentTarget.style.background="rgba(255,255,255,0.06)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.color="var(--v-fg2)";e.currentTarget.style.borderColor="var(--v-bdr2)";e.currentTarget.style.background="rgba(255,255,255,0.02)";}}>
+                    Reset
+                  </button>
+                </div>
+
+                {/* Preset Chips */}
+                <div style={{display:"flex",alignItems:"center",gap:"6px",flexWrap:"wrap"}}>
+                  {[
+                    { name: 'Flat', preset: { bass: 0, mid: 0, treble: 0 } },
+                    { name: 'Bass Boost', preset: { bass: 7, mid: -1, treble: 2 } },
+                    { name: 'Vocal', preset: { bass: -2, mid: 6, treble: 3 } },
+                    { name: 'Treble', preset: { bass: -1, mid: 2, treble: 7 } },
+                    { name: 'Electronic', preset: { bass: 6, mid: 1, treble: 5 } },
+                    { name: 'Rock', preset: { bass: 5, mid: -2, treble: 5 } }
+                  ].map(({ name, preset }) => {
+                    const isSelected = eq.bass === preset.bass && eq.mid === preset.mid && eq.treble === preset.treble;
+                    return (
+                      <button key={name} onClick={() => {
+                        setEq(preset);
+                        invoke('set_equalizer', preset).catch(() => {});
+                      }}
+                      style={{
+                        padding:"4px 13px",borderRadius:"9999px",fontSize:"11.5px",fontWeight:600,cursor:"pointer",
+                        border: isSelected ? "1px solid var(--v-accent)" : "1px solid var(--v-bdr2)",
+                        background: isSelected ? "var(--v-accent)" : "rgba(255,255,255,0.02)",
+                        color: isSelected ? "var(--v-bg0)" : "var(--v-fg2)",
+                        transition: "all .15s ease",
+                      }}
+                      onMouseEnter={e=>{if(!isSelected){e.currentTarget.style.color="var(--v-fg)";e.currentTarget.style.borderColor="var(--v-bdr3)";e.currentTarget.style.background="rgba(255,255,255,0.05)";}}}
+                      onMouseLeave={e=>{if(!isSelected){e.currentTarget.style.color="var(--v-fg2)";e.currentTarget.style.borderColor="var(--v-bdr2)";e.currentTarget.style.background="rgba(255,255,255,0.02)";}}}>
+                        {name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div style={{padding:"18px 16px",display:"flex",flexDirection:"column",gap:"16px"}}>
+
+              {/* Band Sliders */}
+              <div style={{padding:"8px 18px 18px",display:"flex",flexDirection:"column",gap:"10px"}}>
                 {([
                   { label: 'Bass', key: 'bass' as const, freq: '60–250 Hz' },
                   { label: 'Mid', key: 'mid' as const, freq: '500 Hz–2 kHz' },
@@ -798,56 +836,55 @@ export function SettingsPanel({
                   return (
                     <div key={key} style={{
                       borderRadius:"10px",
-                      background:"var(--v-bg2)",
-                      border:`1px solid ${isActive?'rgba(226,221,217,0.08)':'var(--v-bdr)'}`,
-                      padding:"12px 14px",
-                      transition:"border-color .2s ease",
+                      background: "var(--v-bg2)",
+                      border: "1px solid var(--v-bdr)",
+                      padding:"11px 14px",
+                      transition:"all .15s ease",
                     }}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10px"}}>
-                        <div style={{display:"flex",alignItems:"baseline",gap:"8px"}}>
-                          <span style={{fontSize:"13px",fontWeight:700,color:isActive?"#e2ddd9":"#9e9894",transition:"color .2s"}}>{label}</span>
-                          <span style={{fontSize:"10px",color:"#4a4644",letterSpacing:"0.02em"}}>{freq}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                          <span style={{fontSize:"13px",fontWeight:700,color:isActive?"var(--v-fg)":"var(--v-fg2)",transition:"color .15s"}}>{label}</span>
+                          <span style={{fontSize:"10px",fontWeight:500,color:"var(--v-fg3)",letterSpacing:"0.02em"}}>{freq}</span>
                         </div>
                         <div style={{
-                          fontSize:"12px",fontWeight:700,
+                          fontSize:"11.5px",fontWeight:700,
                           fontVariantNumeric:"tabular-nums",
-                          color: val > 0 ? "#e2ddd9" : val < 0 ? "#6f6966" : "#363230",
-                          background: isActive ? "rgba(226,221,217,0.04)" : "transparent",
-                          padding:"2px 8px",borderRadius:"5px",
-                          border: isActive ? "1px solid rgba(226,221,217,0.06)" : "1px solid transparent",
-                          transition:"all .2s ease",
-                          minWidth:"44px",textAlign:"center",
+                          color: isActive ? "var(--v-fg)" : "var(--v-fg3)",
+                          background: isActive ? "rgba(255,255,255,0.04)" : "transparent",
+                          padding:"2px 8px",borderRadius:"9999px",
+                          transition:"all .15s ease",
+                          minWidth:"48px",textAlign:"center",
                         }}>
                           {val > 0 ? `+${val}` : val} dB
                         </div>
                       </div>
 
-                      <div style={{position:"relative",height:"6px",background:"#1b1918",borderRadius:"3px"}}
+                      <div style={{position:"relative",height:"5px",background:"rgba(255,255,255,0.06)",borderRadius:"9999px"}}
                         onMouseEnter={() => setHoveredSlider(key)}
                         onMouseLeave={() => setHoveredSlider(null)}>
-                        <div style={{position:"absolute",left:"50%",top:"-3px",width:"1px",height:"12px",background:"rgba(226,221,217,0.15)",borderRadius:"1px",pointerEvents:"none"}}/>
+                        {/* Center Zero Tick */}
+                        <div style={{position:"absolute",left:"50%",top:"-3px",width:"1px",height:"11px",background:"var(--v-bdr2)",borderRadius:"1px",pointerEvents:"none"}}/>
 
+                        {/* Active Track Fill */}
                         <div style={{
-                          position:"absolute",top:0,height:"100%",borderRadius:"3px",pointerEvents:"none",
-                          transition:"all .15s ease",
+                          position:"absolute",top:0,height:"100%",borderRadius:"9999px",pointerEvents:"none",
                           background:'var(--v-accent)',
-                          boxShadow: isActive ? '0 0 8px rgba(226,221,217,0.15)' : 'none',
                           left: val >= 0 ? '50%' : `${((val + 12) / 24) * 100}%`,
                           width: `${(Math.abs(val) / 24) * 100}%`,
                         }}/>
 
+                        {/* Thumb Knob */}
                         <div style={{
                           position:"absolute",
                           top:"50%",
-                          transform: hoveredSlider === key ? "translateY(-50%) scale(1.25)" : "translateY(-50%) scale(1)",
-                          width:"14px",height:"14px",
+                          transform: hoveredSlider === key ? "translateY(-50%) scale(1.2)" : "translateY(-50%) scale(1)",
+                          width:"13px",height:"13px",
                           borderRadius:"50%",
-                          border:`2.5px solid ${isActive?'var(--v-accent)':'#5c5755'}`,
+                          border:`2px solid ${isActive?'var(--v-accent)':'var(--v-fg3)'}`,
                           background:"var(--v-bg0)",
-                          boxShadow: isActive ? "0 0 10px rgba(226,221,217,0.2), 0 2px 4px rgba(0,0,0,0.5)" : "0 2px 4px rgba(0,0,0,0.5)",
                           pointerEvents:"none",
-                          transition:"left 0.12s ease-out, transform 0.15s ease, border-color .2s ease",
-                          left: `calc(${((val + 12) / 24) * 100}% - 7px)`
+                          transition:"left 0.08s ease-out, transform 0.15s ease",
+                          left: `calc(${((val + 12) / 24) * 100}% - 6.5px)`
                         }}/>
 
                         <input type="range" min="-12" max="12" step="1" value={val}
