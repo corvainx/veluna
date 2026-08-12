@@ -319,7 +319,7 @@ export function SettingsPanel({
 
   return (
     <div style={{flex:1,display:"flex",overflow:"hidden",background:"var(--v-bg0)"}}>
-      <div style={{width:"210px",flexShrink:0,background:"var(--v-bg1)",borderRight:"1px solid var(--v-bdr)",display:"flex",flexDirection:"column",padding:"16px 12px",gap:"4px"}}>
+      <div style={{width:"210px",flexShrink:0,background:"var(--v-bg0)",borderRight:"1px solid var(--v-bdr)",display:"flex",flexDirection:"column",padding:"16px 12px",gap:"4px"}}>
         <div style={{fontSize:"10px",fontWeight:800,letterSpacing:".18em",textTransform:"uppercase",color:"#76706c",padding:"4px 10px 14px"}}>Settings</div>
         
         <div style={{ padding: "0 6px 12px" }}>
@@ -523,7 +523,7 @@ export function SettingsPanel({
               <div style={{flex:1,minWidth:0,position:"relative",zIndex:1}}>
                 {updateAvailable ? (
                   <>
-                    <div style={{fontSize:"13.5px",fontWeight:700,color:"#ffffff",marginBottom:"4px"}}>Update available — v{updateAvailable}</div>
+                    <div style={{fontSize:"13.5px",fontWeight:700,color:"#ffffff",marginBottom:"4px"}}>Update available: v{updateAvailable}</div>
                     <div style={{fontSize:"11.5px",color:"#6f6966",lineHeight:1.4,marginBottom:"10px"}}>A new version of Veluna is ready to download. Features and stability updates await.</div>
                     <a href="#" onClick={e=>{e.preventDefault();openUrl('https://github.com/corvainx/veluna/releases/latest');}}
                       style={{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",fontWeight:600,color:"var(--v-accent)",textDecoration:"none"}}

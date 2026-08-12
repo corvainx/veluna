@@ -41,8 +41,6 @@ import {
   PlaySquare,
   Plus,
   PlusCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
   Repeat,
   Repeat1,
   Search,
@@ -62,11 +60,12 @@ import {
 const __APP_VERSION__ = '0.1.1';
 
 
-import { Track, LocalTrack, Playlist, RepeatMode, CtxMenu, AudioInfo, BatchProgress, ListeningEvent } from './types';
+import { Track, LocalTrack, Playlist, RepeatMode, CtxMenu, AudioInfo, BatchProgress, ListeningEvent, SettingsTab } from './types';
 import { parseDurationToSeconds, lightenColor, hexToRgb, cleanArtist, getTrackGradient, formatTime, loadLS, saveLS, clampMenu } from './utils';
 import { TrackRow, TrackRowSkeleton } from './components/TrackRow';
+import { VirtualTrackList } from './components/VirtualTrackList';
 import { SleepTimerPopover } from './components/SleepTimerPopover';
-import { ImportResultModal, ImportButton, CopyButton, CsvImportModal, YtImportModal, MetadataEditModal } from './components/Modals';
+import { ImportResultModal, CopyButton, CsvImportModal, YtImportModal, MetadataEditModal } from './components/Modals';
 import { SettingsPanel } from './components/SettingsPanel';
 import { DownloadsPanel } from './components/DownloadsPanel';
 
@@ -171,7 +170,7 @@ export default function Veluna() {
   useEffect(() => {
     import('@tauri-apps/api/app').then(m => m.getVersion()).then(setAppVersion).catch(() => {});
   }, []);
-  const [_navHistory, setNavHistory] = useState<string[]>([]);
+  const [navHistory, setNavHistory] = useState<string[]>([]);
 
   const navigateTo = useCallback((nav: string) => {
     setNavHistory(prev => [...prev.slice(-20), activeNav]);
@@ -190,7 +189,7 @@ export default function Veluna() {
   const trackDurationRef = useRef(0);
   const [progressSeconds, setProgressSeconds] = useState(0);
   const progressSecondsRef = useRef(0);
-  const codecPollRef = useRef<NodeJS.Timeout | null>(null);
+  const codecPollRef = useRef<any>(null);
 
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -242,6 +241,7 @@ export default function Veluna() {
   const [isPlaylistMenuOpen, setIsPlaylistMenuOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('playback');
   const playlistMenuRef = useRef<HTMLDivElement>(null);
+  const searchCacheRef = useRef<Map<string, { music: Track[]; video: Track[] }>>(new Map());
   useEffect(() => {
     if (!isPlaylistMenuOpen) return;
     const clickH = (e: MouseEvent) => {
@@ -736,11 +736,15 @@ export default function Veluna() {
     };
   }, [isHydrated]);
 
+  const hoverPrefetchTimer = useRef<any>(null);
   const hoverPrefetchRef = useRef<string | null>(null);
   const prefetchOnHover = useCallback((url: string) => {
     if (!url || url.startsWith('local://') || url === hoverPrefetchRef.current) return;
-    hoverPrefetchRef.current = url;
-    invoke('prefetch_track', { url }).catch(() => {});
+    if (hoverPrefetchTimer.current) clearTimeout(hoverPrefetchTimer.current);
+    hoverPrefetchTimer.current = setTimeout(() => {
+      hoverPrefetchRef.current = url;
+      invoke('prefetch_track', { url }).catch(() => {});
+    }, 150);
   }, []);
 
   useEffect(() => {
@@ -1583,9 +1587,29 @@ export default function Veluna() {
   const searchMusic = useCallback(async (override?: string) => {
     const q = (override ?? searchQuery).trim();
     if (!q || isSearching) return;
-    setIsSearching(true); setHasSearched(true); setSearchError(null);
-    setTracks([]); setYtMusicTracks([]); setVideoTracks([]); setShowHistory(false);
+    const cacheKey = q.toLowerCase();
+    setShowHistory(false);
     setSearchHistory(prev => [q, ...prev.filter(h => h !== q)].slice(0, 8));
+
+    const cached = searchCacheRef.current.get(cacheKey);
+    let hasInstantHit = false;
+
+    if (cached) {
+      hasInstantHit = true;
+      React.startTransition(() => {
+        setHasSearched(true);
+        setIsSearching(false);
+        setSearchError(null);
+        setYtMusicTracks(cached.music);
+        setVideoTracks(cached.video);
+        setTracks(cached.music.length > 0 ? cached.music : cached.video);
+      });
+    } else {
+      setIsSearching(true);
+      setHasSearched(true);
+      setSearchError(null);
+      setTracks([]); setYtMusicTracks([]); setVideoTracks([]);
+    }
 
     try {
       const isUrl = q.startsWith('http://') || q.startsWith('https://') || q.includes('youtube.com') || q.includes('youtu.be');
@@ -1596,7 +1620,7 @@ export default function Veluna() {
             invoke<string>('search_youtube', { query: `${q} video` }).catch(() => '')
           ]);
 
-      const parseLines = (res: string) => {
+      const parseLines = (res: string, mediaType: 'music' | 'video') => {
         return res.trim().split('\n').filter(Boolean).map((line, i) => {
           const parts = line.split('====');
           const title = parts[0]?.trim() || '';
@@ -1604,36 +1628,66 @@ export default function Veluna() {
           const duration = parts[2]?.trim() || '0:00';
           const id = parts[3]?.trim() || '';
           if (!id || id === 'NA') return null;
-          return { id: i, title: title || 'Unknown Track', artist: artist || 'YouTube', duration: duration || '0:00', url: `https://youtube.com/watch?v=${id}`, cover: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` };
+          return { id: i, title: title || 'Unknown Track', artist: artist || 'YouTube', duration: duration || '0:00', url: `https://youtube.com/watch?v=${id}`, cover: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, mediaType };
         }).filter((t): t is Track => t !== null);
       };
 
-      let parsedMusic = parseLines(resMusic);
-      let parsedVideo = parseLines(resVideo);
+      let parsedMusic = parseLines(resMusic, 'music');
+      let parsedVideo = parseLines(resVideo, 'video');
 
       if (parsedMusic.length === 0 && parsedVideo.length === 0) {
         const resFallback = await invoke<string>('search_youtube', { query: q }).catch(() => '');
-        parsedMusic = parseLines(resFallback);
+        parsedMusic = parseLines(resFallback, 'music');
       }
 
-      setYtMusicTracks(parsedMusic);
-      setVideoTracks(parsedVideo);
-      setTracks(parsedMusic.length > 0 ? parsedMusic : parsedVideo);
-
-      if (parsedMusic.length === 0 && parsedVideo.length === 0) {
-        setSearchError(`No tracks found for "${q}". Try another search term.`);
+      if (searchCacheRef.current.size > 100) {
+        const firstKey = searchCacheRef.current.keys().next().value;
+        if (firstKey) searchCacheRef.current.delete(firstKey);
       }
+      searchCacheRef.current.set(cacheKey, { music: parsedMusic, video: parsedVideo });
+
+      [...parsedMusic.slice(0, 8), ...parsedVideo.slice(0, 4)].forEach(t => {
+        if (t.cover) {
+          const img = new Image();
+          img.src = t.cover;
+        }
+      });
+
+      React.startTransition(() => {
+        setYtMusicTracks(parsedMusic);
+        setVideoTracks(parsedVideo);
+        setTracks(parsedMusic.length > 0 ? parsedMusic : parsedVideo);
+        setIsSearching(false);
+
+        if (parsedMusic.length === 0 && parsedVideo.length > 0) {
+          setSearchTab('video');
+        } else if (parsedMusic.length > 0) {
+          setSearchTab('music');
+        }
+
+        if (parsedMusic.length === 0 && parsedVideo.length === 0) {
+          setSearchError(`No tracks found for "${q}". Try another search term.`);
+        } else {
+          setSearchError(null);
+        }
+      });
 
       [...parsedMusic.slice(0, 3), ...parsedVideo.slice(0, 2)].forEach(track => {
         if (track.url) invoke('prefetch_track', { url: track.url }).catch(() => {});
       });
     } catch (err: any) {
-      setYtMusicTracks([]); setVideoTracks([]); setTracks([]);
-      const msg = typeof err === 'string' ? err : (err?.message || 'Search failed');
-      setSearchError(msg);
-      showToast(`Search failed: ${msg}`);
+      if (!hasInstantHit) {
+        React.startTransition(() => {
+          setYtMusicTracks([]); setVideoTracks([]); setTracks([]);
+          setIsSearching(false);
+        });
+        const msg = typeof err === 'string' ? err : (err?.message || 'Search failed');
+        setSearchError(msg);
+        showToast(`Search failed: ${msg}`);
+      } else {
+        setIsSearching(false);
+      }
     }
-    finally { setIsSearching(false); }
   }, [searchQuery, isSearching, showToast]);
 
   const openCtx = useCallback((e: React.MouseEvent, menu: Omit<CtxMenu, 'x' | 'y'>) => {
@@ -1708,9 +1762,7 @@ export default function Veluna() {
     if (id === 'p1') return;
     setPlaylists(p => p.filter(x => x.id !== id));
     setOpenPlaylistId(prev => prev === id ? null : prev);
-    if (playlistContextRef.current?.id === id) {
-      playlistContextRef.current = null;
-    }
+    playlistContextRef.current = null;
     showToast('Playlist deleted');
   }, [showToast]);
 
@@ -1862,7 +1914,7 @@ export default function Veluna() {
         .v-topbar__back:disabled{opacity:0.3;cursor:not-allowed;}
         .v-topbar__crumb{font-size:11.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--v-fg3);}
 
-        .v-player{height:72px;background:var(--v-bg1);border-top:none;display:flex;align-items:center;padding:0 18px;position:relative;z-index:20;flex-shrink:0;gap:0;}
+        .v-player{height:72px;background:var(--v-bg0);border-top:none;display:flex;align-items:center;padding:0 18px;position:relative;z-index:20;flex-shrink:0;gap:0;}
         .v-player__track{display:flex;align-items:center;gap:11px;width:230px;flex-shrink:0;}
         .v-player__art{width:44px;height:44px;border-radius:7px;overflow:hidden;flex-shrink:0;background:var(--v-bg3);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;}
         .v-player__art img{width:100%;height:100%;object-fit:cover;}
@@ -2321,7 +2373,7 @@ export default function Veluna() {
 
       <div style={{display:"flex",flex:"1 1 0%",minHeight:0,overflow:"hidden"}}>
         {/* 📱 Sleek Navigation Sidebar */}
-        <div style={{width:"180px", flexShrink:0, display:"flex", flexDirection:"column", background:"var(--v-bg1)", borderRight:"none", padding:"16px 10px 96px 10px", zIndex:10, overflow:"visible", position:"relative"}}>
+        <div style={{width:"180px", flexShrink:0, display:"flex", flexDirection:"column", background:"var(--v-bg0)", borderRight:"none", padding:"16px 10px 96px 10px", zIndex:10, overflow:"visible", position:"relative"}}>
 
           <nav style={{display:"flex",flexDirection:"column",gap:"2px",flexShrink:0,padding:"0 2px"}}>
             <button onClick={() => navigateTo('home')}
@@ -2356,7 +2408,7 @@ export default function Veluna() {
 
           {/* Playlists section */}
           <div style={{marginTop:"6px",display:"flex",flexDirection:"column",flex:"1 1 0%",minHeight:0}}>
-            <div style={{display:"flex",alignItems:"center",justify:"space-between",padding:"2px 4px 10px",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"2px 4px 10px",flexShrink:0}}>
               <button onClick={() => { navigateTo('library'); setOpenPlaylistId(null); }}
                 style={{display:'flex',alignItems:'center',gap:'8px',padding:'4px 6px',borderRadius:'6px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left',color:activeNav==='library'?'#e2ddd9':'#8a807c',fontSize:'10px',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',transition:'color .15s ease'}}
                 onMouseEnter={e=>{if(activeNav!=='library')e.currentTarget.style.color='#c8c4c0';}}
@@ -2366,14 +2418,14 @@ export default function Veluna() {
               </button>
               <div ref={playlistMenuRef} style={{display:'flex',alignItems:'center',gap:'2px',position:'relative'}}>
                 <button onClick={e => { e.stopPropagation(); setSidebarPlaylistsExpanded(o => !o); }}
-                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justify:"center",transition:'color .15s ease,background .15s ease'}}
+                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",transition:'color .15s ease,background .15s ease'}}
                   title={sidebarPlaylistsExpanded ? "Collapse playlists" : "Expand playlists"}
                   onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
                   onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
                   <ChevronRight size={14} style={{transition:"transform .2s ease",transform:sidebarPlaylistsExpanded?"rotate(90deg)":"none"}}/>
                 </button>
                 <button onClick={e => { e.stopPropagation(); setIsPlaylistMenuOpen(o => !o); }}
-                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:isPlaylistMenuOpen?"#e2ddd9":"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justify:"center",transition:'color .15s ease,background .15s ease'}} title="Add / Import Playlist"
+                  style={{padding:"5px",border:"none",background:"transparent",cursor:"pointer",color:isPlaylistMenuOpen?"#e2ddd9":"#8a807c",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",transition:'color .15s ease,background .15s ease'}} title="Add / Import Playlist"
                   onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
                   onMouseLeave={e=>{if(!isPlaylistMenuOpen)e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='transparent';}}>
                   <Plus size={15} />
@@ -2479,22 +2531,38 @@ export default function Veluna() {
             zIndex: 0
           }} />
 
-          <div className="v-topbar" style={{background:"var(--v-bg0)",padding:"14px 22px",display:"flex",alignItems:"center",justify:"space-between"}}>
+          <div className="v-topbar" style={{background:"var(--v-bg0)",padding:"14px 22px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
-              <button
-                className="v-topbar__back"
-                onClick={() => {
-                  if (activeNav === 'home' && tracks.length > 0) {
-                    setTracks([]); setSearchQuery(''); setIsSearching(false);
-                  } else {
-                    navigateBack();
-                  }
-                }}
-                disabled={activeNav === 'home' && tracks.length === 0}
-              >
-                <ChevronLeft size={14} />
-                <span>Back</span>
-              </button>
+              {(() => {
+                const isSearchActive = activeNav === 'home' && (hasSearched || tracks.length > 0 || ytMusicTracks.length > 0 || videoTracks.length > 0 || isSearching);
+                const isPlaylistOpen = activeNav === 'library' && Boolean(openPlaylistId);
+                const isBackEnabled = isSearchActive || isPlaylistOpen || navHistory.length > 0;
+
+                return (
+                  <button
+                    className="v-topbar__back"
+                    onClick={() => {
+                      if (isSearchActive) {
+                        setHasSearched(false);
+                        setSearchQuery('');
+                        setTracks([]);
+                        setYtMusicTracks([]);
+                        setVideoTracks([]);
+                        setSearchError(null);
+                        setIsSearching(false);
+                      } else if (isPlaylistOpen) {
+                        setOpenPlaylistId(null);
+                      } else {
+                        navigateBack();
+                      }
+                    }}
+                    disabled={!isBackEnabled}
+                  >
+                    <ChevronLeft size={14} />
+                    <span>Back</span>
+                  </button>
+                );
+              })()}
               <span className="v-topbar__crumb">
                 {activeNav === 'home' ? 'Home' : activeNav === 'downloads' ? 'Offline' : activeNav === 'settings' ? 'Settings' : activeNav === 'stats' ? 'Stats' : activeNav === 'library' ? (openPlaylistId ? 'Playlist' : 'Playlists') : activeNav}
               </span>
@@ -2526,7 +2594,7 @@ export default function Veluna() {
           </div>
 
           {}
-          <div key={activeNav + (openPlaylistId || '')} style={{animation:'fadeUp 0.2s cubic-bezier(0.25,0,0,1) both',flex:'1 1 0%',display:'flex',flexDirection:'column',minHeight:0,overflow:'hidden'}}>
+          <div key={activeNav + (openPlaylistId || '')} className="v-page-container" style={{flex:'1 1 0%',display:'flex',flexDirection:'column',minHeight:0,overflow:'hidden'}}>
           {activeNav === 'home' && (
             <>
               <div style={{padding:"16px 24px 10px",position:"relative",zIndex:30,flexShrink:0,display:"flex",justifyContent:"center"}}>
@@ -2596,7 +2664,7 @@ export default function Veluna() {
                   {updateAvailable && (
                     <button
                       onClick={() => { setActiveNav('settings'); setSettingsTab('updates'); }}
-                      title={`Update available — v${updateAvailable}`}
+                      title={`Update available: v${updateAvailable}`}
                       style={{flexShrink:0,width:"42px",height:"42px",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"21px",border:"1px solid var(--v-bdr2)",background:"var(--v-bg2)",cursor:"pointer",position:"relative"}}
                     >
                       <Info size={17} />
@@ -3499,19 +3567,14 @@ export default function Veluna() {
 
                 {}
                 {hasSearched && (() => {
-                  const activeTracks = searchTab === 'music' ? (ytMusicTracks.length > 0 ? ytMusicTracks : tracks) : videoTracks;
+                  const activeTracks = searchTab === 'music' ? (ytMusicTracks.length > 0 ? ytMusicTracks : tracks) : (videoTracks.length > 0 ? videoTracks : tracks);
+                  const hasAnyResults = ytMusicTracks.length > 0 || videoTracks.length > 0 || tracks.length > 0;
                   return (
-                    <div className="v-home-search-results">
+                    <div className="v-home-search-results v-page-container">
                       <div className="v-section-head" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                         <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                          <button onClick={() => { setHasSearched(false); setSearchQuery(''); setTracks([]); setYtMusicTracks([]); setVideoTracks([]); setSearchError(null); }}
-                            style={{display:'flex',alignItems:'center',gap:'4px',padding:'4px 10px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',borderRadius:'7px',color:'#8a807c',fontSize:'11.5px',fontWeight:600,cursor:'pointer',transition:'color .15s,background .15s'}}
-                            onMouseEnter={e=>{e.currentTarget.style.color='#e2ddd9';e.currentTarget.style.background='rgba(226,221,217,0.06)';}}
-                            onMouseLeave={e=>{e.currentTarget.style.color='#8a807c';e.currentTarget.style.background='var(--v-bg2)';}}>
-                            <ChevronLeft size={14} /> Back
-                          </button>
-                          <h2 style={{fontSize:'16px',fontWeight:700,color:'#e2ddd9',margin:0}}>
-                            {isSearching ? 'Searching YouTube...' : `Results for "${searchQuery}"`}
+                          <h2 style={{fontSize:'16px',fontWeight:700,color:'#e2ddd9',margin:0,textTransform:'none',letterSpacing:'normal'}}>
+                            {isSearching ? 'SEARCHING YOUTUBE...' : `RESULTS FOR "${searchQuery}"`}
                           </h2>
                           {isSearching && <div style={{display:"flex",gap:"3px",alignItems:"flex-end",height:"16px"}}>{[100, 60, 80, 50].map((h, i) => <div key={i} style={{ width:"4px",borderRadius:"2px",background:"rgba(226,221,217,0.4)",height: `${h}%`, animation: `barBounce ${0.65 + i * 0.1}s ease-in-out ${i * 100}ms infinite`, transformOrigin: "bottom" }} />)}</div>}
                         </div>
@@ -3590,26 +3653,35 @@ export default function Veluna() {
                             <div style={{width:"60px",flexShrink:0}}/>
                             <Clock size={12} style={{color:"#363230",width:"36px",flexShrink:0}}/>
                           </div>
-                          <div style={{display:"flex",flexDirection:"column",gap:"3px",marginTop:"4px"}}>
-                            {activeTracks.map((track, i) => (
-                              <TrackRow key={track.id} track={track} index={i}
-                                isActive={currentTrack?.url === track.url}
-                                isHovered={hoveredTrackUrl === track.url}
-                                isLoadingTrack={isLoadingTrack} isPlaying={isPlaying}
-                                isLiked={isTrackLiked(track.url)} isDownloading={(downloadingTracks[track.url] ?? 0)}
-                                onPlay={() => handlePlayInContext(track, activeTracks)}
-                                onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
-                                onHoverLeave={() => setHoveredTrackUrl(null)}
-                                onLike={() => toggleLikeTrack(track)}
-                                onDownload={() => handleDownload(track)}
-                                onCtx={e => openCtx(e, { type: 'track', track })}
-                              />
-                            ))}
+                          <div style={{marginTop:"4px"}}>
+                            <VirtualTrackList
+                              items={activeTracks}
+                              itemHeight={56}
+                              keyExtractor={(track) => track.id || track.url}
+                              renderItem={(track, i) => (
+                                <TrackRow
+                                  track={track}
+                                  index={i}
+                                  isActive={currentTrack?.url === track.url}
+                                  isHovered={hoveredTrackUrl === track.url}
+                                  isLoadingTrack={isLoadingTrack}
+                                  isPlaying={isPlaying}
+                                  isLiked={isTrackLiked(track.url)}
+                                  isDownloading={(downloadingTracks[track.url] ?? 0)}
+                                  onPlay={() => handlePlayInContext(track, activeTracks)}
+                                  onHoverEnter={() => { setHoveredTrackUrl(track.url); prefetchOnHover(track.url); }}
+                                  onHoverLeave={() => setHoveredTrackUrl(null)}
+                                  onLike={() => toggleLikeTrack(track)}
+                                  onDownload={() => handleDownload(track)}
+                                  onCtx={e => openCtx(e, { type: 'track', track })}
+                                />
+                              )}
+                            />
                           </div>
                         </>
                       )}
 
-                      {!isSearching && activeTracks.length === 0 && (
+                      {!isSearching && !hasAnyResults && (
                         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"260px",gap:"16px",padding:"40px 20px",textAlign:"center"}}>
                           <div style={{width:'52px',height:'52px',borderRadius:'14px',background:'var(--v-bg2)',border:'1px solid var(--v-bdr2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                             <Search size={22} style={{color:'#8a807c'}} />
@@ -3711,38 +3783,7 @@ export default function Veluna() {
                     zIndex: 0
                   }} />
                 )}
-                <button onClick={() => { setOpenPlaylistId(null); setPlaylistSearchQ(''); }}
-                  style={{
-                    position: "relative",
-                    zIndex: 1,
-                    display:"flex",
-                    alignItems:"center",
-                    justifyContent:"center",
-                    width:"36px",
-                    height:"36px",
-                    borderRadius:"50%",
-                    color:"var(--v-fg2)",
-                    background:"var(--v-bg3)",
-                    border:"1px solid var(--v-bdr3)",
-                    cursor:"pointer",
-                    marginBottom:"24px",
-                    padding:0,
-                    transition:"all .2s cubic-bezier(0.2,0,0,1)"
-                  }}
-                  onMouseEnter={e=>{
-                    e.currentTarget.style.color="var(--v-fg)";
-                    e.currentTarget.style.background="var(--v-bg4)";
-                    e.currentTarget.style.borderColor="var(--v-bdr2)";
-                    e.currentTarget.style.transform="scale(1.05)";
-                  }}
-                  onMouseLeave={e=>{
-                    e.currentTarget.style.color="var(--v-fg2)";
-                    e.currentTarget.style.background="var(--v-bg3)";
-                    e.currentTarget.style.borderColor="var(--v-bdr3)";
-                    e.currentTarget.style.transform="scale(1)";
-                  }}>
-                  <ChevronLeft size={20} style={{flexShrink:0}}/>
-                </button>
+
                 <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"flex-end",gap:"24px",marginBottom:"28px"}}>
                   <div style={{
                     width:"140px",
@@ -4850,7 +4891,7 @@ export default function Veluna() {
         </div>
 
         {}
-        <div style={{flexShrink:0,background:'var(--v-bg1)',borderLeft:'none',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'300px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
+        <div style={{flexShrink:0,background:'var(--v-bg0)',borderLeft:'none',display:'flex',flexDirection:'column',overflow:'hidden',width:isQueueOpen?'300px':'0',transition:'width 0.28s cubic-bezier(0.2,0,0,1)'}}>
           {isQueueOpen && (() => {
             const contextualTracks = (() => {
               if (!playlistContextRef.current || !currentTrack) return [];

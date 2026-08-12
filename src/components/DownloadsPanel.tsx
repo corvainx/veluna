@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { LocalTrack, DiskInfo } from '../types';
 import { cleanArtist, formatBytes } from '../utils';
+import { VirtualTrackList } from './VirtualTrackList';
 
 export const LocalTrackCover = React.memo(({ path, hasCover, cover, isActive }: { path: string; hasCover?: boolean; cover?: string; isActive: boolean }) => {
   const [coverUrl, setCoverUrl] = useState<string | null>(cover || null);
@@ -389,63 +390,68 @@ export function DownloadsPanel({
             </div>
           )}
 
-          <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
-            {filtered.map((track, i) => {
-              const isActive = currentTrackPath === track.path;
-              const isHov = hovered === track.path;
-              const isDragOver = dragOverLocalIdx === i && dragLocalIdx.current !== null && dragLocalIdx.current !== i;
-              return (
-                <div key={track.path}
-                  className={`v-track${isActive?' v-track--active':''}`}
-                  style={{position:"relative",borderColor:isDragOver?"rgba(226,221,217,0.2)":"undefined"}}
-                  onMouseEnter={() => { setHovered(track.path); if(dragLocalIdx.current!==null){dragOverLocalIdxRef.current=i;setDragOverLocalIdx(i);} }}
-                  onMouseLeave={() => setHovered(null)}
-                  onClick={() => onPlayLocalTrack(track, searchQ ? filtered : tracks, i)}
-                  onContextMenu={e => onCtx?.(e, track)}
-                >
-                  {isDragOver && <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />}
-                  {!searchQ && (
-                    <div style={{width:"14px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"grab",opacity:isHov?0.5:0,transition:"opacity .12s"}}
-                      onMouseDown={e => {
-                        e.preventDefault();
-                        dragLocalIdx.current = i; dragOverLocalIdxRef.current = i; setDragOverLocalIdx(i);
-                        const onUp = () => {
-                          const from = dragLocalIdx.current; const to = dragOverLocalIdxRef.current;
-                          dragLocalIdx.current = null; dragOverLocalIdxRef.current = null; setDragOverLocalIdx(null);
-                          window.removeEventListener('mouseup', onUp);
-                          if (from===null||to===null||from===to) return;
-                          setTracks(prev => { const next=[...prev]; const [moved]=next.splice(from,1); next.splice(to,0,moved); return next; });
-                        };
-                        window.addEventListener('mouseup', onUp);
-                      }}>
-                      <svg width="8" height="14" viewBox="0 0 10 16" fill="#5c5755"><circle cx="3" cy="3" r="1.5"/><circle cx="7" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/></svg>
+          <div>
+            <VirtualTrackList
+              items={filtered}
+              itemHeight={56}
+              keyExtractor={(track) => track.path}
+              renderItem={(track, i) => {
+                const isActive = currentTrackPath === track.path;
+                const isHov = hovered === track.path;
+                const isDragOver = dragOverLocalIdx === i && dragLocalIdx.current !== null && dragLocalIdx.current !== i;
+                return (
+                  <div
+                    className={`v-track${isActive?' v-track--active':''}`}
+                    style={{position:"relative",borderColor:isDragOver?"rgba(226,221,217,0.2)":"undefined"}}
+                    onMouseEnter={() => { setHovered(track.path); if(dragLocalIdx.current!==null){dragOverLocalIdxRef.current=i;setDragOverLocalIdx(i);} }}
+                    onMouseLeave={() => setHovered(null)}
+                    onClick={() => onPlayLocalTrack(track, searchQ ? filtered : tracks, i)}
+                    onContextMenu={e => onCtx?.(e, track)}
+                  >
+                    {isDragOver && <div style={{position:"absolute",top:0,left:0,right:0,height:"1.5px",background:"rgba(226,221,217,0.5)",borderRadius:"1px",zIndex:10,pointerEvents:"none"}} />}
+                    {!searchQ && (
+                      <div style={{width:"14px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"grab",opacity:isHov?0.5:0,transition:"opacity .12s"}}
+                        onMouseDown={e => {
+                          e.preventDefault();
+                          dragLocalIdx.current = i; dragOverLocalIdxRef.current = i; setDragOverLocalIdx(i);
+                          const onUp = () => {
+                            const from = dragLocalIdx.current; const to = dragOverLocalIdxRef.current;
+                            dragLocalIdx.current = null; dragOverLocalIdxRef.current = null; setDragOverLocalIdx(null);
+                            window.removeEventListener('mouseup', onUp);
+                            if (from===null||to===null||from===to) return;
+                            setTracks(prev => { const next=[...prev]; const [moved]=next.splice(from,1); next.splice(to,0,moved); return next; });
+                          };
+                          window.addEventListener('mouseup', onUp);
+                        }}>
+                        <svg width="8" height="14" viewBox="0 0 10 16" fill="#5c5755"><circle cx="3" cy="3" r="1.5"/><circle cx="7" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/></svg>
+                      </div>
+                    )}
+                    <div className="v-track__num">
+                      {isActive&&isLoadingTrack
+                        ? <div style={{width:"12px",height:"12px",border:"1.5px solid #9e9894",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto"}}/>
+                        : isActive&&isPlaying
+                          ? <div style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"13px",justifyContent:"center"}}>{[100,65,80].map((h,j)=><div key={j} style={{width:"2.5px",background:"#9e9894",borderRadius:"1px",height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:"bottom"}}/>)}</div>
+                          : isHov ? <Play size={12} style={{fill:"#e2ddd9",color:"#e2ddd9",margin:"0 auto"}}/>
+                          : i+1}
                     </div>
-                  )}
-                  <div className="v-track__num">
-                    {isActive&&isLoadingTrack
-                      ? <div style={{width:"12px",height:"12px",border:"1.5px solid #9e9894",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto"}}/>
-                      : isActive&&isPlaying
-                        ? <div style={{display:"flex",gap:"2px",alignItems:"flex-end",height:"13px",justifyContent:"center"}}>{[100,65,80].map((h,j)=><div key={j} style={{width:"2.5px",background:"#9e9894",borderRadius:"1px",height:`${h}%`,animation:`barBounce ${0.7+j*0.12}s ease-in-out ${j*110}ms infinite`,transformOrigin:"bottom"}}/>)}</div>
-                        : isHov ? <Play size={12} style={{fill:"#e2ddd9",color:"#e2ddd9",margin:"0 auto"}}/>
-                        : i+1}
+                    <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"var(--v-bdr2)",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`,overflow:"hidden"}}>
+                      <LocalTrackCover path={track.path} hasCover={track.has_cover} cover={track.cover} isActive={isActive} />
+                    </div>
+                    <div className="v-track__info">
+                      <div className="v-track__title">{track.title}</div>
+                      <div className="v-track__artist">{track.artist||track.extension.toUpperCase()} · {formatBytes(track.size_bytes)}</div>
+                    </div>
+                    <div className="v-track__actions">
+                      <button className="v-track__btn" title="Rename" onClick={e=>{e.stopPropagation();setRenaming(track);setRenameVal(track.title);setRenameArtistVal(track.artist || '');}}><Pencil size={12}/></button>
+                      <button className="v-track__btn" title="Show in folder" onClick={e=>{e.stopPropagation();onOpenInFileManager(track.path);}}><FolderOpen size={12}/></button>
+                      <button className="v-track__btn" title="Delete" onClick={e=>{e.stopPropagation();onDeleteLocalTrack(track);scan();}}
+                        onMouseEnter={e=>(e.currentTarget.style.color="#b05555")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><Trash2 size={12}/></button>
+                    </div>
+                    <span style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums",width:"40px",textAlign:"right",flexShrink:0}}>{track.duration||"—"}</span>
                   </div>
-                  <div style={{width:"38px",height:"38px",borderRadius:"7px",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:isActive?"rgba(226,221,217,0.06)":"var(--v-bdr2)",border:`1px solid ${isActive?"rgba(226,221,217,0.1)":"rgba(255,255,255,0.05)"}`,overflow:"hidden"}}>
-                    <LocalTrackCover path={track.path} hasCover={track.has_cover} cover={track.cover} isActive={isActive} />
-                  </div>
-                  <div className="v-track__info">
-                    <div className="v-track__title">{track.title}</div>
-                    <div className="v-track__artist">{track.artist||track.extension.toUpperCase()} · {formatBytes(track.size_bytes)}</div>
-                  </div>
-                  <div className="v-track__actions">
-                    <button className="v-track__btn" title="Rename" onClick={e=>{e.stopPropagation();setRenaming(track);setRenameVal(track.title);setRenameArtistVal(track.artist || '');}}><Pencil size={12}/></button>
-                    <button className="v-track__btn" title="Show in folder" onClick={e=>{e.stopPropagation();onOpenInFileManager(track.path);}}><FolderOpen size={12}/></button>
-                    <button className="v-track__btn" title="Delete" onClick={e=>{e.stopPropagation();onDeleteLocalTrack(track);scan();}}
-                      onMouseEnter={e=>(e.currentTarget.style.color="#b05555")} onMouseLeave={e=>(e.currentTarget.style.color="#5c5755")}><Trash2 size={12}/></button>
-                  </div>
-                  <span style={{fontSize:"11px",color:"#363230",fontVariantNumeric:"tabular-nums",width:"40px",textAlign:"right",flexShrink:0}}>{track.duration||"—"}</span>
-                </div>
-              );
-            })}
+                );
+              }}
+            />
           </div>
         </>
       )}

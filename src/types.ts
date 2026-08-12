@@ -5,6 +5,7 @@ export type Track = {
   duration: string;
   url: string;
   cover: string;
+  mediaType?: 'music' | 'video';
 };
 
 export type LocalTrack = {
