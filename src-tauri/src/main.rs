@@ -1657,7 +1657,10 @@ fn wait_for_socket(timeout_ms: u64) -> bool {
     {
         while std::time::Instant::now() < deadline {
             if std::path::Path::new(SOCKET_PATH).exists() {
-                if UnixStream::connect(SOCKET_PATH).is_ok() { return true; }
+                if let Ok(s) = UnixStream::connect(SOCKET_PATH) {
+                    let _ = s.shutdown(std::net::Shutdown::Both);
+                    return true;
+                }
             }
             std::thread::sleep(std::time::Duration::from_millis(15));
         }
@@ -1698,7 +1701,11 @@ fn send_ipc_batch(cmds: &[&str]) -> Vec<Result<String, String>> {
             return vec![Err("UnixStream clone failed".to_string()); n];
         }
 
-        let mut reader = BufReader::new(stream);
+        let read_stream = match stream.try_clone() {
+            Ok(s) => s,
+            Err(_) => return vec![Err("UnixStream clone failed".to_string()); n],
+        };
+        let mut reader = BufReader::new(read_stream);
         let mut results: Vec<String> = Vec::with_capacity(n);
         let mut lines_read = 0usize;
         while results.len() < n && lines_read < n * 12 {
@@ -1710,6 +1717,8 @@ fn send_ipc_batch(cmds: &[&str]) -> Vec<Result<String, String>> {
                 if !v["error"].is_null() { results.push(trimmed.to_string()); }
             }
         }
+
+        let _ = stream.shutdown(std::net::Shutdown::Both);
 
         let mut out: Vec<Result<String, String>> = results.into_iter().map(Ok).collect();
         while out.len() < n { out.push(Err("No response from mpv".to_string())); }
@@ -1783,19 +1792,28 @@ fn send_ipc_command(cmd: &str) -> Result<String, String> {
     #[cfg(unix)]
     {
         
-        let mut stream = UnixStream::connect(SOCKET_PATH)
+        let stream = UnixStream::connect(SOCKET_PATH)
             .map_err(|e| format!("IPC connect failed: {}", e))?;
         stream.set_read_timeout(Some(std::time::Duration::from_millis(500))).map_err(|e| e.to_string())?;
         stream.set_write_timeout(Some(std::time::Duration::from_millis(200))).map_err(|e| e.to_string())?;
-        stream.write_all(cmd.as_bytes()).map_err(|e| e.to_string())?;
-        stream.write_all(b"\n").map_err(|e| e.to_string())?;
-        let mut reader = BufReader::new(stream);
+        
+        let cloned_stream = stream.try_clone().map_err(|e| e.to_string())?;
+        let mut reader = BufReader::new(cloned_stream);
+
+        {
+            let mut w = &stream;
+            w.write_all(cmd.as_bytes()).map_err(|e| e.to_string())?;
+            w.write_all(b"\n").map_err(|e| e.to_string())?;
+        }
+
+        let mut resp = Err("No response from mpv".to_string());
         for _ in 0..24 {
             let mut line = String::new();
             if reader.read_line(&mut line).is_err() || line.is_empty() { break; }
-            if is_cmd_response(line.trim()) { return Ok(line); }
+            if is_cmd_response(line.trim()) { resp = Ok(line); break; }
         }
-        Err("No response from mpv".to_string())
+        let _ = stream.shutdown(std::net::Shutdown::Both);
+        resp
     }
 
     #[cfg(windows)]

@@ -5803,7 +5803,7 @@ export default function Veluna() {
               {/* Footer */}
               <div style={{padding:"12px 16px",borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"flex-end",flexShrink:0}}>
                 <button onClick={() => { showToast('Tags saved'); setBulkEditPlaylist(null); }}
-                  style={{padding:"9px 22px",background:"#fff",color:"#0a0908",fontWeight:700,borderRadius:"9999px",border:"none",cursor:"pointer",fontSize:"12.5px",transition:"transform .1s,opacity .12s"}}
+                  style={{padding:"9px 22px",background:"var(--v-accent)",color:"var(--v-bg0)",fontWeight:700,borderRadius:"9999px",border:"none",cursor:"pointer",fontSize:"12.5px",transition:"transform .1s,opacity .12s"}}
                   onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"}
                   onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
                   Save &amp; Close
@@ -5851,7 +5851,7 @@ export default function Veluna() {
                 onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.8)";e.currentTarget.style.borderColor="rgba(255,255,255,0.16)";e.currentTarget.style.background="rgba(255,255,255,0.08)";}}
                 onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.4)";e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";e.currentTarget.style.background="rgba(255,255,255,0.04)";}}>Cancel</button>
               <button onClick={confirmCreatePlaylist} disabled={!newPlaylistName.trim()}
-                style={{padding:"8px 20px",borderRadius:"9999px",border:"none",background:"#fff",color:"#0a0908",fontWeight:700,cursor:"pointer",fontSize:"12px",opacity:newPlaylistName.trim()?1:0.35,transition:"transform .1s,opacity .12s"}}
+                style={{padding:"8px 20px",borderRadius:"9999px",border:"none",background:"var(--v-accent)",color:"var(--v-bg0)",fontWeight:700,cursor:"pointer",fontSize:"12px",opacity:newPlaylistName.trim()?1:0.35,transition:"transform .1s,opacity .12s"}}
                 onMouseEnter={e=>{if(newPlaylistName.trim())e.currentTarget.style.transform="scale(1.03)";}}
                 onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";}}>Create</button>
             </div>
@@ -5897,7 +5897,7 @@ export default function Veluna() {
                 onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.8)";e.currentTarget.style.borderColor="rgba(255,255,255,0.16)";e.currentTarget.style.background="rgba(255,255,255,0.08)";}}
                 onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.4)";e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";e.currentTarget.style.background="rgba(255,255,255,0.04)";}}>Cancel</button>
               <button onClick={confirmRenamePlaylist}
-                style={{padding:"8px 20px",borderRadius:"9999px",border:"none",background:"#fff",color:"#0a0908",fontWeight:700,cursor:"pointer",fontSize:"12px",transition:"transform .1s"}}
+                style={{padding:"8px 20px",borderRadius:"9999px",border:"none",background:"var(--v-accent)",color:"var(--v-bg0)",fontWeight:700,cursor:"pointer",fontSize:"12px",transition:"transform .1s"}}
                 onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"}
                 onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>Save</button>
             </div>
